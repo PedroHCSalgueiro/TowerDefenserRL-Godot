@@ -32,7 +32,7 @@ func _init() -> void:
 	if args.has("kill-step"):
 		economy.kill_gold_wave_step = int(args["kill-step"])
 	# `--brom=old|mid`: valores antigos do Mestre Brom (dano, raio e dano da bola carregada), para isolar o efeito.
-	if args.has("brom"):
+	if args.has("brom") and args["brom"] != "new":
 		var brom: TowerData.TowerType = TowerData.game_data().get_type("brom")
 		var presets := {"old": [8.0, 1.5, [200.0, 250.0, 250.0], [1.5, 1.5, 1.75]], "mid": [7.0, 1.25, [175.0, 225.0, 225.0], [1.25, 1.25, 1.5]]}
 		var p: Array = presets.get(args["brom"], presets["old"])

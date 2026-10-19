@@ -46,7 +46,7 @@
         "guardian",
         "valcoroa"
       ],
-      "damage": 13,
+      "damage": 14,
       "shotsPerSecond": 1,
       "range": 3,
       "projectileSpeed": 8,
@@ -159,7 +159,7 @@
         "artillerist",
         "valcoroa"
       ],
-      "damage": 6,
+      "damage": 7,
       "shotsPerSecond": 0.8,
       "range": 3,
       "projectileSpeed": 5,
@@ -175,18 +175,18 @@
           {
             "shots": 4,
             "radiusMultiplier": 1.25,
-            "damagePercent": 150
+            "damagePercent": 175
           },
           {
             "shots": 4,
             "radiusMultiplier": 1.25,
-            "damagePercent": 200,
+            "damagePercent": 225,
             "attackDamagePercent": 125
           },
           {
             "shots": 3,
             "radiusMultiplier": 1.5,
-            "damagePercent": 200,
+            "damagePercent": 225,
             "attackDamagePercent": 125
           }
         ]
@@ -199,7 +199,7 @@
         "mage",
         "valcoroa"
       ],
-      "damage": 9,
+      "damage": 10,
       "shotsPerSecond": 1.5,
       "range": 3,
       "projectileSpeed": 8,
@@ -229,7 +229,7 @@
         "hunter",
         "valcoroa"
       ],
-      "damage": 12,
+      "damage": 13,
       "shotsPerSecond": 0.6,
       "range": 3.5,
       "projectileSpeed": 10,
@@ -274,7 +274,7 @@
         "summoner",
         "valcoroa"
       ],
-      "damage": 10,
+      "damage": 11,
       "shotsPerSecond": 0.5,
       "range": 3,
       "projectileSpeed": 8,
@@ -319,7 +319,7 @@
         "controller",
         "valcoroa"
       ],
-      "damage": 11,
+      "damage": 12.5,
       "shotsPerSecond": 1,
       "range": 3.5,
       "projectileSpeed": 8,

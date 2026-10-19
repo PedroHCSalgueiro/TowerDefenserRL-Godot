@@ -6,6 +6,7 @@ param(
 	[string]$Set = 'valcoroa',
 	[int]$PerPolicy = 100,
 	[int]$Procs = 5,
+	[int]$Offset = 0,
 	[int]$Interval = 600,
 	[string[]]$Policies = @('sequential', 'stack'),
 	[string]$Extra = '',
@@ -17,8 +18,8 @@ $slice = [math]::Ceiling($PerPolicy / $Procs)
 $running = @()
 foreach ($policy in $Policies) {
 	for ($p = 0; $p -lt $Procs; $p++) {
-		$from = $p * $slice
-		$count = [math]::Min($slice, $PerPolicy - $from)
+		$from = $Offset + $p * $slice
+		$count = [math]::Min($slice, $PerPolicy - ($from - $Offset))
 		if ($count -le 0) { continue }
 		$file = Join-Path $Out "$policy-$p.json"
 		$log = Join-Path $Out "$policy-$p.log"
