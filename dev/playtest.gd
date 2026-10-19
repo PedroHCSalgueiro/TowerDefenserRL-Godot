@@ -23,6 +23,28 @@ func _init() -> void:
 	if not GameSets.select(set_id):
 		quit(1)
 		return
+	# Varredura de balanço: sobrescreve o ouro por abate (base, por degrau e tamanho do degrau) sem mexer nos dados.
+	var economy := EconomyData.game_data()
+	if args.has("kill-base"):
+		economy.kill_gold_base = int(args["kill-base"])
+	if args.has("kill-per"):
+		economy.kill_gold_per_wave = int(args["kill-per"])
+	if args.has("kill-step"):
+		economy.kill_gold_wave_step = int(args["kill-step"])
+	# `--brom=old|mid`: valores antigos do Mestre Brom (dano, raio e dano da bola carregada), para isolar o efeito.
+	if args.has("brom"):
+		var brom: TowerData.TowerType = TowerData.game_data().get_type("brom")
+		var presets := {"old": [8.0, 1.5, [200.0, 250.0, 250.0], [1.5, 1.5, 1.75]], "mid": [7.0, 1.25, [175.0, 225.0, 225.0], [1.25, 1.25, 1.5]]}
+		var p: Array = presets.get(args["brom"], presets["old"])
+		brom.damage = p[0]
+		for i in brom.trigger.stars.size():
+			brom.trigger.stars[i].effect["damagePercent"] = p[2][i]
+			brom.trigger.stars[i].effect["radiusMultiplier"] = p[3][i]
+	# `--buff=aldric:1.4,mabel:1.4`: multiplica o dano dos heróis (varredura de balanço).
+	if args.has("buff"):
+		for pair: String in String(args["buff"]).split(","):
+			var parts := pair.split(":")
+			TowerData.game_data().get_type(parts[0]).damage *= float(parts[1])
 	var policy: String = args.get("policy", "sequential")
 	var from := int(args.get("from", "0"))
 	var count := int(args.get("count", "10"))
@@ -142,7 +164,7 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 				m["shotsByType"][type] = m["shotsByType"].get(type, 0) + 1
 			"enemyKilled":
 				m["kills"] += 1
-				m["killGold"] += int(e["wave"])
+				m["killGold"] += int(Economy.kill_gold_for(EconomyData.game_data(), 0.0, int(e["wave"])))
 				var by: String = "nexus" if e["towerId"] == null else str(_id_to_type.get(e["towerId"], "?"))
 				m["killsByType"][by] = m["killsByType"].get(by, 0) + 1
 				m["killsByEnemy"][e["enemyType"]] = m["killsByEnemy"].get(e["enemyType"], 0) + 1

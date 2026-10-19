@@ -46,7 +46,7 @@
         "guardian",
         "valcoroa"
       ],
-      "damage": 8,
+      "damage": 13,
       "shotsPerSecond": 1,
       "range": 3,
       "projectileSpeed": 8,
@@ -199,7 +199,7 @@
         "mage",
         "valcoroa"
       ],
-      "damage": 5,
+      "damage": 9,
       "shotsPerSecond": 1.5,
       "range": 3,
       "projectileSpeed": 8,
@@ -229,7 +229,7 @@
         "hunter",
         "valcoroa"
       ],
-      "damage": 10,
+      "damage": 12,
       "shotsPerSecond": 0.6,
       "range": 3.5,
       "projectileSpeed": 10,
@@ -274,7 +274,7 @@
         "summoner",
         "valcoroa"
       ],
-      "damage": 6,
+      "damage": 10,
       "shotsPerSecond": 0.5,
       "range": 3,
       "projectileSpeed": 8,
@@ -319,7 +319,7 @@
         "controller",
         "valcoroa"
       ],
-      "damage": 7,
+      "damage": 11,
       "shotsPerSecond": 1,
       "range": 3.5,
       "projectileSpeed": 8,

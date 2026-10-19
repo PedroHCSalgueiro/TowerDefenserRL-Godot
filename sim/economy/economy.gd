@@ -58,7 +58,7 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 
 
 ## Ouro de um abate: o `gold` do tipo (`enemies.json`) mais `killGold.base + killGold.perWave × ceil(onda / waveStep)`
-## (com waveStep 5: 1 de ouro por inimigo nas ondas 1 a 5, 2 nas 6 a 10, ...). Inimigo sem onda (debug, onda 0) não paga o extra.
+## (com waveStep 2: 1 de ouro por inimigo nas ondas 1 e 2, 2 nas 3 e 4, ...). Inimigo sem onda (debug, onda 0) não paga o extra.
 static func kill_gold_for(economy: EconomyData, type_gold: float, wave: int) -> float:
 	if wave <= 0:
 		return type_gold

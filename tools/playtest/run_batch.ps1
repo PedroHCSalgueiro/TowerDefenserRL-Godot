@@ -7,13 +7,15 @@ param(
 	[int]$PerPolicy = 100,
 	[int]$Procs = 5,
 	[int]$Interval = 600,
+	[string[]]$Policies = @('sequential', 'stack'),
+	[string]$Extra = '',
 	[Parameter(Mandatory = $true)][string]$Out
 )
 New-Item -ItemType Directory -Force $Out | Out-Null
 $project = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $slice = [math]::Ceiling($PerPolicy / $Procs)
 $running = @()
-foreach ($policy in 'sequential', 'stack') {
+foreach ($policy in $Policies) {
 	for ($p = 0; $p -lt $Procs; $p++) {
 		$from = $p * $slice
 		$count = [math]::Min($slice, $PerPolicy - $from)
@@ -23,6 +25,7 @@ foreach ($policy in 'sequential', 'stack') {
 		# Caminhos com espaço precisam de aspas dentro da lista de argumentos.
 		$argList = @('--headless', '--path', "`"$project`"", '-s', 'dev/playtest.gd', '--', "--set=$Set", "--policy=$policy",
 			"--from=$from", "--count=$count", "--interval=$Interval", "`"--out=$file`"")
+		if ($Extra -ne '') { $argList += $Extra.Split(' ') }
 		$running += Start-Process -FilePath $Godot -ArgumentList $argList -NoNewWindow -PassThru -RedirectStandardOutput $log
 	}
 }

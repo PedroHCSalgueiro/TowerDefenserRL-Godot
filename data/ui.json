@@ -202,7 +202,7 @@
       },
       {
         "id": "income",
-        "text": "Cada inimigo abatido dá ouro (1 nas ondas 1 a 5, 2 nas 6 a 10...) e o fim da onda paga um bônus. Guardar ouro rende juros: 10% do que sobrar, até 10."
+        "text": "Cada inimigo abatido dá ouro (1 nas ondas 1 e 2, 2 nas 3 e 4, 3 nas 5 e 6...) e o fim da onda paga um bônus. Guardar ouro rende juros: 10% do que sobrar, até 10."
       },
       {
         "id": "nexus",
