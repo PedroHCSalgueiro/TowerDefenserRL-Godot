@@ -1,0 +1,51 @@
+{
+  "maxSpawnPerCommand": 5000,
+  "maxGoldPerCommand": 100000,
+  "cheats": {
+    "addGold": 500
+  },
+  "defaults": {
+    "enemyCount": 1000,
+    "towerCount": 30,
+    "towerType": "basic",
+    "spawnCount": 50
+  },
+  "chainScenario": {
+    "name": "Cadeia (4 tipos)",
+    "towerTypes": ["mortar", "relay", "obelisk", "reaper"],
+    "towerLayout": "clustered"
+  },
+  "perf": {
+    "recordSeconds": 20,
+    "warmupSeconds": 3,
+    "liveWindowSeconds": 2,
+    "worstFraction": 0.01,
+    "gate": {
+      "minAvgFps": 58,
+      "minLowFps": 45,
+      "maxAvgTickMs": 4,
+      "maxDroppedTicks": 0
+    }
+  },
+  "panel": {
+    "toggleKey": "F2",
+    "unlockKey": "D",
+    "unlockParam": "debug",
+    "unlockSessionKey": "td-debug-unlocked",
+    "refreshMs": 250
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 tipos)",
+    "towerTypes": [
+      "mortar",
+      "reaper",
+      "relay",
+      "obelisk",
+      "ballista",
+      "clock",
+      "executioner",
+      "mirror"
+    ],
+    "towerLayout": "clustered"
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "tile": {
+    "width": 64,
+    "height": 32
+  },
+  "camera": {
+    "zoom": {
+      "min": 0.75,
+      "default": 1,
+      "max": 3,
+      "wheelStep": 1.2,
+      "wheelNotchPx": 100,
+      "wheelLinesPerNotch": 3,
+      "smoothMs": 120
+    },
+    "resetMs": 200,
+    "marginPx": 180,
+    "keyPanSpeedPx": 800,
+    "dragThresholdPx": 6,
+    "edgePan": {
+      "bandPx": 32,
+      "speedPx": 600
+    }
+  },
+  "grid": {
+    "lineWidth": 1,
+    "lineColor": "#1d1f21",
+    "freeColor": "#3e5245",
+    "pathColor": "#8c7a5b",
+    "entranceColor": "#4f7cac",
+    "nexusColor": "#b54848"
+  },
+  "hover": {
+    "buildableColor": "#9be39b",
+    "blockedColor": "#e39b9b",
+    "alpha": 0.55
+  },
+  "carry": {
+    "alpha": 0.7
+  },
+  "selection": {
+    "color": "#ffd24a",
+    "lineWidth": 3
+  },
+  "enemies": {
+    "radius": 7,
+    "outlineColor": "#1d1f21",
+    "outlineWidth": 1,
+    "fallbackColor": "#ff00ff",
+    "colors": {
+      "common": "#d9d9d9",
+      "fast": "#f2c14e",
+      "armored": "#6c8ebf",
+      "flying": "#c77dff",
+      "boss": "#e2553f",
+      "bossFinal": "#8b1e3f"
+    },
+    "flyingHeight": 14,
+    "shadow": {
+      "color": "#000000",
+      "alpha": 0.35,
+      "width": 12,
+      "height": 6
+    },
+    "healthBar": {
+      "width": 16,
+      "height": 3,
+      "offsetY": 12,
+      "backColor": "#3a0d0d",
+      "fillColor": "#5ad15a"
+    },
+    "scales": {
+      "boss": 1.8,
+      "bossFinal": 2.4
+    },
+    "eliteScale": 1.5,
+    "eliteAura": {
+      "color": "#c77dff",
+      "alpha": 0.45,
+      "fillAlpha": 0.18,
+      "radius": 13,
+      "lineWidth": 3
+    }
+  },
+  "nexus": {
+    "healthBar": {
+      "width": 48,
+      "height": 6,
+      "offsetY": 30,
+      "backColor": "#3a0d0d",
+      "fillColor": "#e25555"
+    },
+    "attackLine": {
+      "color": "#ffe08a",
+      "width": 2,
+      "durationMs": 120
+    }
+  },
+  "towers": {
+    "outlineColor": "#1d1f21",
+    "outlineWidth": 1,
+    "width": 14,
+    "height": 18,
+    "fallbackColor": "#ff00ff",
+    "classColors": {
+      "artillery": "#e0703c",
+      "mechanical": "#4fb3a9",
+      "arcane": "#3d7be0",
+      "shadow": "#8c4a8f"
+    },
+    "range": {
+      "fillColor": "#ffffff",
+      "fillAlpha": 0.08,
+      "lineColor": "#ffffff",
+      "lineAlpha": 0.6,
+      "lineWidth": 1
+    },
+    "stars": {
+      "fontSize": 9,
+      "color": "#ffd84a",
+      "offsetY": 1
+    },
+    "fusion": {
+      "flashColor": "#ffffff",
+      "flashScale": 1.35,
+      "flashMs": 280
+    },
+    "locked": {
+      "shakePx": 3,
+      "shakeMs": 50,
+      "shakeRepeats": 3,
+      "iconWidth": 10,
+      "iconHeight": 8,
+      "iconShackleRadius": 3.5,
+      "iconLineWidth": 2,
+      "iconColor": "#ffd24a",
+      "iconOutlineColor": "#1d1f21",
+      "iconOffsetY": 12,
+      "iconMs": 1200
+    }
+  },
+  "projectiles": {
+    "color": "#ffe08a",
+    "radius": 2.5,
+    "explosion": {
+      "color": "#ff9a3c",
+      "alpha": 0.7,
+      "lineWidth": 2,
+      "durationMs": 180,
+      "maxActive": 64
+    }
+  },
+  "triggerFx": {
+    "pulse": {
+      "durationMs": 300,
+      "maxActive": 64,
+      "lineWidth": 2,
+      "alpha": 0.9
+    },
+    "flash": {
+      "durationMs": 150,
+      "color": "#ffffff",
+      "lineWidth": 2,
+      "alpha": 0.9,
+      "padPx": 2
+    },
+    "chain": {
+      "text": "Cadeia x{n}!",
+      "minLength": 3,
+      "maxLabels": 5,
+      "lingerMs": 600,
+      "labelRefreshMs": 100,
+      "fontSize": 13,
+      "color": "#ffe08a",
+      "strokeColor": "#1d1f21",
+      "strokeWidth": 3,
+      "offsetY": 16,
+      "nexusOffsetY": 44,
+      "ring": {
+        "radius": 0.6,
+        "color": "#ffe08a",
+        "lineWidth": 2,
+        "alpha": 0.9,
+        "pulseScale": 0.15,
+        "pulseMs": 400
+      }
+    },
+    "numbers": {
+      "minDamage": 30,
+      "maxActive": 20,
+      "durationMs": 900,
+      "risePx": 18,
+      "fontSize": 11,
+      "color": "#ffffff",
+      "strokeColor": "#1d1f21",
+      "strokeWidth": 3
+    }
+  },
+  "hoverInfo": {
+    "neighborColor": "#7fd7ff",
+    "neighborLineWidth": 2,
+    "neighborAlpha": 0.95
+  },
+  "linkPreview": {
+    "cellColor": "#7fd7ff",
+    "cellAlpha": 0.55,
+    "cellLineWidth": 1.5,
+    "arrowAlpha": 0.95,
+    "arrowLineWidth": 3,
+    "arrowHeadLength": 11,
+    "arrowHeadWidth": 8,
+    "arrowLift": 14,
+    "arrowInset": 10,
+    "colors": {
+      "activates": "#ffd24a",
+      "charges": "#7fd7ff",
+      "copies": "#c77dff"
+    }
+  }
+}

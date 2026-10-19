@@ -1,0 +1,217 @@
+{
+  "tooltip": {
+    "delayMs": 250,
+    "offsetX": 16,
+    "offsetY": 18,
+    "edgeMarginPx": 8
+  },
+  "texts": {
+    "limitWarning": "limite",
+    "towersLocked": "Torres travadas durante a onda",
+    "towerSummaries": {
+      "mortar": "Atira bombas em área e, de tempos em tempos, tiros extras.",
+      "reaper": "Explode quando um inimigo morre perto.",
+      "relay": "Quando atira, faz as torres encostadas atirarem também.",
+      "obelisk": "Carrega com os abates das torres encostadas e solta um raio que pula entre inimigos.",
+      "ballista": "Quando outra torre a ativa, dispara uma flecha que atravessa a fila.",
+      "clock": "A cada tantos inimigos mortos no alcance, ativa as torres encostadas.",
+      "executioner": "Mata na hora os inimigos com pouca vida.",
+      "mirror": "Quando é ativado, repete o último efeito de uma torre encostada."
+    }
+  },
+  "shop": {
+    "rerollLabel": "Rerolar (R) −{cost}",
+    "freeRerollLabel": "Rerolar (R) grátis"
+  },
+  "rewardScreen": {
+    "title": "Recompensa da onda {wave}",
+    "extraTitle": "Recompensa extra",
+    "subtitle": "Escolha 1 bônus permanente para a run (1, 2 ou 3). O jogo fica pausado.",
+    "queued": "+{n} na fila",
+    "rerollKey": "r",
+    "rerollLabel": "Rerolar (R) −{cost}",
+    "seconds": "{s} s",
+    "repeatable": "repetível",
+    "wildcardName": "Coringa: {classe}",
+    "categories": {
+      "class": "Classe",
+      "economy": "Economia",
+      "nexus": "Núcleo",
+      "chain": "Cadeia"
+    },
+    "categoryColors": {
+      "economy": "#ffd24a",
+      "nexus": "#e25555",
+      "chain": "#ffe08a"
+    },
+    "wildcardMember": "Coringa"
+  },
+  "towerDrag": {
+    "thresholdPx": 6,
+    "lockedMessageMs": 1600
+  },
+  "triggerFx": {
+    "numbersToggleKey": "n"
+  },
+  "help": {
+    "key": "h",
+    "title": "Controles",
+    "buttonLabel": "? (H)",
+    "closeLabel": "Fechar (H ou Esc)",
+    "pausedNote": "O jogo fica pausado enquanto a ajuda está aberta.",
+    "controls": [
+      {
+        "keys": "1 a 5",
+        "action": "Pegar a torre do slot da loja; clique numa casa para comprar e posicionar"
+      },
+      {
+        "keys": "Arrastar slot",
+        "action": "Comprar arrastando a torre da loja até a casa"
+      },
+      {
+        "keys": "Arrastar torre",
+        "action": "Mover (casa livre) ou trocar (outra torre), fora da onda"
+      },
+      {
+        "keys": "Clique",
+        "action": "Selecionar torre (alcance e informações)"
+      },
+      {
+        "keys": "Rodinha",
+        "action": "Aproximar e afastar a câmera, no ponto do mouse"
+      },
+      {
+        "keys": "Botão direito",
+        "action": "Arrastar no mapa move a tela; clique curto no mapa (ou no meio de um arrasto) cancela a torre na mão"
+      },
+      {
+        "keys": "Setas",
+        "action": "Mover a tela"
+      },
+      {
+        "keys": "Botão do meio",
+        "action": "Voltar a câmera ao padrão (no mapa)"
+      },
+      {
+        "keys": "R",
+        "action": "Rerolar a loja"
+      },
+      {
+        "keys": "S",
+        "action": "Vender a torre selecionada"
+      },
+      {
+        "keys": "E",
+        "action": "Evoluir o núcleo"
+      },
+      {
+        "keys": "Espaço",
+        "action": "Chamar a próxima onda (antecipada com outra ativa)"
+      },
+      {
+        "keys": "Q",
+        "action": "Velocidade 1x → 2x → 3x"
+      },
+      {
+        "keys": "P",
+        "action": "Pausar e continuar"
+      },
+      {
+        "keys": "N",
+        "action": "Mostrar ou esconder os números de dano"
+      },
+      {
+        "keys": "Esc",
+        "action": "Cancelar a torre presa ao mouse ou o arrasto"
+      },
+      {
+        "keys": "1 a 3 / R",
+        "action": "Na tela de recompensa: escolher a carta / rerolar as cartas"
+      },
+      {
+        "keys": "H",
+        "action": "Abrir e fechar esta ajuda"
+      }
+    ],
+    "debugControls": [
+      {
+        "keys": "F2",
+        "action": "Mostrar ou esconder o painel de debug e trapaças"
+      },
+      {
+        "keys": "Ctrl+Shift+D",
+        "action": "Liberar o debug nesta sessão (build de playtest)"
+      }
+    ],
+    "chains": {
+      "title": "Cadeias",
+      "paragraphs": [
+        "A posição das torres importa: algumas reagem às torres encostadas (nas 4 casas de lado).",
+        "O Relé, quando atira, faz as torres encostadas atirarem também. O Relógio faz o mesmo a cada tantos abates no alcance.",
+        "O Obelisco carrega com os abates das torres encostadas, e o Espelho repete o último efeito de uma torre encostada.",
+        "Uma reação pode disparar outra: é a cadeia. O número \"Cadeia xN!\" mostra quantos gatilhos ela juntou.",
+        "Com o bônus da Arcana, as torres Arcana passam a alcançar também as diagonais.",
+        "Ao posicionar ou mover uma torre, as setas mostram com quem ela vai se ligar naquela casa."
+      ]
+    }
+  },
+  "waveHud": {
+    "upcomingCount": 5,
+    "texts": {
+      "callEarly": "Chamar antecipada (+{bonus})",
+      "callNoBonus": "Chamar próxima onda (sem bônus)",
+      "bonusWindow": "bônus por mais {n} {inimigos}",
+      "upcoming": "Próximas:",
+      "eliteMark": "◆",
+      "bossMark": "◆",
+      "eliteTitle": "Onda de elite",
+      "bossTitle": "Chefão"
+    }
+  },
+  "waveAnnounce": {
+    "durationMs": 2500,
+    "texts": {
+      "elite": "Onda de elite",
+      "boss": "CHEFÃO"
+    }
+  },
+  "linkHint": {
+    "offsetX": 18,
+    "offsetY": -28,
+    "texts": {
+      "none": "sem ligações aqui",
+      "activates": "ativa",
+      "charges": "carga",
+      "copies": "copia"
+    }
+  },
+  "tutorial": {
+    "storageKey": "td-tutorial-done-v1",
+    "autoCloseMs": 9000,
+    "skipLabel": "Pular tutorial",
+    "advanceLabel": "Avançar",
+    "closeLabel": "Ok",
+    "steps": [
+      {
+        "id": "buy",
+        "text": "Compre uma torre na loja (arraste o slot ou aperte 1 a 5) e coloque perto do caminho."
+      },
+      {
+        "id": "call",
+        "text": "Aperte Espaço (ou o botão no topo) para chamar a onda."
+      },
+      {
+        "id": "income",
+        "text": "O ouro vem no fim de cada onda. Guardar ouro rende juros: 10% do que sobrar, até 10."
+      },
+      {
+        "id": "nexus",
+        "text": "Limite de torres cheio: evolua o núcleo (E) para ter mais torres."
+      },
+      {
+        "id": "positions",
+        "text": "A posição das torres importa: algumas reagem às vizinhas. Experimente!"
+      }
+    ]
+  }
+}

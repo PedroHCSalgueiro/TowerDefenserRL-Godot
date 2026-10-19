@@ -1,0 +1,63 @@
+# Tower Defense Roguelite (Godot)
+
+Tower defense roguelite 2.5D para PC (Steam) e navegador (mouse e teclado).
+O jogador compra torres numa loja com reroll, posiciona em grade e
+monta composições de classes cujos gatilhos disparam em cadeia
+contra hordas de centenas de inimigos.
+
+Este repositório é o **porte para o Godot** do jogo feito em Phaser 4 + TypeScript
+(`PedroHCSalgueiro/TowerDefenserRL`). O Phaser continua como **referência** e fonte
+dos testes. Clone local de consulta: `C:\Users\pedro\Documents\TowerDefenserRL-reference`
+(somente leitura; nunca copiar código do Phaser para cá).
+
+Plano do porte: `docs/plano-porte-godot.md`.
+
+## Links do Notion (use sempre estes, não precisa buscar)
+- Mini-GDD (regras do jogo): https://app.notion.com/p/3e4c656560ae81f4b23dc4c4ece91da4
+- Documento Técnico (do Phaser; arquitetura continua valendo): https://app.notion.com/p/3e5c656560ae81e991d3fc03b62227a4
+- Diário de Desenvolvimento: https://app.notion.com/p/3e5c656560ae811f9631fdd9de2301f0
+- Teste Godot: https://app.notion.com/p/3f9c656560ae81fb8a12ce9a4607b871
+- Direção de Arte: https://app.notion.com/p/3ebc656560ae8102a571de5ca487830d
+- Guia de Estilo Visual — Personagens: https://app.notion.com/p/3fac656560ae8150933de77457155594
+
+Quando Pedro disser "execute a tarefa X", leia a tarefa e as seções do Mini-GDD
+citadas, apresente um plano e só então implemente.
+
+## Stack
+- Godot 4.7, **GDScript** (C# não exporta para web), renderer GL Compatibility
+- Alvos: Windows (Steam, GodotSteam depois) e Web
+- Testes: GUT (a instalar em `addons/gut`), rodando headless
+
+## Arquitetura (regra mais importante)
+- `sim/`: lógica pura em GDScript (`RefCounted`, sem `Node`, sem cenas). PROIBIDO tocar em nós aqui.
+- `render/`: nós 3D. Só lê estado e eventos da simulação.
+- `ui/`: nós `Control` + `Theme` central. Lógica de tela em "model" puro, nós só desenham.
+- `data/`: todos os números do jogo, em JSON (copiados do repo Phaser, mesma estrutura).
+- `tests/`: testes da simulação.
+- `assets/`, `scenes/`, `blender/` (com `.gdignore`): arte.
+
+## Regras
+- Nunca colocar números de jogo no código: sempre em `data/`.
+- Toda regra da simulação vem com teste em `tests/`.
+- Simulação determinística: RNG com semente portado de `rng.ts` do Phaser (mesmo algoritmo),
+  nunca `randf()`/`RandomNumberGenerator` na sim.
+- Tick fixo (30/s); render interpola; velocidade 1x/2x/3x = mais ticks por quadro.
+- Porte arquivo a arquivo, **com o teste correspondente junto**. Paridade com o Phaser
+  é provada por golden files (mesma semente + mesmos comandos = mesmo estado por onda).
+- Cuidado com TS vs GDScript: divisão inteira, `Math.round`/`floor`, `int` vs `float`.
+- Não adicionar dependências/addons sem justificar.
+- Tarefas pequenas: uma por vez, testes passando no fim.
+- Arte pesada (`.glb`, `.png`, `.jpg`, `.blend`) vai pelo Git LFS (ver `.gitattributes`).
+  Antes de exportar para web, reduzir modelos e texturas.
+
+## Ao terminar cada tarefa (obrigatório)
+1. Marcar o status da tarefa no Notion (banco de tarefas do porte, a criar).
+2. Adicionar entrada no topo do "Diário de Desenvolvimento", seguindo o modelo da página.
+3. Nunca decidir regra de jogo sozinho: registrar em "Perguntas de design" e perguntar ao Pedro.
+4. Commit e push antes de marcar como Feito.
+
+## Comandos (a preencher conforme a instalação do Godot e do GUT)
+- Abrir editor: `godot --editor --path .`
+- Rodar jogo: `godot --path .`
+- Testes: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
+- Export: `godot --headless --export-release "Windows" build/windows/game.exe` e `"Web"` (presets a criar)

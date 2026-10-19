@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://render/sir_aldric.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/sir-aldric.glb" id="2"]
+
+[node name="SirAldric" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Modelo" parent="." instance=ExtResource("2")]
+transform = Transform3D(0.656, 0, 0, 0, 0.656, 0, 0, 0, 0.656, 0, 0.08, 0)
