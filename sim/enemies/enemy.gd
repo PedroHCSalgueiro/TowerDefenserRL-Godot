@@ -20,6 +20,14 @@ var distance := 0.0
 var prev_x := 0.0
 var prev_y := 0.0
 
+# Cache de desempenho (derivado; não faz parte do estado da simulação): preenchido no spawn.
+## Dados do tipo, rota, comprimento da rota, segmento atual da rota e distância por tick.
+var type_data: EnemyData.EnemyType = null
+var route: Route = null
+var route_length := 0.0
+var seg := 0
+var step := -1.0
+
 
 func _init(p_slot: int = 0) -> void:
 	slot = p_slot

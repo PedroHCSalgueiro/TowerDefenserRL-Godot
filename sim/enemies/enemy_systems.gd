@@ -21,7 +21,13 @@ static func spawn_enemy(ctx: TickContext, routes: Dictionary, data: EnemyData, e
 	enemy.hp = type.hp * hp_multiplier * (data.elite_hp_multiplier if elite else 1.0)
 	enemy.max_hp = enemy.hp
 	enemy.distance = distance
-	(routes[type.movement] as Route).sample_into(distance, enemy)
+	var route: Route = routes[type.movement]
+	route.sample_into(distance, enemy)
+	enemy.type_data = type
+	enemy.route = route
+	enemy.route_length = route.length
+	enemy.seg = route.find_segment(distance)
+	enemy.step = -1.0
 	# Sem isso, um slot reaproveitado seria interpolado a partir da posição antiga.
 	enemy.prev_x = enemy.x
 	enemy.prev_y = enemy.y
@@ -41,8 +47,18 @@ static func create_movement_system(routes: Dictionary, data: EnemyData, ticks_pe
 		for enemy: Enemy in ctx.state.enemies.slots:
 			if not enemy.active:
 				continue
-			var type := data.get_type(enemy.type)
+			var route := enemy.route
+			if route == null:
+				# Inimigo posto à mão (testes): sem cache, usa o caminho lento.
+				var slow_type := data.get_type(enemy.type)
+				enemy.prev_x = enemy.x
+				enemy.prev_y = enemy.y
+				enemy.distance += data.enemy_speed(slow_type, enemy.elite) / ticks_per_second
+				(routes[slow_type.movement] as Route).sample_into(enemy.distance, enemy)
+				continue
+			if enemy.step < 0.0:
+				enemy.step = data.enemy_speed(enemy.type_data, enemy.elite) / ticks_per_second
 			enemy.prev_x = enemy.x
 			enemy.prev_y = enemy.y
-			enemy.distance += data.enemy_speed(type, enemy.elite) / ticks_per_second
-			(routes[type.movement] as Route).sample_into(enemy.distance, enemy)
+			enemy.distance += enemy.step
+			enemy.seg = route.sample_cursor(enemy.distance, enemy, enemy.seg)

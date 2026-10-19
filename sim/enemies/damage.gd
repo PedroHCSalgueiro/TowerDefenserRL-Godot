@@ -9,12 +9,16 @@ extends RefCounted
 ##   "chain": ChainMark    — cadeia do tiro (projétil de gatilho); padrão: sem cadeia
 
 
+## Sem opções (compartilhado, só leitura): evita criar um Dictionary vazio a cada chamada.
+const NO_OPTIONS := {}
+
+
 ## Aplica `raw_damage` já descontando a armadura e devolve o dano efetivo.
 ## Se a vida chegar a zero, o inimigo volta para o pool e `enemyKilled` é
 ## emitido, com o ponto da morte e o peso do abate. `tower_id` null = núcleo.
 static func damage_enemy(ctx: TickContext, data: EnemyData, enemy: Enemy, raw_damage: float,
-		tower_id: Variant, options: Dictionary = {}) -> float:
-	var type := data.get_type(enemy.type)
+		tower_id: Variant, options: Dictionary = NO_OPTIONS) -> float:
+	var type := enemy.type_data if enemy.type_data != null else data.get_type(enemy.type)
 	var damage := raw_damage if options.get("ignoreArmor", false) \
 			else Armor.apply_armor(raw_damage, type.armor, data.armor_scale)
 	enemy.hp -= damage

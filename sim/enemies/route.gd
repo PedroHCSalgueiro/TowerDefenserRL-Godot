@@ -69,6 +69,47 @@ func sample_into(distance: float, out: MutablePoint) -> void:
 	out.y = _ys[lo] + (_ys[hi] - _ys[lo]) * t
 
 
+## Segmento que contém a distância (maior índice com distância acumulada <= distance), por busca binária.
+func find_segment(distance: float) -> int:
+	var last := _cumulative.size() - 1
+	if distance <= 0.0:
+		return 0
+	if distance >= length:
+		return maxi(last - 1, 0)
+	var lo := 0
+	var hi := last
+	while hi - lo > 1:
+		var mid := (lo + hi) >> 1
+		if _cumulative[mid] <= distance:
+			lo = mid
+		else:
+			hi = mid
+	return lo
+
+
+## Como sample_into, mas parte do segmento seg da amostra anterior (a distância só cresce):
+## evita a busca binária a cada tick. Devolve o segmento novo. O resultado é idêntico ao da busca.
+func sample_cursor(distance: float, out: MutablePoint, seg: int) -> int:
+	var last := _cumulative.size() - 1
+	if distance <= 0.0:
+		out.x = _xs[0]
+		out.y = _ys[0]
+		return 0
+	if distance >= length:
+		out.x = _xs[last]
+		out.y = _ys[last]
+		return maxi(last - 1, 0)
+	var lo := seg
+	while lo + 1 < last and _cumulative[lo + 1] <= distance:
+		lo += 1
+	var hi := lo + 1
+	var start := _cumulative[lo]
+	var t := (distance - start) / (_cumulative[hi] - start)
+	out.x = _xs[lo] + (_xs[hi] - _xs[lo]) * t
+	out.y = _ys[lo] + (_ys[hi] - _ys[lo]) * t
+	return lo
+
+
 ## Rotas de um mapa: {"ground": Route, "air": Route}.
 static func build_routes(map: SimMap) -> Dictionary:
 	var air_points: Array[Vector2i] = [map.entrance, map.nexus]

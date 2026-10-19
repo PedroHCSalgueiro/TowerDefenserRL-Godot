@@ -15,6 +15,8 @@ extends RefCounted
 ## O alvo normal da torre agora: o melhor pelo modo de mira, dentro do alcance.
 static func find_tower_target(index: SpatialIndex, state: Object, tower: Tower,
 		type: TowerData.TowerType, scores: Dictionary) -> Enemy:
+	if type.target_mode == "first":
+		return index.find_first(state, float(tower.x), float(tower.y), type.range)
 	return index.find_best(state, float(tower.x), float(tower.y), type.range, scores[type.target_mode])
 
 

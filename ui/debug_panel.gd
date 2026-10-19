@@ -17,6 +17,10 @@ class Profiler:
 	var total_ms := 0.0
 	var max_ms := 0.0
 	var count := 0
+	## Totais desde o começo (não zeram), para o resumo de desempenho.
+	var grand_total_ms := 0.0
+	var grand_max_ms := 0.0
+	var grand_count := 0
 
 	func now() -> float:
 		return Time.get_ticks_usec() / 1000.0
@@ -25,6 +29,9 @@ class Profiler:
 		total_ms += duration_ms
 		max_ms = maxf(max_ms, duration_ms)
 		count += 1
+		grand_total_ms += duration_ms
+		grand_max_ms = maxf(grand_max_ms, duration_ms)
+		grand_count += 1
 
 	func average() -> float:
 		return total_ms / float(count) if count > 0 else 0.0
@@ -238,6 +245,13 @@ func _spawn_enemies() -> void:
 	var idx := _enemy_option.selected
 	_send({"type": "debugSpawnEnemies", "count": int(_enemy_count.value),
 			"enemyType": null if idx == 0 else _enemy_ids[idx - 1], "layout": _layout()})
+
+
+## Resumo de desempenho desde o começo da run (para medições por linha de comando).
+func perf_summary() -> String:
+	return "FPS %d | tick médio %.3f ms, máx %.3f ms (%d ticks) | ticks descartados %d" % [
+			Engine.get_frames_per_second(), _profiler.grand_total_ms / maxf(1.0, float(_profiler.grand_count)),
+			_profiler.grand_max_ms, _profiler.grand_count, _runner.clock.dropped_ticks]
 
 
 ## Chame a cada quadro.

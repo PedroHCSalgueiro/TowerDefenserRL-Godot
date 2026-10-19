@@ -13,9 +13,12 @@ static func create_nexus_contact_system(routes: Dictionary, data: EnemyData) -> 
 		for enemy: Enemy in state.enemies.slots:
 			if not enemy.active:
 				continue
-			var type := data.get_type(enemy.type)
-			if enemy.distance < (routes[type.movement] as Route).length:
+			if enemy.route != null:
+				if enemy.distance < enemy.route_length:
+					continue
+			elif enemy.distance < (routes[data.get_type(enemy.type).movement] as Route).length:
 				continue
+			var type := data.get_type(enemy.type)
 			var invulnerable: bool = state.debug.nexus_invulnerable
 			var damage := 0.0
 			if not invulnerable:

@@ -98,6 +98,39 @@ func find_best(state: Object, x: float, y: float, range_: float, score: Callable
 	return best
 
 
+## Atalho de `find_best` para o modo de mira "first" (menor distância que falta até o núcleo, ou seja,
+## `route_length - distance`): mesma varredura, mesmo desempate (menor id), sem Callable por inimigo.
+## Só vale para inimigos criados por `EnemySystems.spawn_enemy` (que preenchem `route_length`).
+func find_first(state: Object, x: float, y: float, range_: float) -> Enemy:
+	_ensure(state)
+	if _cols == 0:
+		return null
+	var slots: Array[Enemy] = state.enemies.slots
+	var range_sq := range_ * range_
+	var x0 := _col(x - range_)
+	var x1 := _col(x + range_)
+	var y0 := _row(y - range_)
+	var y1 := _row(y + range_)
+	var best: Enemy = null
+	var best_score := INF
+	for cy in range(y0, y1 + 1):
+		var row_base := cy * _cols
+		for cx in range(x0, x1 + 1):
+			var cell := row_base + cx
+			var end := _compact(cell, slots)
+			for i in range(_cell_start[cell], end):
+				var enemy := slots[_items[i]]
+				var dx := enemy.x - x
+				var dy := enemy.y - y
+				if dx * dx + dy * dy > range_sq:
+					continue
+				var score := enemy.route_length - enemy.distance
+				if best == null or score < best_score or (score == best_score and enemy.id < best.id):
+					best = enemy
+					best_score = score
+	return best
+
+
 ## Os `count` melhores inimigos dentro do alcance, do melhor para o pior (mesma nota
 ## e desempate de `find_best`). `out` é esvaziado e preenchido (menos de `count` se
 ## não houver tantos). Devolve `out`.
@@ -135,7 +168,23 @@ func collect_in_range(state: Object, x: float, y: float, range_: float, out: Arr
 	_ensure(state)
 	if _cols == 0:
 		return out
-	out.append_array(_in_range(state, x, y, range_))
+	var slots: Array[Enemy] = state.enemies.slots
+	var range_sq := range_ * range_
+	var x0 := _col(x - range_)
+	var x1 := _col(x + range_)
+	var y0 := _row(y - range_)
+	var y1 := _row(y + range_)
+	for cy in range(y0, y1 + 1):
+		var row_base := cy * _cols
+		for cx in range(x0, x1 + 1):
+			var cell := row_base + cx
+			var end := _compact(cell, slots)
+			for i in range(_cell_start[cell], end):
+				var enemy := slots[_items[i]]
+				var dx := enemy.x - x
+				var dy := enemy.y - y
+				if dx * dx + dy * dy <= range_sq:
+					out.append(enemy)
 	return out
 
 

@@ -520,6 +520,13 @@ func _open_for_dev() -> void:
 			_state().status = "lost"
 		"debug":
 			debug_panel.visible = true
+		"stress":
+			# Medição de desempenho: núcleo invulnerável, 30 torres dos 8 tipos em ★2 e 1.000 inimigos.
+			var cfg: Dictionary = DataLoader.load_json("debug.json")
+			runner.sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
+			runner.sim.enqueue({"type": "debugSpawnTowers", "count": 30, "towerTypes": cfg["fullScenario"]["towerTypes"],
+					"layout": "clustered", "star": 2})
+			runner.sim.enqueue({"type": "debugSetStress", "stress": {"count": 1000, "layout": "spread"}})
 
 
 func _run_dev_tools(delta: float) -> void:
@@ -529,6 +536,7 @@ func _run_dev_tools(delta: float) -> void:
 			_demo_step = 0.0
 			WaveBot.drive_for_demo(runner.sim)
 	if _args.has("shot") and _elapsed >= float(_args.get("shot-seconds", "8")):
+		print("[PERF] ", debug_panel.perf_summary())
 		var image := get_viewport().get_texture().get_image()
 		image.save_png(String(_args["shot"]))
 		get_tree().quit()
