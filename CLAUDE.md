@@ -46,6 +46,13 @@ citadas, apresente um plano e só então implemente.
 - Porte arquivo a arquivo, **com o teste correspondente junto**. Paridade com o Phaser
   é provada por golden files (mesma semente + mesmos comandos = mesmo estado por onda).
 - Cuidado com TS vs GDScript: divisão inteira, `Math.round`/`floor`, `int` vs `float`.
+  O JSON do Godot traz todo número como `float`: converta com `int()` onde é inteiro e
+  nunca divida dois `int` com `/` (no GDScript é divisão inteira). `Array.has(2.0)` não acha `2`.
+- Convenções do porte: classes/métodos/propriedades em `snake_case`; **dados que cruzam a
+  fronteira** (eventos, comandos, golden/save em JSON) mantêm as chaves do Phaser em
+  `camelCase` (ex.: `{"type": "enemySpawned", "enemyId": 7}`). Célula da grade = `Vector2i`.
+  Erros de entrada inválida: `push_error` + valor neutro (`null`), nunca exceção; teste com `assert_push_error`.
+  Nomes que colidem com o Godot ganham outro nome (`GridMap` → `SimMap`).
 - Não adicionar dependências/addons sem justificar.
 - Tarefas pequenas: uma por vez, testes passando no fim.
 - Arte pesada (`.glb`, `.png`, `.jpg`, `.blend`) vai pelo Git LFS (ver `.gitattributes`).

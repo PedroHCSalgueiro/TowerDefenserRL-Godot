@@ -24,6 +24,7 @@ referência), e commitar o JSON novo junto com o ajuste do porte.
 | Script | Gera | Cobre |
 | --- | --- | --- |
 | `gen_engine.ts` | `rng.json`, `clock.json` | `sim/engine/rng`, `sim/engine/clock` |
+| `gen_grid_sim.ts` | `grid.json`, `simulation.json` | `sim/grid/*`, `sim/engine/simulation` + `simulation_runner` (com sistema de teste; RNG reiniciado em `hashSeed`, pois o `createRunState` real já sorteia a loja) |
 
 ## Convenções
 
