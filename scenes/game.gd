@@ -48,6 +48,7 @@ var _demo_step := 0.0
 
 
 func _ready() -> void:
+	FontSetup.install()
 	_parse_args()
 	map = SimMap.load_map(DataLoader.load_json("map.json"))
 	seed_text = _args.get("seed", forced_seed if forced_seed != "" else _random_seed())
@@ -534,7 +535,9 @@ func _run_dev_tools(delta: float) -> void:
 		_demo_step += delta
 		if _demo_step > 0.8:
 			_demo_step = 0.0
-			WaveBot.drive_for_demo(runner.sim)
+			# O bot fica em dev/ (fora da exportação): carrega só se existir.
+			if ResourceLoader.exists("res://dev/wave_bot.gd"):
+				load("res://dev/wave_bot.gd").drive_for_demo(runner.sim)
 	if _args.has("shot") and _elapsed >= float(_args.get("shot-seconds", "8")):
 		print("[PERF] ", debug_panel.perf_summary())
 		var image := get_viewport().get_texture().get_image()

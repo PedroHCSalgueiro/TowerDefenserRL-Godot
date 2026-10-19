@@ -22,3 +22,6 @@ assets/sir-aldric_*.jpg
 assets/sir-aldric_*.jpg.import
 assets/sir-aldric_*.png
 assets/sir-aldric_*.png.import
+
+# Saídas de exportação
+build/
