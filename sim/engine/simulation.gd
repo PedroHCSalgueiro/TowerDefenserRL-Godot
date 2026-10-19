@@ -7,7 +7,7 @@ extends RefCounted
 ## ("playing" | "lost" | "won"), `command_queue` (Array) e `rewards.screen`.
 ## Um sistema é um Callable que recebe um `TickContext`.
 ##
-## Ainda não portado: `restore(json)` e `serialize()` (entram com o save, Fase 4).
+
 
 var rng: Rng
 var _events := EventBus.new()
@@ -69,6 +69,17 @@ func step() -> void:
 		if frozen and not _frozen_safe.has(system):
 			continue
 		system.call(ctx)
+
+
+## O estado da run em JSON (floats exatos; ver `RunStateIO`).
+func serialize() -> String:
+	return RunStateIO.serialize(_state)
+
+
+## Simulação restaurada de `serialize()`. `map`: o mapa da run. null se o save for inválido.
+static func restore(text: String, systems: Array, map: SimMap) -> Simulation:
+	var restored := RunStateIO.deserialize(text, map)
+	return Simulation.new(restored, systems) if restored != null else null
 
 
 func drain_events() -> Array:
