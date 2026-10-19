@@ -2,6 +2,10 @@ class_name Golden
 extends RefCounted
 ## Carrega os golden files gerados a partir do Phaser (tests/golden/*.json).
 ## Para regenerar: tools/golden/README.md.
+##
+## Floats que precisam bater BIT A BIT vêm gravados como texto com o padrão de
+## bits IEEE-754 (inteiro de 64 bits em decimal): o parser de JSON do Godot não
+## garante o último bit de um float. Compare com `bits_of(valor) == parse_bits(texto)`.
 
 const DIR := "res://tests/golden/"
 
@@ -16,3 +20,21 @@ static func load_json(file_name: String) -> Variant:
 		push_error("golden file inválido: %s (linha %d)" % [path, json.get_error_line()])
 		return null
 	return json.data
+
+
+## Padrão de bits IEEE-754 (64) do float, como int com sinal.
+static func bits_of(value: float) -> int:
+	return PackedFloat64Array([value]).to_byte_array().decode_s64(0)
+
+
+## Lê um padrão de bits gravado como texto decimal.
+static func parse_bits(text: Variant) -> int:
+	return String(text).to_int()
+
+
+## Float correspondente a um padrão de bits gravado como texto (para mensagens de erro).
+static func float_of_bits(text: Variant) -> float:
+	var bytes := PackedByteArray()
+	bytes.resize(8)
+	bytes.encode_s64(0, parse_bits(text))
+	return bytes.decode_double(0)
