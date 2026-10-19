@@ -50,3 +50,24 @@ func test_run_ouro_ganho_e_abates_mais_bonus_mais_juros() -> void:
 	assert_gt(waves_ended, 0, "pelo menos uma onda fechou")
 	assert_gt(kills_by_wave.get(1, 0), 0, "abates da onda 1")
 	assert_eq(sim.state.stats.gold_earned, expected, "ouro ganho = abates + juros + bônus + antecipado")
+
+
+func test_primeira_rodada_so_tem_cartas_comuns() -> void:
+	var map := SimMap.load_map(DataLoader.load_json("map.json"))
+	var towers := TowerData.game_data()
+	for seed_text in ["a", "b", "c", "d", "e", "f", "g", "h"]:
+		var sim := Simulation.create("loja-" + seed_text, GameSystems.create(map))
+		for id: String in sim.state.shop.slots:
+			assert_eq(towers.get_type(id).rarity, "common", "loja inicial (%s)" % seed_text)
+		sim.state.gold = 1000
+		for i in 6:
+			sim.enqueue({"type": "rerollShop"})
+			sim.step()
+			for id: String in sim.state.shop.slots:
+				assert_eq(towers.get_type(id).rarity, "common", "reroll %d (%s)" % [i, seed_text])
+
+
+func test_depois_da_primeira_rodada_voltam_as_outras_raridades() -> void:
+	var economy := EconomyData.game_data()
+	assert_true(Shop.common_only(economy, 0))
+	assert_false(Shop.common_only(economy, 1))

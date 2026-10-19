@@ -58,6 +58,11 @@ static func shop_reroll_cost(economy: EconomyData, state: Object) -> int:
 	return 0 if state.shop.free_rerolls > 0 else economy.shop_reroll_cost
 
 
+## A loja só traz comuns enquanto menos de `commonOnlyWaves` ondas fecharam (`waves_closed` = `state.wave`).
+static func common_only(economy: EconomyData, waves_closed: int) -> bool:
+	return waves_closed < economy.shop_common_only_waves
+
+
 static func _draw_rarity(rng: Rng, chances: Dictionary) -> String:
 	var roll := rng.next_float() * 100.0
 	for rarity: String in EconomyData.RARITIES:
@@ -70,13 +75,15 @@ static func _draw_rarity(rng: Rng, chances: Dictionary) -> String:
 ## Loja nova: por slot, a raridade sai da tabela do nível e depois uma torre da raridade com
 ## chance igual. Na primeira loja da run, se nenhum slot trouxer a raridade garantida, um slot
 ## sorteado vira uma torre dela. `free_rerolls`: rerolls grátis da loja (bônus das recompensas).
+## `only_common`: todos os slots saem do pool de comuns (primeira rodada; ver `common_only`).
 static func new_shop(rng: Rng, economy: EconomyData, towers: TowerData, nexus_level: int,
-		is_first_shop: bool, free_rerolls: int = 0) -> ShopState:
+		is_first_shop: bool, free_rerolls: int = 0, only_common: bool = false) -> ShopState:
 	var pools := shop_pools(towers)
 	var chances := chances_for(economy, nexus_level)
 	var slots: Array = []
 	for i in economy.shop_slots:
-		var pool: Array = pools[_draw_rarity(rng, chances)]
+		var drawn := _draw_rarity(rng, chances)
+		var pool: Array = pools["common" if only_common else drawn]
 		if pool.is_empty():
 			push_error("Loja: raridade sorteada sem nenhuma torre nos dados")
 			return null
@@ -149,7 +156,8 @@ static func reroll_shop(ctx: TickContext, towers: TowerData, economy: EconomyDat
 		return false
 	var free_left: int = state.shop.free_rerolls - 1 if free else state.shop.free_rerolls
 	Gold.spend_gold(state, cost)
-	state.shop = new_shop(ctx.rng, economy, towers, shop_rarity_level(state), false, free_left)
+	state.shop = new_shop(ctx.rng, economy, towers, shop_rarity_level(state), false, free_left,
+			common_only(economy, state.wave))
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "reroll"})
 	return true
 

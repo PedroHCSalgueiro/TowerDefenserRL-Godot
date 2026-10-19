@@ -44,7 +44,7 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 	Gold.earn_gold(state, bonus)
 	Gold.earn_gold(state, early_bonus)
 	state.shop = Shop.new_shop(ctx.rng, economy, towers, Shop.shop_rarity_level(state), false,
-			mods.free_rerolls_per_shop)
+			mods.free_rerolls_per_shop, Shop.common_only(economy, state.wave))
 	ctx.emit({
 		"type": "waveEnded",
 		"tick": state.tick,

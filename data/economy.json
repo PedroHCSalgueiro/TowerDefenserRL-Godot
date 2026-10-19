@@ -7,6 +7,7 @@
   "earlyCall": { "perActiveWave": 5, "windowPercent": 75 },
   "shop": {
     "slots": 5,
+    "commonOnlyWaves": 1,
     "rerollCost": 4,
     "sellRefundPercent": 70,
     "firstShopGuarantee": "common",

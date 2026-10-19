@@ -22,6 +22,8 @@ var early_per_active_wave: int
 ## mais recente já nasceu. Depois, a chamada sai sem bônus.
 var early_window_percent: int
 var shop_slots: int
+## Nas primeiras N ondas (enquanto menos de N ondas fecharam) a loja só traz torres comuns.
+var shop_common_only_waves: int
 var shop_reroll_cost: int
 var shop_sell_refund_percent: int
 ## Raridade que a primeira loja da run precisa ter em pelo menos um slot.
@@ -89,7 +91,7 @@ static func load_data(raw: Variant) -> EconomyData:
 		_fail('"earlyCall" precisa de perActiveWave inteiro >= 0 e windowPercent inteiro de 1 a 100')
 		return null
 	var shop: Variant = raw.get("shop")
-	if not (shop is Dictionary) or not _is_int(shop.get("slots"), 1) or not _is_int(shop.get("rerollCost"), 0) \
+	if not (shop is Dictionary) or not _is_int(shop.get("slots"), 1) or not _is_int(shop.get("rerollCost"), 0) or not _is_int(shop.get("commonOnlyWaves"), 0) \
 			or not _is_int(shop.get("sellRefundPercent"), 0) or int(shop["sellRefundPercent"]) > 100 \
 			or not RARITIES.has(shop.get("firstShopGuarantee")):
 		_fail('"shop" com campos ausentes ou fora do intervalo')
@@ -129,6 +131,7 @@ static func load_data(raw: Variant) -> EconomyData:
 	data.early_per_active_wave = int(early["perActiveWave"])
 	data.early_window_percent = int(early["windowPercent"])
 	data.shop_slots = int(shop["slots"])
+	data.shop_common_only_waves = int(shop["commonOnlyWaves"])
 	data.shop_reroll_cost = int(shop["rerollCost"])
 	data.shop_sell_refund_percent = int(shop["sellRefundPercent"])
 	data.shop_first_guarantee = shop["firstShopGuarantee"]

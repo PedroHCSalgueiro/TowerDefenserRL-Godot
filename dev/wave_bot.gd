@@ -66,7 +66,7 @@ static func no_rewards() -> RewardData:
 
 
 static func bot_sim(seed_text: String, nexus_invulnerable: bool = false, options: Dictionary = {}) -> Simulation:
-	var sim := Simulation.create(seed_text, GameSystems.create(bot_map(), options))
+	var sim := Simulation.create(seed_text, GameSystems.create(bot_map(), options), options.get("economy"))
 	if nexus_invulnerable:
 		sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
 	return sim

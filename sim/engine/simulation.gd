@@ -32,8 +32,8 @@ var state: Object:
 
 
 ## Simulação nova com o RunState inicial da semente (porte de `Simulation.create`).
-static func create(seed_text: String, systems: Array = []) -> Simulation:
-	return Simulation.new(RunState.create(seed_text), systems)
+static func create(seed_text: String, systems: Array = [], economy: EconomyData = null) -> Simulation:
+	return Simulation.new(RunState.create(seed_text, economy), systems)
 
 
 ## Marca o sistema para rodar também nos ticks congelados pela tela de

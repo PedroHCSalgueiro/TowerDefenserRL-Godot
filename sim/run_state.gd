@@ -62,8 +62,8 @@ var command_queue: Array = []
 
 ## Estado inicial de uma run com a semente dada (porte de `createRunState`). A primeira loja da run
 ## sai do RNG da própria semente e garante uma comum.
-static func create(seed_text_value: String) -> RunState:
-	var economy := EconomyData.game_data()
+static func create(seed_text_value: String, economy_data: EconomyData = null) -> RunState:
+	var economy := economy_data if economy_data != null else EconomyData.game_data()
 	var nexus_data := NexusData.game_data()
 	var engine := EngineData.config()
 	var state := RunState.new()
@@ -79,5 +79,6 @@ static func create(seed_text_value: String) -> RunState:
 	state.gold = economy.starting_gold
 	state.reported_gold = economy.starting_gold
 	state.rewards = RewardsState.create(seed_text_value)
-	state.shop = Shop.new_shop(Rng.new(state), economy, TowerData.game_data(), state.nexus.level, true)
+	state.shop = Shop.new_shop(Rng.new(state), economy, TowerData.game_data(), state.nexus.level, true, 0,
+			Shop.common_only(economy, 0))
 	return state
