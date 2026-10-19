@@ -20,8 +20,9 @@ foreach ($policy in 'sequential', 'stack') {
 		if ($count -le 0) { continue }
 		$file = Join-Path $Out "$policy-$p.json"
 		$log = Join-Path $Out "$policy-$p.log"
-		$argList = @('--headless', '--path', $project, '-s', 'dev/playtest.gd', '--', "--set=$Set", "--policy=$policy",
-			"--from=$from", "--count=$count", "--interval=$Interval", "--out=$file")
+		# Caminhos com espaço precisam de aspas dentro da lista de argumentos.
+		$argList = @('--headless', '--path', "`"$project`"", '-s', 'dev/playtest.gd', '--', "--set=$Set", "--policy=$policy",
+			"--from=$from", "--count=$count", "--interval=$Interval", "`"--out=$file`"")
 		$running += Start-Process -FilePath $Godot -ArgumentList $argList -NoNewWindow -PassThru -RedirectStandardOutput $log
 	}
 }
