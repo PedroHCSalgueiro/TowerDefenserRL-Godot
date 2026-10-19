@@ -5,7 +5,7 @@ extends RngHolder
 ## do Phaser no que importa (tick 0, rng_state = hash da semente, next_entity_id 1,
 ## status "playing"). Campos novos entram aqui conforme os módulos são portados.
 
-class Rewards:
+class TestRewards:
 	extends RefCounted
 	var screen: Variant = null
 
@@ -14,7 +14,7 @@ var tick := 0
 var next_entity_id := 1
 var status := "playing"
 var command_queue: Array = []
-var rewards := Rewards.new()
+var rewards := TestRewards.new()
 var enemies := EnemyPool.create(8)
 
 

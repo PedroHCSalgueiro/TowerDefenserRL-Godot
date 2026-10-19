@@ -1,0 +1,191 @@
+class_name Shop
+extends RefCounted
+## Loja: 5 slots sorteados com reposição pelo RNG da simulação, compra, reroll e venda. Só
+## torres com raridade entram (Básica e Canhão ficam de fora). Slot comprado fica null até o
+## próximo reroll ou loja nova (porte de `shop.ts`).
+
+## Estado da loja (vai no RunState).
+class ShopState:
+	extends RefCounted
+	## Id da torre em cada slot; null = comprado.
+	var slots: Array = []
+	## Rerolls grátis que ainda restam nesta loja (bônus "Reroll grátis", T24).
+	var free_rerolls := 0
+
+
+## Ids das torres de loja de cada raridade, na ordem dos dados: {"common": [...], ...}.
+static func shop_pools(towers: TowerData) -> Dictionary:
+	var pools := {"common": [], "uncommon": [], "rare": []}
+	for id: String in towers.types:
+		var rarity: Variant = towers.types[id].rarity
+		if rarity != null:
+			pools[rarity].append(id)
+	return pools
+
+
+## Chances (em %) do nível do núcleo, preso ao último da tabela: {"common": int, ...}.
+static func chances_for(economy: EconomyData, nexus_level: int) -> Dictionary:
+	var table := economy.shop_rarity_chances
+	return table[mini(maxi(1, nexus_level), table.size()) - 1]
+
+
+## Preço da torre (-1 = não é de loja). Com desconto (bônus "Desconto", T24), o preço é
+## arredondado para o inteiro mais próximo (,5 para cima).
+static func price_of(economy: EconomyData, towers: TowerData, tower_type: String, discount_percent: float = 0.0) -> int:
+	if not towers.has_type(tower_type):
+		return -1
+	var rarity: Variant = towers.get_type(tower_type).rarity
+	if rarity == null:
+		return -1
+	var price: int = economy.shop_prices[rarity]
+	if discount_percent > 0.0:
+		return SimMath.js_round((float(price) * (100.0 - discount_percent)) / 100.0)
+	return price
+
+
+## Preço da torre na run, com o desconto das recompensas (-1 = não é de loja).
+static func shop_price(economy: EconomyData, towers: TowerData, state: Object, tower_type: String) -> int:
+	return price_of(economy, towers, tower_type, RewardMods.of(state).tower_discount_percent)
+
+
+## Nível usado na tabela de raridade da loja: o do núcleo mais o bônus "Loja melhor" (T24).
+static func shop_rarity_level(state: Object) -> int:
+	return state.nexus.level + RewardMods.of(state).shop_rarity_levels
+
+
+## Custo do próximo reroll da loja: 0 com reroll grátis sobrando.
+static func shop_reroll_cost(economy: EconomyData, state: Object) -> int:
+	return 0 if state.shop.free_rerolls > 0 else economy.shop_reroll_cost
+
+
+static func _draw_rarity(rng: Rng, chances: Dictionary) -> String:
+	var roll := rng.next_float() * 100.0
+	for rarity: String in EconomyData.RARITIES:
+		roll -= float(chances[rarity])
+		if roll < 0.0:
+			return rarity
+	return EconomyData.RARITIES[EconomyData.RARITIES.size() - 1]
+
+
+## Loja nova: por slot, a raridade sai da tabela do nível e depois uma torre da raridade com
+## chance igual. Na primeira loja da run, se nenhum slot trouxer a raridade garantida, um slot
+## sorteado vira uma torre dela. `free_rerolls`: rerolls grátis da loja (bônus das recompensas).
+static func new_shop(rng: Rng, economy: EconomyData, towers: TowerData, nexus_level: int,
+		is_first_shop: bool, free_rerolls: int = 0) -> ShopState:
+	var pools := shop_pools(towers)
+	var chances := chances_for(economy, nexus_level)
+	var slots: Array = []
+	for i in economy.shop_slots:
+		var pool: Array = pools[_draw_rarity(rng, chances)]
+		if pool.is_empty():
+			push_error("Loja: raridade sorteada sem nenhuma torre nos dados")
+			return null
+		slots.append(rng.pick(pool))
+	if is_first_shop:
+		var guaranteed := economy.shop_first_guarantee
+		var has := slots.any(func(id: String) -> bool: return towers.get_type(id).rarity == guaranteed)
+		if not has:
+			var pool: Array = pools[guaranteed]
+			if pool.is_empty():
+				push_error("Loja: raridade garantida sem nenhuma torre nos dados")
+				return null
+			slots[rng.next_int(0, slots.size() - 1)] = rng.pick(pool)
+	var shop := ShopState.new()
+	shop.slots = slots
+	shop.free_rerolls = free_rerolls
+	return shop
+
+
+## Compra o slot. Se a cópia funde com uma torre do mapa, funde na hora e a casa é ignorada;
+## senão posiciona a torre na casa. Nada muda (nem ouro, nem slot) se o slot estiver vazio,
+## faltar ouro, ou, sem fusão, o mapa estiver no limite de torres do núcleo (emite `buyRefused`),
+## a casa faltar ou for inválida ou ocupada. A fusão não ocupa casa nova e passa com o limite
+## cheio. `cell`: Vector2i, ou null para "sem casa".
+static func buy_tower(ctx: TickContext, map: SimMap, towers: TowerData, economy: EconomyData,
+		nexus: NexusData, slot: int, cell: Variant = null) -> bool:
+	var state := ctx.state
+	if slot < 0 or slot >= state.shop.slots.size():
+		return false
+	var tower_type: Variant = state.shop.slots[slot]
+	if typeof(tower_type) != TYPE_STRING:
+		return false
+	var price := shop_price(economy, towers, state, tower_type)
+	if price < 0 or state.gold < price:
+		return false
+	var plan := Fusion.plan_fusion(state.towers, towers, tower_type)
+	if plan == null and not TowerLimit.has_room_for_tower(state, nexus):
+		ctx.emit({"type": "buyRefused", "tick": state.tick, "slot": slot, "reason": "limit"})
+		return false
+	var tower: Tower
+	if plan != null:
+		tower = Fusion.apply_fusion(ctx, towers, plan, price)
+	else:
+		tower = TowerPlacement.place_tower(ctx, map, towers, tower_type, cell) if cell != null else null
+		if tower == null:
+			return false
+		tower.invested = price
+	Gold.spend_gold(state, price)
+	state.shop.slots[slot] = null
+	ctx.emit({
+		"type": "towerBought",
+		"tick": state.tick,
+		"towerId": tower.id,
+		"towerType": tower_type,
+		"slot": slot,
+		"price": price,
+		"fused": plan != null,
+	})
+	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "bought"})
+	return true
+
+
+## Troca os 5 slots por sorteio novo, pagando o reroll. Com reroll grátis sobrando, não paga e
+## gasta um deles (a loja nova não ganha outro).
+static func reroll_shop(ctx: TickContext, towers: TowerData, economy: EconomyData) -> bool:
+	var state := ctx.state
+	var free: bool = state.shop.free_rerolls > 0
+	var cost := shop_reroll_cost(economy, state)
+	if state.gold < cost:
+		return false
+	var free_left: int = state.shop.free_rerolls - 1 if free else state.shop.free_rerolls
+	Gold.spend_gold(state, cost)
+	state.shop = new_shop(ctx.rng, economy, towers, shop_rarity_level(state), false, free_left)
+	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "reroll"})
+	return true
+
+
+## Porcentagem devolvida na venda: a da economia ou a do bônus "Revenda cheia" (T24).
+static func sell_refund_percent(economy: EconomyData, state: Object) -> float:
+	var percent: Variant = RewardMods.of(state).sell_refund_percent
+	return float(percent) if percent != null else float(economy.shop_sell_refund_percent)
+
+
+## Devolução da venda: a porcentagem do valor investido, arredondada para baixo.
+static func refund_for(invested: int, percent: float) -> int:
+	return int(floorf((float(invested) * percent) / 100.0))
+
+
+## Vende a torre: sai do mapa e devolve parte do valor investido.
+static func sell_tower(ctx: TickContext, economy: EconomyData, tower_id: int) -> bool:
+	var state := ctx.state
+	var index := -1
+	for i in state.towers.size():
+		if state.towers[i].id == tower_id:
+			index = i
+			break
+	if index < 0:
+		return false
+	var tower: Tower = state.towers[index]
+	state.towers.remove_at(index)
+	var refund := refund_for(tower.invested, sell_refund_percent(economy, state))
+	state.gold += refund
+	ctx.emit({
+		"type": "towerSold",
+		"tick": state.tick,
+		"towerId": tower_id,
+		"towerType": tower.type,
+		"x": tower.x,
+		"y": tower.y,
+		"refund": refund,
+	})
+	return true

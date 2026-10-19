@@ -43,6 +43,22 @@ static func make_sim() -> Simulation:
 	return Simulation.new(TestRunState.new("test"), [spawn_system, movement])
 
 
+## Coloca um inimigo direto no estado, numa posição exata (sem passar pelo spawn).
+static func place(state: Object, type: String, x: float, y: float, hp: float = 10.0) -> Enemy:
+	var enemy: Enemy = state.enemies.acquire()
+	enemy.id = state.next_entity_id
+	state.next_entity_id += 1
+	enemy.type = type
+	enemy.hp = hp
+	enemy.max_hp = hp
+	enemy.distance = 0.0
+	enemy.x = x
+	enemy.prev_x = x
+	enemy.y = y
+	enemy.prev_y = y
+	return enemy
+
+
 static func spawn(sim: Simulation, enemy_type: String, count: int = 1) -> void:
 	for i in count:
 		sim.enqueue({"type": "spawnEnemy", "enemyType": enemy_type})

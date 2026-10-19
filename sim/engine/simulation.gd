@@ -7,8 +7,7 @@ extends RefCounted
 ## ("playing" | "lost" | "won"), `command_queue` (Array) e `rewards.screen`.
 ## Um sistema é um Callable que recebe um `TickContext`.
 ##
-## Ainda não portado (dependem do RunState): `create(seed)`, `restore(json)` e
-## `serialize()`. Entram junto com `sim/state.gd`.
+## Ainda não portado: `restore(json)` e `serialize()` (entram com o save, Fase 4).
 
 var rng: Rng
 var _events := EventBus.new()
@@ -28,6 +27,11 @@ func _init(run_state: Object, systems: Array = []) -> void:
 var state: Object:
 	get:
 		return _state
+
+
+## Simulação nova com o RunState inicial da semente (porte de `Simulation.create`).
+static func create(seed_text: String, systems: Array = []) -> Simulation:
+	return Simulation.new(RunState.create(seed_text), systems)
 
 
 ## Marca o sistema para rodar também nos ticks congelados pela tela de
