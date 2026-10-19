@@ -1,0 +1,188 @@
+class_name TowerView
+extends Node3D
+## Desenha as torres (porte de `TowerView.ts`): um bloco na cor da classe principal com uma
+## "tampa" na cor da segunda classe, as estrelas acima, o alcance da torre selecionada, o flash dos
+## gatilhos, o brilho da fusão e o tremor de "travada". Um nó por torre, criado e removido conforme
+## o estado.
+
+const BODY_SIZE := Vector3(0.42, 0.56, 0.42)
+const FLASH_MS := 280.0
+
+class TowerNode:
+	extends Node3D
+	var body: MeshInstance3D
+	var cap: MeshInstance3D
+	var stars: Node3D
+	var star_count := 0
+	var body_material: StandardMaterial3D
+	## Brilho do gatilho (0..1) e pulso da fusão (0..1).
+	var flash := 0.0
+	var merge := 0.0
+	## Tremor de "travada": tempo que falta, em ms.
+	var shake_ms := 0.0
+	var home := Vector3.ZERO
+
+var _data: TowerData
+var _nodes: Dictionary = {}  # id -> TowerNode
+var _range_disc: MeshInstance3D
+var _range_ring: MeshInstance3D
+var _star_mesh: SphereMesh
+var _star_material: StandardMaterial3D
+var _cfg: Dictionary
+
+
+func setup(data: TowerData) -> void:
+	_data = data
+	_cfg = RenderConfig.data()["towers"]
+	var range_cfg: Dictionary = _cfg["range"]
+	_range_disc = MeshUtil.instance(MeshUtil.disc_mesh(), MeshUtil.flat_material(
+			RenderConfig.color(range_cfg["fillColor"], range_cfg["fillAlpha"])), self)
+	_range_ring = MeshUtil.instance(MeshUtil.ring_mesh(0.02), MeshUtil.flat_material(
+			RenderConfig.color(range_cfg["lineColor"], range_cfg["lineAlpha"])), self)
+	_range_disc.visible = false
+	_range_ring.visible = false
+	_star_mesh = SphereMesh.new()
+	_star_mesh.radius = 0.07
+	_star_mesh.height = 0.14
+	_star_mesh.radial_segments = 8
+	_star_mesh.rings = 4
+	_star_material = MeshUtil.flat_material(RenderConfig.color(_cfg["stars"]["color"]))
+
+
+## Sincroniza os nós com as torres do estado. `selected_cell`: Vector2i ou null.
+func draw(state: Object, selected_cell: Variant, delta_ms: float) -> void:
+	var seen := {}
+	var selected: Tower = null
+	for tower: Tower in state.towers:
+		seen[tower.id] = true
+		var node: TowerNode = _nodes.get(tower.id)
+		if node == null:
+			node = _create_node(tower)
+			_nodes[tower.id] = node
+		_update_node(node, tower, delta_ms)
+		if selected_cell != null and tower.x == selected_cell.x and tower.y == selected_cell.y:
+			selected = tower
+	for id: int in _nodes.keys():
+		if not seen.has(id):
+			(_nodes[id] as TowerNode).queue_free()
+			_nodes.erase(id)
+	show_range(selected)
+
+
+## Mostra o alcance da torre (ou esconde com null).
+func show_range(tower: Tower) -> void:
+	var visible_range := tower != null
+	_range_disc.visible = visible_range
+	_range_ring.visible = visible_range
+	if not visible_range:
+		return
+	var radius := _data.get_type(tower.type).range
+	var pos := Vector3(tower.x, 0.02, tower.y)
+	_range_disc.position = pos
+	_range_ring.position = pos + Vector3(0, 0.005, 0)
+	_range_disc.scale = Vector3(radius, 1.0, radius)
+	_range_ring.scale = Vector3(radius, 1.0, radius)
+
+
+func _create_node(tower: Tower) -> TowerNode:
+	var node := TowerNode.new()
+	var type := _data.get_type(tower.type)
+	var main := RenderConfig.tower_color(_data, tower.type)
+	var box := BoxMesh.new()
+	box.size = BODY_SIZE
+	node.body_material = MeshUtil.lit_material(main)
+	node.body = MeshUtil.instance(box, node.body_material, node)
+	node.body.position = Vector3(0, BODY_SIZE.y / 2.0, 0)
+	node.body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	if type.classes.size() > 1:
+		var cap_mesh := SphereMesh.new()
+		cap_mesh.radius = 0.17
+		cap_mesh.height = 0.34
+		cap_mesh.radial_segments = 12
+		cap_mesh.rings = 6
+		var second := RenderConfig.color(_cfg["classColors"].get(type.classes[1], _cfg["fallbackColor"]))
+		node.cap = MeshUtil.instance(cap_mesh, MeshUtil.lit_material(second), node)
+		node.cap.position = Vector3(0, BODY_SIZE.y + 0.1, 0)
+	node.stars = Node3D.new()
+	node.stars.position = Vector3(0, BODY_SIZE.y + 0.5, 0)
+	node.add_child(node.stars)
+	node.position = Vector3(tower.x, 0.0, tower.y)
+	node.home = node.position
+	add_child(node)
+	return node
+
+
+func _update_node(node: TowerNode, tower: Tower, delta_ms: float) -> void:
+	node.home = Vector3(tower.x, 0.0, tower.y)
+	var offset := Vector3.ZERO
+	if node.shake_ms > 0.0:
+		node.shake_ms = maxf(0.0, node.shake_ms - delta_ms)
+		var cfg: Dictionary = _cfg["locked"]
+		var phase := node.shake_ms / float(cfg["shakeMs"])
+		offset.x = sin(phase * PI) * float(cfg["shakePx"]) * RenderConfig.PX_TO_UNIT
+	node.position = node.home + offset
+	if node.star_count != tower.star:
+		node.star_count = tower.star
+		for child in node.stars.get_children():
+			child.queue_free()
+		var right := Vector3(cos(GroundProjection.azimuth()), 0.0, -sin(GroundProjection.azimuth()))
+		for i in tower.star:
+			var s := MeshUtil.instance(_star_mesh, _star_material, node.stars)
+			s.position = right * ((float(i) - float(tower.star - 1) / 2.0) * 0.17)
+	# Flash do gatilho e brilho da fusão.
+	node.flash = maxf(0.0, node.flash - delta_ms / FLASH_MS)
+	node.merge = maxf(0.0, node.merge - delta_ms / FLASH_MS)
+	var glow := maxf(node.flash, node.merge)
+	node.body_material.emission_enabled = glow > 0.0
+	node.body_material.emission = Color.WHITE
+	node.body_material.emission_energy_multiplier = glow * 1.5
+	var pulse := 1.0 + node.merge * (float(_cfg["fusion"]["flashScale"]) - 1.0)
+	node.body.scale = Vector3.ONE * pulse
+	node.body.position.y = BODY_SIZE.y / 2.0 * pulse
+
+
+## A torre disparou um gatilho visível: pisca.
+func flash(tower_id: int) -> void:
+	var node: TowerNode = _nodes.get(tower_id)
+	if node != null:
+		node.flash = 1.0
+
+
+## Eventos do quadro: fusão (brilho) e torres travadas.
+func handle_events(events: Array) -> void:
+	for event: Dictionary in events:
+		if event["type"] == "towersMerged":
+			var node: TowerNode = _nodes.get(event["towerId"])
+			if node != null:
+				node.merge = 1.0
+
+
+## Treme a torre (tentou mover com onda ativa).
+func show_locked(tower_id: int) -> void:
+	var node: TowerNode = _nodes.get(tower_id)
+	if node != null:
+		var cfg: Dictionary = _cfg["locked"]
+		node.shake_ms = float(cfg["shakeMs"]) * float(cfg["shakeRepeats"]) * 2.0
+
+
+## Posição de uma torre no mundo (para efeitos), ou null.
+func tower_position(tower_id: int) -> Variant:
+	var node: TowerNode = _nodes.get(tower_id)
+	return node.home if node != null else null
+
+
+## Id da torre atingida por um raio (a mais próxima da câmera), ou -1.
+func tower_at_ray(origin: Vector3, direction: Vector3) -> int:
+	var best := -1
+	var best_dist := INF
+	for id: int in _nodes:
+		var node: TowerNode = _nodes[id]
+		var box := AABB(node.home + Vector3(-BODY_SIZE.x / 2.0, 0.0, -BODY_SIZE.z / 2.0),
+				Vector3(BODY_SIZE.x, BODY_SIZE.y + 0.45, BODY_SIZE.z))
+		var hit: Variant = box.intersects_ray(origin, direction)
+		if hit != null:
+			var d := origin.distance_to(hit)
+			if d < best_dist:
+				best_dist = d
+				best = id
+	return best

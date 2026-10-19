@@ -232,3 +232,19 @@ static func drain(sim: Simulation) -> Array:
 	for event: Dictionary in events:
 		tally[event["type"]] = tally.get(event["type"], 0) + 1
 	return events
+
+
+## Para o modo `--demo` do jogo: a cada chamada faz UMA ação do bot (comprar, evoluir, rerolar,
+## escolher recompensa) ou, sem nada a fazer e sem onda em andamento, chama a próxima onda.
+static func drive_for_demo(sim: Simulation) -> void:
+	var state = sim.state
+	if state.status != "playing":
+		return
+	if state.rewards.screen_open():
+		sim.enqueue({"type": "chooseReward", "index": 0})
+		return
+	if not state.waves.active.is_empty():
+		return
+	if state.towers.size() < 8 and _bot_action(sim, {"left": 0}):
+		return
+	sim.enqueue({"type": "callWave"})
