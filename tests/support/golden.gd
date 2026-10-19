@@ -10,6 +10,13 @@ extends RefCounted
 const DIR := "res://tests/golden/"
 
 
+## Opções de `GameSystems.create` com a economia que o Phaser tinha quando os golden files foram gerados
+## (ouro só no fim da onda, 15 + 1 × onda). A economia do jogo mudou (ouro por abate, T-ouro-por-abate);
+## a paridade dos demais sistemas continua provada com esta.
+static func phaser_options() -> Dictionary:
+	return {"economy": EconomyData.load_data(load_json("economy_phaser.json"))}
+
+
 static func load_json(file_name: String) -> Variant:
 	var path := DIR + file_name
 	if not FileAccess.file_exists(path):

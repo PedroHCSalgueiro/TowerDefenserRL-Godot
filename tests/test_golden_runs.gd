@@ -10,7 +10,7 @@ const REPORT_KEYS := ["wave", "ticks", "kills", "peakKillsPerTick", "dropped", "
 
 func _play(s: Dictionary) -> Dictionary:
 	WaveBot.tally = {}
-	var sim := WaveBot.bot_sim(s["seed"], s["invulnerable"])
+	var sim := WaveBot.bot_sim(s["seed"], s["invulnerable"], Golden.phaser_options())
 	var reports: Array
 	if s["bot"] == "good":
 		reports = WaveBot.play_run(sim, GoodBot.bot_break, GoodBot.reward)

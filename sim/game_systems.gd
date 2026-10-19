@@ -50,7 +50,7 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 			"index": index, "enemies": enemies, "towers": towers, "classes": classes,
 			"scores": scores, "ticksPerSecond": ticks_per_second,
 		}),
-		Economy.create_gold_system(enemies),
+		Economy.create_gold_system(enemies, economy),
 		WaveSystems.create_wave_progress_system(enemies, schedules, economy, towers),
 		Rewards.create_reward_open_system(rewards, economy, classes, ticks_per_second),
 		ClassSystems.create_class_system(towers, classes),

@@ -57,17 +57,24 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "newWave"})
 
 
-## Sistema de ouro, depois dos gatilhos: soma o `gold` de cada inimigo morto no tick (por
-## qualquer autor, inclusive o núcleo). Desde a T19 todo inimigo tem `gold` 0 nos dados; a soma
-## fica para dar para voltar atrás só nos dados. Emite `goldChanged` uma vez por tick com o saldo
+## Ouro de um abate: o `gold` do tipo (`enemies.json`) mais `killGold.base + killGold.perWave × onda`
+## (onda 1 = 1 de ouro por inimigo, onda 2 = 2, ...). Inimigo sem onda (debug, onda 0) não paga o extra.
+static func kill_gold_for(economy: EconomyData, type_gold: float, wave: int) -> float:
+	if wave <= 0:
+		return type_gold
+	return type_gold + float(economy.kill_gold_base + economy.kill_gold_per_wave * wave)
+
+
+## Sistema de ouro, depois dos gatilhos: soma o ouro de cada inimigo morto no tick (por qualquer
+## autor, inclusive o núcleo; ver `kill_gold_for`). Emite `goldChanged` uma vez por tick com o saldo
 ## final, nunca um por abate. Roda também congelado (T24): o reroll das cartas gasta ouro.
-static func create_gold_system(enemies: EnemyData) -> Callable:
+static func create_gold_system(enemies: EnemyData, economy: EconomyData) -> Callable:
 	return Simulation.runs_while_frozen(func(ctx: TickContext) -> void:
 		var state := ctx.state
 		var kill_gold := 0.0
 		for event: Dictionary in ctx.tick_events:
 			if event["type"] == "enemyKilled":
-				kill_gold += enemies.get_type(event["enemyType"]).gold
+				kill_gold += kill_gold_for(economy, enemies.get_type(event["enemyType"]).gold, int(event["wave"]))
 		if kill_gold > 0.0:
 			Gold.earn_gold(state, int(kill_gold))
 		if state.gold != state.reported_gold:

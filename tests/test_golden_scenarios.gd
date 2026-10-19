@@ -11,7 +11,7 @@ func before_all() -> void:
 
 
 func _play(s: Dictionary) -> Dictionary:
-	var sim := Simulation.create(s["seed"], GameSystems.create(WaveBot.bot_map()))
+	var sim := Simulation.create(s["seed"], GameSystems.create(WaveBot.bot_map(), Golden.phaser_options()))
 	var by_tick := {}
 	for entry in s["commands"]:
 		var tick := int(entry[0])

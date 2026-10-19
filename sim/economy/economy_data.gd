@@ -11,6 +11,10 @@ var interest_percent: int
 var interest_cap: int
 var wave_bonus_base: int
 var wave_bonus_per_wave: int
+## Ouro por abate: `base + perWave × onda` do inimigo (0 para inimigo sem onda, como os do debug),
+## somado ao `gold` do tipo (`enemies.json`).
+var kill_gold_base: int
+var kill_gold_per_wave: int
 ## Chamada antecipada: `early_per_active_wave` × ondas já ativas (chamadas e não fechadas) no
 ## momento da chamada, pago quando a onda chamada fecha.
 var early_per_active_wave: int
@@ -75,6 +79,10 @@ static func load_data(raw: Variant) -> EconomyData:
 	if not (wave_bonus is Dictionary) or not _is_int(wave_bonus.get("base"), 0) or not _is_int(wave_bonus.get("perWave"), 0):
 		_fail('"waveBonus" precisa de base e perWave inteiros >= 0')
 		return null
+	var kill_gold: Variant = raw.get("killGold")
+	if not (kill_gold is Dictionary) or not _is_int(kill_gold.get("base"), 0) or not _is_int(kill_gold.get("perWave"), 0):
+		_fail('"killGold" precisa de base e perWave inteiros >= 0')
+		return null
 	var early: Variant = raw.get("earlyCall")
 	if not (early is Dictionary) or not _is_int(early.get("perActiveWave"), 0) \
 			or not _is_int(early.get("windowPercent"), 1) or int(early["windowPercent"]) > 100:
@@ -116,6 +124,8 @@ static func load_data(raw: Variant) -> EconomyData:
 	data.interest_cap = int(interest["cap"])
 	data.wave_bonus_base = int(wave_bonus["base"])
 	data.wave_bonus_per_wave = int(wave_bonus["perWave"])
+	data.kill_gold_base = int(kill_gold["base"])
+	data.kill_gold_per_wave = int(kill_gold["perWave"])
 	data.early_per_active_wave = int(early["perActiveWave"])
 	data.early_window_percent = int(early["windowPercent"])
 	data.shop_slots = int(shop["slots"])
