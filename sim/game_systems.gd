@@ -12,6 +12,9 @@ extends RefCounted
 ## o índice espacial uma única vez por tick. O índice é compartilhado pelo núcleo, pelos projéteis
 ## (troca de alvo e área), pelas torres e pelos gatilhos.
 ##
+## O sistema de estados (Lento, Atordoado, Sangramento) roda depois das torres e só entra se algum tipo de
+## torre aplica estado (`TowerData.uses_statuses`).
+##
 ## Os gatilhos enxergam todos os tiros e abates do tick; o ouro dos abates é somado depois deles, e
 ## só então a onda pode fechar (os juros já contam o ouro do último abate). As classes rodam por
 ## último: o bônus muda no tick seguinte a posicionar, vender ou fundir.
@@ -34,7 +37,7 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var index := SpatialIndex.new(float(engine["spatialCellSize"]))
 	var scores := Targeting.create_target_scores(routes, enemies)
 	var schedules := WaveSchedule.build_wave_schedules(waves, ticks_per_second)
-	return [
+	var systems: Array = [
 		Rewards.create_reward_clock_system(),
 		Commands.create_command_system(map, routes, enemies, towers, debug, schedules, economy, nexus,
 				rewards, classes, ticks_per_second),
@@ -44,8 +47,9 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		EnemySystems.create_movement_system(routes, enemies, ticks_per_second),
 		NexusSystems.create_nexus_contact_system(routes, enemies),
 		NexusSystems.create_nexus_attack_system(map.nexus, enemies, nexus, ticks_per_second, index),
-		ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius, ticks_per_second),
+		ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius, ticks_per_second, towers),
 		TowerSystems.create_tower_system(index, towers, scores, ticks_per_second, classes),
+		Status.create_status_system(enemies) if towers.uses_statuses() else Callable(),
 		TriggerEngine.create_trigger_system({
 			"index": index, "enemies": enemies, "towers": towers, "classes": classes,
 			"scores": scores, "ticksPerSecond": ticks_per_second,
@@ -55,3 +59,4 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		Rewards.create_reward_open_system(rewards, economy, classes, ticks_per_second),
 		ClassSystems.create_class_system(towers, classes),
 	]
+	return systems.filter(func(system: Callable) -> bool: return system.is_valid())

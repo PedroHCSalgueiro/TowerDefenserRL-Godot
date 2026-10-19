@@ -24,7 +24,8 @@ static func find_tower_target(index: SpatialIndex, state: Object, tower: Tower,
 ## torre vezes `damage_percent` (tiro ativado do Relé e do Relógio); no tiro em área, o bônus
 ## de Artilharia vigente neste tick aumenta o raio e o dano. `shot` = "normal" | "activated" | "extra".
 static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.TowerType, target: Enemy,
-		shot: String, classes: ClassData, damage_percent: float = 100.0, chain: ChainMark = null) -> void:
+		shot: String, classes: ClassData, damage_percent: float = 100.0, chain: ChainMark = null,
+		radius_multiplier: float = 1.0) -> void:
 	var area: bool = type.shot["kind"] == "area"
 	var shot_damage := Stars.tower_damage(type, tower)
 	if damage_percent != 100.0:
@@ -40,7 +41,7 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 	})
 	var area_radius := 0.0
 	if area:
-		area_radius = type.shot["radius"] * ClassBonuses.area_radius_multiplier(classes, ctx.state, type)
+		area_radius = type.shot["radius"] * ClassBonuses.area_radius_multiplier(classes, ctx.state, type) * radius_multiplier
 	ProjectileSystems.fire_projectile(ctx, {
 		"sourceId": tower.id,
 		"x": float(tower.x),
@@ -49,6 +50,7 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 		"speed": type.projectile_speed,
 		"areaRadius": area_radius,
 		"chain": chain,
+		"statusType": tower.type if not type.on_hit.is_empty() else "",
 	}, target)
 
 
@@ -62,6 +64,7 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 		var type: TowerData.TowerType = data.types[id]
 		if type.attacks:
 			cooldown_ticks[id] = maxi(1, SimMath.js_round(ticks_per_second / type.shots_per_second))
+	var has_auras := data.has_auras()
 
 	return func(ctx: TickContext) -> void:
 		var state := ctx.state
@@ -79,4 +82,8 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 				continue
 
 			tower.cooldown_ticks = cooldown_ticks[tower.type]
+			if has_auras:
+				var haste := Auras.attack_speed_percent(state, data, tower)
+				if haste > 0.0:
+					tower.cooldown_ticks = maxi(1, SimMath.js_round(float(tower.cooldown_ticks) / (1.0 + haste / 100.0)))
 			fire_tower_shot(ctx, tower, type, target, "normal", classes)

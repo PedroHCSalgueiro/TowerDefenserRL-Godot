@@ -54,7 +54,29 @@
         "kind": "single"
       },
       "targetMode": "first",
-      "trigger": null
+      "trigger": {
+        "when": "everyNShots",
+        "do": "stunFront",
+        "stars": [
+          {
+            "shots": 6,
+            "count": 3,
+            "seconds": 1
+          },
+          {
+            "shots": 5,
+            "count": 3,
+            "seconds": 1.25,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 4,
+            "count": 4,
+            "seconds": 1.5,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
     },
     "lyra": {
       "name": "Lyra, a Besteira",
@@ -111,7 +133,24 @@
         "kind": "single"
       },
       "targetMode": "first",
-      "trigger": null
+      "trigger": null,
+      "aura": {
+        "region": "valcoroa",
+        "stars": [
+          {
+            "attackSpeedPercent": 10,
+            "regionPercent": 20
+          },
+          {
+            "attackSpeedPercent": 15,
+            "regionPercent": 30
+          },
+          {
+            "attackSpeedPercent": 20,
+            "regionPercent": 40
+          }
+        ]
+      }
     },
     "brom": {
       "name": "Mestre Brom",
@@ -129,7 +168,29 @@
         "radius": 1
       },
       "targetMode": "first",
-      "trigger": null
+      "trigger": {
+        "when": "everyNShots",
+        "do": "empoweredShot",
+        "stars": [
+          {
+            "shots": 4,
+            "radiusMultiplier": 1.5,
+            "damagePercent": 200
+          },
+          {
+            "shots": 4,
+            "radiusMultiplier": 1.5,
+            "damagePercent": 250,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 3,
+            "radiusMultiplier": 1.75,
+            "damagePercent": 250,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
     },
     "selene": {
       "name": "Dama Selene",
@@ -175,7 +236,7 @@
       "shot": {
         "kind": "single"
       },
-      "targetMode": "first",
+      "targetMode": "strongest",
       "trigger": {
         "when": "everyNShots",
         "do": "multiShot",
@@ -198,6 +259,12 @@
             "attackDamagePercent": 125
           }
         ]
+      },
+      "onHit": {
+        "bleed": {
+          "percentPerSecond": 25,
+          "seconds": 4
+        }
       }
     },
     "mabel": {
@@ -232,7 +299,35 @@
         "kind": "single"
       },
       "targetMode": "first",
-      "trigger": null
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "stunSlowed",
+        "stars": [
+          {
+            "seconds": 8,
+            "stunSeconds": 0.5
+          },
+          {
+            "seconds": 7,
+            "stunSeconds": 0.75,
+            "attackDamagePercent": 125
+          },
+          {
+            "seconds": 6,
+            "stunSeconds": 1,
+            "attackDamagePercent": 125
+          }
+        ]
+      },
+      "onHit": {
+        "slow": {
+          "percent": 10,
+          "cap": 50,
+          "seconds": 3,
+          "bounces": 8,
+          "bounceRadius": 1.5
+        }
+      }
     }
   }
 }

@@ -6,7 +6,7 @@ extends RngHolder
 ## Convenções: propriedades em snake_case; comandos e eventos são Dictionaries com as chaves do
 ## Phaser (camelCase). `status`: "playing" | "lost" | "won".
 
-const VERSION := 15
+const VERSION := 16
 
 ## Estado do núcleo.
 class NexusState:

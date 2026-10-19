@@ -58,6 +58,8 @@ static func _when_text(when: Dictionary) -> String:
 			return "Quando uma vizinha abate um inimigo"
 		"everyNKillsInRange":
 			return "A cada %s abates no alcance" % fmt(when["kills"])
+		"everyNSeconds":
+			return "A cada %s s" % fmt(when["seconds"])
 	return ""
 
 
@@ -93,6 +95,12 @@ static func _effect_text(effect: Dictionary) -> String:
 					if effect["explodeRadius"] > 0.0 else ""
 			return "executa o inimigo com menos de %s%% da vida (a morte conta como %s)%s%s" % [
 					fmt(effect["hpPercent"]), _plural(effect["killWeight"], "abate", "abates"), boss, blast]
+		"empoweredShot":
+			return "dispara um tiro em área extra, com raio ×%s e %s%% do dano" % [fmt(effect["radiusMultiplier"]), fmt(effect["damagePercent"])]
+		"stunFront":
+			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["seconds"])]
+		"stunSlowed":
+			return "atordoa por %s s os inimigos Lentos no alcance" % fmt(effect["stunSeconds"])
 		"copyLast":
 			var from := "os últimos efeitos de %s vizinhas diferentes" % fmt(effect["copies"]) if effect["copies"] > 1 \
 					else "o último efeito de uma vizinha"

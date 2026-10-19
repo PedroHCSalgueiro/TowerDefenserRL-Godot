@@ -147,6 +147,11 @@ func enqueue_blast(tower: Tower, x: float, y: float, radius: float, percent: flo
 	_enqueue(armed, tower.id, 1.0, entry.depth + 1, entry.tick_depth + 1, true, x, y, radius, percent)
 
 
+## Segundos em ticks (no mínimo 1), como a trava de ativação.
+func seconds_to_ticks(seconds: float) -> int:
+	return _cooldown_ticks_for(seconds)
+
+
 func _cooldown_ticks_for(seconds: float) -> int:
 	return maxi(1, SimMath.js_round(seconds * _ticks_per_second))
 
@@ -177,6 +182,16 @@ func run(tick_ctx: TickContext) -> void:
 	_chains.clear()
 	for chain in triggers.chains:
 		_chains[chain.id] = chain
+
+	# Relógios das torres "a cada N segundos": andam a cada tick e, ao completar, abrem uma cadeia nova.
+	for armed in _armed:
+		if armed.star.when["kind"] == "everyNSeconds":
+			var timed := armed.tower
+			timed.trigger_counter += 1.0
+			if timed.trigger_counter >= armed.count:
+				timed.trigger_counter -= armed.count
+				_mark_fact(0, timed.id)
+				_enqueue(armed, timed.id, 1.0, 1, 1, false, 0.0, 0.0)
 
 	# Sobras do tick anterior já estão na frente; os fatos deste tick entram atrás.
 	var cursor := _convert_facts(0, 1, 1, false)
@@ -285,6 +300,8 @@ func _prepare(tick_ctx: TickContext) -> void:
 		armed.type = type
 		armed.star = star
 		armed.count = ClassBonuses.reduced_trigger_count(classes, tick_ctx.state, type, base_count) if base_count > 0 else 0
+		if when["kind"] == "everyNSeconds":
+			armed.count = _cooldown_ticks_for(when["seconds"])
 		armed.neighbor_radius = ClassBonuses.neighborhood_radius(classes, tick_ctx.state, type)
 		_armed.append(armed)
 		_armed_by_id[tower.id] = armed
@@ -448,13 +465,14 @@ func _execute(entry: TriggerState.PendingTrigger) -> void:
 		if TowerSystems.find_tower_target(index, ctx.state, tower, type, scores) == null:
 			return
 
-	# O raio em cadeia só é visível se sair: ganhar carga sem soltar não conta na cadeia.
-	var charging: bool = own["kind"] == "chargeLightning"
-	var event := _fired(armed, entry, own["kind"], not charging, null)
+	# O raio em cadeia só é visível se sair: ganhar carga sem soltar não conta na cadeia. O mesmo vale
+	# para os efeitos de estado: sem ninguém para atordoar, o gatilho não aparece na cadeia.
+	var lazy: bool = own["kind"] == "chargeLightning" or TriggerData.STATUS_EFFECTS.has(own["kind"])
+	var event := _fired(armed, entry, own["kind"], not lazy, null)
 	if TriggerEffects.run_effect(self, tower, type, own, entry, false):
 		tower.last_effect = Tower.LastEffect.new(own, _state.next_seq)
 		_state.next_seq += 1
-		if charging:
+		if lazy:
 			_count_visible(event, entry)
 
 

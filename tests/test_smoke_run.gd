@@ -5,7 +5,7 @@ extends GutTest
 
 func test_run_state_nasce_como_o_phaser() -> void:
 	var state := RunState.create("smoke")
-	assert_eq(state.version, 15)
+	assert_eq(state.version, 16)
 	assert_eq(state.gold, 10)
 	assert_eq(state.nexus.level, 1)
 	assert_eq(state.nexus.max_hp, 20)

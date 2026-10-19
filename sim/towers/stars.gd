@@ -7,7 +7,8 @@ extends RefCounted
 
 ## Estrelas que o tipo tem em dados (1 se não tem gatilho).
 static func max_stars(type: TowerData.TowerType) -> int:
-	return type.trigger.stars.size() if type.trigger != null else 1
+	var from_trigger := type.trigger.stars.size() if type.trigger != null else 1
+	return maxi(from_trigger, type.aura["stars"].size() if not type.aura.is_empty() else 1)
 
 
 ## Estrela pedida, presa entre ★1 e a última que o tipo tem.

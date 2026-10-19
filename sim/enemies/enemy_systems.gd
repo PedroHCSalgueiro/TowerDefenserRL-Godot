@@ -28,6 +28,7 @@ static func spawn_enemy(ctx: TickContext, routes: Dictionary, data: EnemyData, e
 	enemy.route_length = route.length
 	enemy.seg = route.find_segment(distance)
 	enemy.step = -1.0
+	Status.clear(enemy)
 	# Sem isso, um slot reaproveitado seria interpolado a partir da posição antiga.
 	enemy.prev_x = enemy.x
 	enemy.prev_y = enemy.y
@@ -60,5 +61,11 @@ static func create_movement_system(routes: Dictionary, data: EnemyData, ticks_pe
 				enemy.step = data.enemy_speed(enemy.type_data, enemy.elite) / ticks_per_second
 			enemy.prev_x = enemy.x
 			enemy.prev_y = enemy.y
-			enemy.distance += enemy.step
+			if enemy.stun_ticks > 0:
+				# Atordoado: fica parado 
+				pass
+			elif enemy.slow_ticks > 0:
+				enemy.distance += enemy.step * (1.0 - enemy.slow_percent / 100.0)
+			else:
+				enemy.distance += enemy.step
 			enemy.seg = route.sample_cursor(enemy.distance, enemy, enemy.seg)

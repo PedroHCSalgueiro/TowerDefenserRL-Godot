@@ -17,6 +17,8 @@ static func to_dict(state: RunState) -> Dictionary:
 			"slot": e.slot, "active": e.active, "id": e.id, "type": e.type, "wave": e.wave, "elite": e.elite,
 			"hp": e.hp, "maxHp": e.max_hp, "distance": e.distance,
 			"x": e.x, "y": e.y, "prevX": e.prev_x, "prevY": e.prev_y,
+			"slowPercent": e.slow_percent, "slowTicks": e.slow_ticks, "stunTicks": e.stun_ticks,
+			"bleedDamage": e.bleed_damage, "bleedTicks": e.bleed_ticks, "bleedSource": e.bleed_source,
 		})
 	var projectiles := []
 	for p in state.projectiles.slots:
@@ -24,7 +26,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"slot": p.slot, "active": p.active, "id": p.id, "sourceId": p.source_id, "chainId": p.chain_id,
 			"originTowerId": p.origin_tower_id, "targetId": p.target_id, "targetSlot": p.target_slot,
 			"targetX": p.target_x, "targetY": p.target_y, "retargeted": p.retargeted, "damage": p.damage,
-			"areaRadius": p.area_radius, "speed": p.speed, "x": p.x, "y": p.y, "prevX": p.prev_x, "prevY": p.prev_y,
+			"areaRadius": p.area_radius, "statusType": p.status_type, "speed": p.speed, "x": p.x, "y": p.y, "prevX": p.prev_x, "prevY": p.prev_y,
 		})
 	var towers := []
 	for t: Tower in state.towers:
@@ -156,6 +158,12 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		enemy.y = float(e["y"])
 		enemy.prev_x = float(e["prevX"])
 		enemy.prev_y = float(e["prevY"])
+		enemy.slow_percent = float(e["slowPercent"])
+		enemy.slow_ticks = e["slowTicks"]
+		enemy.stun_ticks = e["stunTicks"]
+		enemy.bleed_damage = float(e["bleedDamage"])
+		enemy.bleed_ticks = e["bleedTicks"]
+		enemy.bleed_source = e["bleedSource"]
 		if enemy.active:
 			# Caches de desempenho: refeitos da rota do tipo.
 			var type := enemy_data.get_type(enemy.type)
@@ -186,6 +194,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		proj.retargeted = p["retargeted"]
 		proj.damage = float(p["damage"])
 		proj.area_radius = float(p["areaRadius"])
+		proj.status_type = p["statusType"]
 		proj.speed = float(p["speed"])
 		proj.x = float(p["x"])
 		proj.y = float(p["y"])

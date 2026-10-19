@@ -32,6 +32,12 @@ class TowerType:
 	var target_mode: String
 	## TriggerData.TriggerDef ou null.
 	var trigger: TriggerData.TriggerDef = null
+	## Efeitos de estado que os tiros da torre aplicam no acerto (vazio = nenhum):
+	## {"slow": {"percent", "cap", "seconds", "bounces", "bounceRadius"}, "bleed": {"percentPerSecond", "seconds"}}.
+	var on_hit: Dictionary = {}
+	## Aura passiva nas vizinhas (vazio = nenhuma):
+	## {"region": String, "stars": [{"attackSpeedPercent", "regionPercent"}, ...]} (índice 0 = ★1).
+	var aura: Dictionary = {}
 
 ## Raio, em casas, em que o projétil procura um alvo novo quando o dele some.
 var projectile_retarget_radius: float
@@ -40,6 +46,28 @@ var triggers: TriggerData.TriggerRules
 var types: Dictionary = {}
 
 static var _default: TowerData = null
+
+
+## Algum tipo aplica efeito de estado (Lento, Atordoado, Sangramento)? Sem isso, o sistema de estados
+## nem entra na lista de sistemas (o conjunto Padrão não paga nada por ele).
+func uses_statuses() -> bool:
+	for id: String in types:
+		var type: TowerType = types[id]
+		if not type.on_hit.is_empty():
+			return true
+		if type.trigger != null:
+			for star in type.trigger.stars:
+				if TriggerData.STATUS_EFFECTS.has(star.effect["kind"]):
+					return true
+	return false
+
+
+## Algum tipo tem aura?
+func has_auras() -> bool:
+	for id: String in types:
+		if not (types[id] as TowerType).aura.is_empty():
+			return true
+	return false
 
 
 ## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
@@ -81,6 +109,60 @@ static func load_data(raw: Variant, classes: ClassData = null) -> TowerData:
 	if data.triggers == null:
 		return null
 	return data
+
+
+## `onHit` opcional: slow {percent, cap, seconds, bounces?, bounceRadius?} e bleed {percentPerSecond, seconds}.
+## Devolve o Dictionary normalizado ({} sem efeitos) ou null (push_error).
+static func _parse_on_hit(id: String, raw: Variant) -> Variant:
+	if raw == null:
+		return {}
+	var out := {}
+	var bad := func(why: String) -> Variant:
+		push_error('Torre inválida: "%s" tem "onHit" inválido (%s)' % [id, why])
+		return null
+	if not (raw is Dictionary) or raw.is_empty():
+		return bad.call("precisa de slow e/ou bleed")
+	for key: String in raw:
+		var spec: Variant = raw[key]
+		if not (spec is Dictionary):
+			return bad.call("%s não é um objeto" % key)
+		match key:
+			"slow":
+				if not (_is_positive(spec.get("percent")) and float(spec["percent"]) < 100.0 and _is_positive(spec.get("cap"))
+						and float(spec["cap"]) < 100.0 and _is_positive(spec.get("seconds"))):
+					return bad.call("slow precisa de percent e cap (0 a 100, exclusive) e seconds positivos")
+				var bounces := int(spec.get("bounces", 0))
+				if bounces < 0 or (bounces > 0 and not _is_positive(spec.get("bounceRadius"))):
+					return bad.call("slow com bounces precisa de bounceRadius positivo")
+				out["slow"] = {"percent": float(spec["percent"]), "cap": float(spec["cap"]),
+						"seconds": float(spec["seconds"]), "bounces": bounces,
+						"bounceRadius": float(spec.get("bounceRadius", 0.0))}
+			"bleed":
+				if not (_is_positive(spec.get("percentPerSecond")) and _is_positive(spec.get("seconds"))):
+					return bad.call("bleed precisa de percentPerSecond e seconds positivos")
+				out["bleed"] = {"percentPerSecond": float(spec["percentPerSecond"]), "seconds": float(spec["seconds"])}
+			_:
+				return bad.call("efeito desconhecido: %s" % key)
+	return out
+
+
+## `aura` opcional: {"region": id, "stars": [{"attackSpeedPercent", "regionPercent"}, ...]}.
+static func _parse_aura(id: String, raw: Variant) -> Variant:
+	if raw == null:
+		return {}
+	if not (raw is Dictionary) or typeof(raw.get("region")) != TYPE_STRING or not (raw.get("stars") is Array) \
+			or raw["stars"].is_empty() or raw["stars"].size() > TriggerData.MAX_STARS:
+		push_error('Torre inválida: "%s" tem "aura" inválida (region e de 1 a %d stars)' % [id, TriggerData.MAX_STARS])
+		return null
+	var stars: Array = []
+	for star in raw["stars"]:
+		if not (star is Dictionary) or not _is_positive(star.get("attackSpeedPercent")) \
+				or (star.has("regionPercent") and not _is_positive(star["regionPercent"])):
+			push_error('Torre inválida: "%s" tem estrela de aura inválida' % id)
+			return null
+		stars.append({"attackSpeedPercent": float(star["attackSpeedPercent"]),
+				"regionPercent": float(star.get("regionPercent", 0.0))})
+	return {"region": raw["region"], "stars": stars}
 
 
 static func _parse_shot(id: String, raw: Variant) -> Dictionary:
@@ -147,6 +229,12 @@ static func _parse_type(id: String, raw: Variant, classes: ClassData) -> TowerTy
 	var parsed := TriggerData.parse_trigger(id, raw["trigger"])
 	if not parsed["ok"]:
 		return null
+	var on_hit: Variant = _parse_on_hit(id, raw.get("onHit"))
+	if on_hit == null:
+		return null
+	var aura: Variant = _parse_aura(id, raw.get("aura"))
+	if aura == null:
+		return null
 	var type := TowerType.new()
 	type.name = raw["name"]
 	type.rarity = rarity
@@ -159,6 +247,8 @@ static func _parse_type(id: String, raw: Variant, classes: ClassData) -> TowerTy
 	type.shot = shot
 	type.target_mode = raw["targetMode"]
 	type.trigger = parsed["def"]
+	type.on_hit = on_hit
+	type.aura = aura
 	return type
 
 

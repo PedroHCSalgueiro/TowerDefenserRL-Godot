@@ -19,6 +19,15 @@ var distance := 0.0
 ## Posição no tick anterior (a atual é x/y), para a renderização interpolar.
 var prev_x := 0.0
 var prev_y := 0.0
+## Efeitos de estado (ver `Status`): ticks que faltam, 0 = sem o efeito.
+## Lento: anda `slow_percent`% mais devagar. Atordoado: não anda. Sangramento: `bleed_damage` de dano
+## por tick (sem armadura), creditado à torre `bleed_source` (id; null = ninguém).
+var slow_percent := 0.0
+var slow_ticks := 0
+var stun_ticks := 0
+var bleed_damage := 0.0
+var bleed_ticks := 0
+var bleed_source: Variant = null
 
 # Cache de desempenho (derivado; não faz parte do estado da simulação): preenchido no spawn.
 ## Dados do tipo, rota, comprimento da rota, segmento atual da rota e distância por tick.

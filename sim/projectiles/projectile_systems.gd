@@ -30,6 +30,7 @@ static func fire_projectile(ctx: TickContext, params: Dictionary, target: Enemy)
 	_aim(projectile, target)
 	projectile.retargeted = false
 	projectile.damage = params["damage"]
+	projectile.status_type = params.get("statusType", "")
 	projectile.area_radius = params["areaRadius"]
 	projectile.speed = params["speed"]
 	projectile.x = params["x"]
@@ -61,7 +62,9 @@ static func _track_target(state: Object, projectile: Projectile) -> Enemy:
 
 ## Devolve o sistema (Callable) que move os projéteis e aplica o dano.
 static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
-		retarget_radius: float, ticks_per_second: float) -> Callable:
+		retarget_radius: float, ticks_per_second: float, towers: TowerData = null) -> Callable:
+	if towers == null:
+		towers = TowerData.game_data()
 	var hits: Array = []
 	# Cadeia do projétil que está causando dano (reaproveitada).
 	var mark := ChainMark.new(0, null)
@@ -86,6 +89,8 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 			var before := enemy.hp
 			Damage.damage_enemy(ctx, enemies, enemy, projectile.damage, projectile.source_id, damage_options)
 			event["damage"] += before - enemy.hp
+			if projectile.status_type != "":
+				Status.apply_on_hit(ctx, towers, index, enemy, projectile, ticks_per_second)
 
 	return func(ctx: TickContext) -> void:
 		var state := ctx.state
@@ -120,6 +125,8 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 					explode.call(ctx, projectile, target.x, target.y)
 				else:
 					Damage.damage_enemy(ctx, enemies, target, projectile.damage, projectile.source_id, damage_options)
+					if projectile.status_type != "":
+						Status.apply_on_hit(ctx, towers, index, target, projectile, ticks_per_second)
 			else:
 				projectile.x += (dx / dist) * step
 				projectile.y += (dy / dist) * step

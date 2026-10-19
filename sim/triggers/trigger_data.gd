@@ -44,6 +44,8 @@ static var WHEN_PARAMS := {
 	"neighborKills": [],
 	## Completa N abates dentro do alcance (qualquer autor; abate duplo conta 2).
 	"everyNKillsInRange": [_count("kills")],
+	## A cada N segundos (o relógio da torre anda a cada tick; pausa com a tela de recompensa).
+	"everyNSeconds": [_positive("seconds")],
 }
 
 ## Parâmetros de cada "o quê". Porcentagens de dano são do dano da torre.
@@ -71,7 +73,17 @@ static var DO_PARAMS := {
 			_positive("explodeRadius", null, 0), _positive("explodeDamagePercent", null, 0)],
 	## `powerPercent`: escala o dano do efeito copiado. `copies`: quantos efeitos copia.
 	"copyLast": [_positive("powerPercent", null, 100), _count("copies", 1)],
+	## Atordoa os `count` inimigos mais à frente da fila, no alcance, por `seconds`.
+	"stunFront": [_count("count"), _positive("seconds")],
+	## Tiro em área do alvo normal, com o raio ×`radiusMultiplier` e `damagePercent`% do dano.
+	"empoweredShot": [_positive("radiusMultiplier"), _positive("damagePercent")],
+	## Atordoa por `stunSeconds` os inimigos no alcance que já estão Lentos.
+	"stunSlowed": [_positive("stunSeconds")],
 }
+
+## "O quê" que aplicam efeitos de estado: precisam do sistema de estados e só contam como visíveis
+## na cadeia quando acertam alguém.
+const STATUS_EFFECTS := ["stunFront", "stunSlowed"]
 
 ## Parâmetro de estrela que vale para qualquer gatilho: multiplica o dano do ataque
 ## normal da torre (e, com ele, tudo que é % do dano dela).

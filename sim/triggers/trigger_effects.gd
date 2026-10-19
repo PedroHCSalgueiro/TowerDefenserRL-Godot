@@ -332,4 +332,52 @@ static func run_effect(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 		"execute":
 			_execute(env, tower, type, effect, entry)
 			return true
+		"empoweredShot":
+			return _empowered_shot(env, tower, type, effect, entry)
+		"stunFront":
+			return _stun_front(env, tower, type, effect)
+		"stunSlowed":
+			return _stun_slowed(env, tower, type, effect)
 	return false
+
+
+## Tiro em área extra, maior e mais forte, no alvo normal (o "tiro carregado" do Mestre Brom). Não
+## conta como tiro normal. Devolve se saiu.
+static func _empowered_shot(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary,
+		entry: TriggerState.PendingTrigger) -> bool:
+	var target := TowerSystems.find_tower_target(env.index, env.ctx.state, tower, type, env.scores)
+	if target == null:
+		return false
+	TowerSystems.fire_tower_shot(env.ctx, tower, type, target, "extra", env.classes, e["damagePercent"],
+			ChainMark.new(entry.chain_id, entry.origin_tower_id), e["radiusMultiplier"])
+	return true
+
+
+## Atordoa os `count` inimigos mais à frente (pelo modo "first") dentro do alcance. Devolve se atordoou alguém.
+static func _stun_front(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), type.range,
+			env.scores["first"], int(e["count"]), _spread_targets)
+	if targets.is_empty():
+		return false
+	var ticks := env.seconds_to_ticks(e["seconds"])
+	for enemy: Enemy in targets:
+		Status.apply_stun(enemy, ticks)
+	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun",
+			"count": targets.size()})
+	return true
+
+
+## Atordoa os inimigos no alcance que já estão Lentos. Devolve se atordoou alguém.
+static func _stun_slowed(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var ticks := env.seconds_to_ticks(e["stunSeconds"])
+	var count := 0
+	for enemy: Enemy in _collect_sorted(env, float(tower.x), float(tower.y), type.range):
+		if enemy.slow_ticks > 0:
+			Status.apply_stun(enemy, ticks)
+			count += 1
+	if count == 0:
+		return false
+	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun", "count": count})
+	return true

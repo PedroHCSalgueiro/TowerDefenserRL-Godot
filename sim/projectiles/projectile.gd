@@ -22,6 +22,8 @@ var target_y := 0.0
 ## Já trocou de alvo uma vez (não troca de novo).
 var retargeted := false
 var damage := 0.0
+## Tipo da torre que atirou, quando o tipo aplica efeitos no acerto (`onHit`); "" = nenhum.
+var status_type := ""
 ## Raio do tiro em área, em casas; 0 = tiro único.
 var area_radius := 0.0
 ## Velocidade em casas por segundo.
