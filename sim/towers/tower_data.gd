@@ -8,7 +8,7 @@ extends RefCounted
 ## segurança do motor.
 
 ## Raridade para a loja (T10). Torres de teste não têm (null).
-const RARITIES := ["common", "uncommon", "rare"]
+const RARITIES := ["common", "uncommon", "rare", "legendary"]
 ## Cada torre tem exatamente 2 classes (Mini-GDD, Sistema 1).
 const CLASSES_PER_TOWER := 2
 

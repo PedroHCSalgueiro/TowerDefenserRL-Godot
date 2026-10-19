@@ -107,7 +107,7 @@
     },
     "shopRarity": {
       "name": "Loja melhor",
-      "text": "Raridade da loja como se o núcleo estivesse um nível acima.",
+      "text": "A loja passa a oferecer as raridades da faixa de ondas seguinte.",
       "category": "nexus",
       "repeatable": false,
       "effect": {

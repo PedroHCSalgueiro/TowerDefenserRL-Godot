@@ -62,7 +62,7 @@ static func available_rewards(state: Object, data: RewardData, economy: EconomyD
 		if not reward.repeatable and taken.has(reward.id):
 			continue
 		if reward.effect["kind"] == "shopRarityLevels":
-			if state.nexus.level < economy.shop_rarity_chances.size():
+			if Shop.can_improve_rarity(economy, state):
 				out.append(reward)
 			continue
 		out.append(reward)

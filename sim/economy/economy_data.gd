@@ -3,7 +3,8 @@ extends RefCounted
 ## Economia da run e regras da loja, lidas de `data/economy.json` (porte de `economyData.ts`).
 ## Chances em porcentagem (cada nível soma 100); `rarity_chances[n - 1]` é o nível `n` do núcleo.
 
-const RARITIES := ["common", "uncommon", "rare"]
+## Raridades em ordem. "legendary" é opcional nos dados (o conjunto Padrão não usa): sem ele, preço e chance valem 0.
+const RARITIES := ["common", "uncommon", "rare", "legendary"]
 
 var starting_gold: int
 var nexus_start_level: int
@@ -34,6 +35,11 @@ var shop_first_guarantee: String
 var shop_prices: Dictionary = {}
 ## Array de Dictionary rarity -> int, índice 0 = nível 1 do núcleo.
 var shop_rarity_chances: Array = []
+## Como a loja escolhe a raridade: "nexusLevel" (tabela por nível do núcleo, a regra do Phaser) ou "wave" (tabela
+## por onda: `rarity_by_wave`, cada faixa vale da onda `fromWave` até a seguinte).
+var rarity_mode := "nexusLevel"
+## Modo "wave": [{"fromWave": int, "chances": Dictionary rarity -> %}], `fromWave` crescente e a primeira = 1.
+var rarity_by_wave: Array = []
 
 static var _default: EconomyData = null
 
@@ -63,6 +69,9 @@ static func _by_rarity(p_name: String, raw: Variant, min_value: int) -> Dictiona
 		return {}
 	var out := {}
 	for r: String in RARITIES:
+		if r == "legendary" and not raw.has(r):
+			out[r] = 0
+			continue
 		if not _is_int(raw.get(r), min_value):
 			_fail('"%s" precisa ter %s válidos' % [p_name, ", ".join(RARITIES)])
 			return {}
@@ -129,6 +138,35 @@ static func load_data(raw: Variant) -> EconomyData:
 		_fail('"nexusStartLevel" passa do último nível da tabela de chances')
 		return null
 
+	var mode: Variant = shop.get("rarityMode", "nexusLevel")
+	if mode != "nexusLevel" and mode != "wave":
+		_fail('"shop.rarityMode" precisa ser "nexusLevel" ou "wave"')
+		return null
+	var by_wave: Array = []
+	if mode == "wave":
+		var rows_raw: Variant = shop.get("rarityByWave")
+		if not (rows_raw is Array) or rows_raw.is_empty():
+			_fail('"shop.rarityByWave" precisa de pelo menos uma faixa')
+			return null
+		var last_from := 0
+		for i in rows_raw.size():
+			var row: Variant = rows_raw[i]
+			if not (row is Dictionary) or not _is_int(row.get("fromWave"), 1) or int(row["fromWave"]) <= last_from \
+					or (i == 0 and int(row["fromWave"]) != 1):
+				_fail('"shop.rarityByWave[%d]" precisa de fromWave inteiro crescente (a primeira faixa começa na onda 1)' % i)
+				return null
+			var row_chances := _by_rarity("shop.rarityByWave[%d]" % i, row, 0)
+			if row_chances.is_empty():
+				return null
+			var row_total := 0
+			for r: String in RARITIES:
+				row_total += row_chances[r]
+			if row_total != 100:
+				_fail('"shop.rarityByWave[%d]" precisa somar 100' % i)
+				return null
+			last_from = int(row["fromWave"])
+			by_wave.append({"fromWave": last_from, "chances": row_chances})
+
 	var data := EconomyData.new()
 	data.starting_gold = int(raw["startingGold"])
 	data.nexus_start_level = int(raw["nexusStartLevel"])
@@ -148,4 +186,6 @@ static func load_data(raw: Variant) -> EconomyData:
 	data.shop_first_guarantee = shop["firstShopGuarantee"]
 	data.shop_prices = prices
 	data.shop_rarity_chances = chances
+	data.rarity_mode = mode
+	data.rarity_by_wave = by_wave
 	return data

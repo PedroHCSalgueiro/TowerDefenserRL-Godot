@@ -20,7 +20,8 @@ func _init() -> void:
 static func _chances_text(chances: Dictionary) -> String:
 	var parts: Array[String] = []
 	for r: String in EconomyData.RARITIES:
-		parts.append("%s %d%%" % [TowerInfo.RARITY_LABELS[r], chances[r]])
+		if chances[r] > 0:
+			parts.append("%s %d%%" % [TowerInfo.RARITY_LABELS[r], chances[r]])
 	return " · ".join(parts)
 
 
@@ -48,7 +49,8 @@ func _render(model: NexusPanelModel) -> void:
 	chances.custom_minimum_size = Vector2(170, 0)
 	_box.add_child(chances)
 	if not model.next_chances.is_empty():
-		var next := UiKit.label("Próximo: " + _chances_text(model.next_chances), 12, Color("#a8c8ff"))
+		var next_prefix := "Próximo: " if model.next_from_wave < 0 else "Da onda %d: " % model.next_from_wave
+		var next := UiKit.label(next_prefix + _chances_text(model.next_chances), 12, Color("#a8c8ff"))
 		next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		next.custom_minimum_size = Vector2(170, 0)
 		_box.add_child(next)

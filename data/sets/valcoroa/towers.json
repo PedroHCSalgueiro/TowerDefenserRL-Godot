@@ -154,7 +154,7 @@
     },
     "brom": {
       "name": "Mestre Brom",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "classes": [
         "artillerist",
         "valcoroa"
@@ -314,7 +314,7 @@
     },
     "isolde": {
       "name": "Rainha Isolde",
-      "rarity": "rare",
+      "rarity": "legendary",
       "classes": [
         "controller",
         "valcoroa"

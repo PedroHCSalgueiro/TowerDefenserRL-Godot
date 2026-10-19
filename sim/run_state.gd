@@ -81,6 +81,6 @@ static func create(seed_text_value: String, economy_data: EconomyData = null) ->
 	state.gold = economy.starting_gold
 	state.reported_gold = economy.starting_gold
 	state.rewards = RewardsState.create(seed_text_value)
-	state.shop = Shop.new_shop(Rng.new(state), economy, TowerData.game_data(), state.nexus.level, true, 0,
+	state.shop = Shop.new_shop(Rng.new(state), economy, TowerData.game_data(), Shop.initial_chances(economy), true, 0,
 			Shop.common_only(economy, 0))
 	return state

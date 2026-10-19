@@ -7,7 +7,7 @@ signal slot_pressed(slot: int, global_pos: Vector2)
 signal reroll_pressed
 signal sell_pressed
 
-const RARITY_COLORS := {"common": "#8a8f94", "uncommon": "#4fa86a", "rare": "#b06adf"}
+const RARITY_COLORS := {"common": "#8a8f94", "uncommon": "#4fa86a", "rare": "#b06adf", "legendary": "#f0a830"}
 
 var hovered_slot := -1
 var _row: HBoxContainer

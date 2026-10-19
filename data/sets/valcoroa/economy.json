@@ -1,0 +1,55 @@
+{
+  "waveBonus": {
+    "base": 8,
+    "perWave": 2
+  },
+  "killGold": {
+    "base": 0,
+    "perWave": 1,
+    "waveStep": 10
+  },
+  "shop": {
+    "commonOnlyWaves": 0,
+    "rarityMode": "wave",
+    "prices": {
+      "legendary": 40
+    },
+    "rarityByWave": [
+      {
+        "fromWave": 1,
+        "common": 100,
+        "uncommon": 0,
+        "rare": 0,
+        "legendary": 0
+      },
+      {
+        "fromWave": 9,
+        "common": 70,
+        "uncommon": 30,
+        "rare": 0,
+        "legendary": 0
+      },
+      {
+        "fromWave": 17,
+        "common": 50,
+        "uncommon": 35,
+        "rare": 15,
+        "legendary": 0
+      },
+      {
+        "fromWave": 25,
+        "common": 35,
+        "uncommon": 35,
+        "rare": 25,
+        "legendary": 5
+      },
+      {
+        "fromWave": 33,
+        "common": 25,
+        "uncommon": 30,
+        "rare": 30,
+        "legendary": 15
+      }
+    ]
+  }
+}

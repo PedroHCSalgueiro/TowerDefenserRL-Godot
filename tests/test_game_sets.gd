@@ -49,13 +49,13 @@ func test_volta_ao_padrao() -> void:
 	assert_false(TowerData.game_data().has_type("aldric"))
 
 
-func test_valcoroa_tem_8_herois_com_raridades_3_3_2() -> void:
+func test_valcoroa_tem_8_herois_com_raridades_3_2_2_1() -> void:
 	GameSets.select("valcoroa")
 	var towers := TowerData.game_data()
-	var count := {"common": 0, "uncommon": 0, "rare": 0}
+	var count := {"common": 0, "uncommon": 0, "rare": 0, "legendary": 0}
 	for id in VALCOROA:
 		count[towers.get_type(id).rarity] += 1
-	assert_eq(count, {"common": 3, "uncommon": 3, "rare": 2})
+	assert_eq(count, {"common": 3, "uncommon": 2, "rare": 2, "legendary": 1})
 
 
 func test_mesclagem_dos_arquivos_do_conjunto() -> void:

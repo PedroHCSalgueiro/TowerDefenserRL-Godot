@@ -4,7 +4,7 @@ extends RefCounted
 ## `towers.json` na estrela pedida: o texto nunca fica diferente do jogo (porte de `towerInfo.ts`).
 ## Sem nós, para testar direto.
 
-const RARITY_LABELS := {"common": "Comum", "uncommon": "Incomum", "rare": "Rara"}
+const RARITY_LABELS := {"common": "Comum", "uncommon": "Incomum", "rare": "Rara", "legendary": "Lendária"}
 
 ## "Relé ★2"
 var title := ""

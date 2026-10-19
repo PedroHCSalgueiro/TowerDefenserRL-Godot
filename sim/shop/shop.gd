@@ -15,7 +15,7 @@ class ShopState:
 
 ## Ids das torres de loja de cada raridade, na ordem dos dados: {"common": [...], ...}.
 static func shop_pools(towers: TowerData) -> Dictionary:
-	var pools := {"common": [], "uncommon": [], "rare": []}
+	var pools := {"common": [], "uncommon": [], "rare": [], "legendary": []}
 	for id: String in towers.types:
 		var rarity: Variant = towers.types[id].rarity
 		if rarity != null:
@@ -27,6 +27,50 @@ static func shop_pools(towers: TowerData) -> Dictionary:
 static func chances_for(economy: EconomyData, nexus_level: int) -> Dictionary:
 	var table := economy.shop_rarity_chances
 	return table[mini(maxi(1, nexus_level), table.size()) - 1]
+
+
+## Chances da loja agora (rarity -> %). Modo "nexusLevel": a linha do nível do núcleo (com a carta "Loja melhor").
+## Modo "wave": a faixa da onda que vai ser jogada (`state.wave + 1`), deslocada pela carta "Loja melhor".
+static func chances_for_state(economy: EconomyData, state: Object) -> Dictionary:
+	if economy.rarity_mode != "wave":
+		return chances_for(economy, shop_rarity_level(state))
+	var rows := economy.rarity_by_wave
+	return rows[_wave_row(economy, state)]["chances"]
+
+
+## Chances da primeira loja da run (onda 1, núcleo no nível inicial).
+static func initial_chances(economy: EconomyData) -> Dictionary:
+	if economy.rarity_mode != "wave":
+		return chances_for(economy, economy.nexus_start_level)
+	return economy.rarity_by_wave[0]["chances"]
+
+
+## Modo "wave": índice da faixa em uso (a da onda atual, deslocada pelas cartas, presa na última).
+static func _wave_row(economy: EconomyData, state: Object) -> int:
+	var rows := economy.rarity_by_wave
+	var index := 0
+	for i in rows.size():
+		if state.wave + 1 >= int(rows[i]["fromWave"]):
+			index = i
+	return mini(rows.size() - 1, index + RewardMods.of(state).shop_rarity_levels)
+
+
+## A próxima faixa da loja: {"fromWave": int, "chances": Dictionary} (modo "wave"), ou {} no último
+## ou no modo "nexusLevel". Serve ao painel ("Incomum a partir da onda 9").
+static func next_rarity_row(economy: EconomyData, state: Object) -> Dictionary:
+	if economy.rarity_mode != "wave":
+		return {}
+	var next := _wave_row(economy, state) + 1
+	if next >= economy.rarity_by_wave.size():
+		return {}
+	return economy.rarity_by_wave[next]
+
+
+## A carta "Loja melhor" ainda tem o que melhorar? (Senão ela nem é oferecida.)
+static func can_improve_rarity(economy: EconomyData, state: Object) -> bool:
+	if economy.rarity_mode == "wave":
+		return _wave_row(economy, state) < economy.rarity_by_wave.size() - 1
+	return state.nexus.level < economy.shop_rarity_chances.size()
 
 
 ## Preço da torre (-1 = não é de loja). Com desconto (bônus "Desconto", T24), o preço é
@@ -69,17 +113,20 @@ static func _draw_rarity(rng: Rng, chances: Dictionary) -> String:
 		roll -= float(chances[rarity])
 		if roll < 0.0:
 			return rarity
-	return EconomyData.RARITIES[EconomyData.RARITIES.size() - 1]
+	# Sobra de arredondamento: a última raridade que tem chance.
+	for i in range(EconomyData.RARITIES.size() - 1, -1, -1):
+		if float(chances[EconomyData.RARITIES[i]]) > 0.0:
+			return EconomyData.RARITIES[i]
+	return EconomyData.RARITIES[0]
 
 
 ## Loja nova: por slot, a raridade sai da tabela do nível e depois uma torre da raridade com
 ## chance igual. Na primeira loja da run, se nenhum slot trouxer a raridade garantida, um slot
 ## sorteado vira uma torre dela. `free_rerolls`: rerolls grátis da loja (bônus das recompensas).
 ## `only_common`: todos os slots saem do pool de comuns (primeira rodada; ver `common_only`).
-static func new_shop(rng: Rng, economy: EconomyData, towers: TowerData, nexus_level: int,
+static func new_shop(rng: Rng, economy: EconomyData, towers: TowerData, chances: Dictionary,
 		is_first_shop: bool, free_rerolls: int = 0, only_common: bool = false) -> ShopState:
 	var pools := shop_pools(towers)
-	var chances := chances_for(economy, nexus_level)
 	var slots: Array = []
 	for i in economy.shop_slots:
 		var drawn := _draw_rarity(rng, chances)
@@ -156,7 +203,7 @@ static func reroll_shop(ctx: TickContext, towers: TowerData, economy: EconomyDat
 		return false
 	var free_left: int = state.shop.free_rerolls - 1 if free else state.shop.free_rerolls
 	Gold.spend_gold(state, cost)
-	state.shop = new_shop(ctx.rng, economy, towers, shop_rarity_level(state), false, free_left,
+	state.shop = new_shop(ctx.rng, economy, towers, chances_for_state(economy, state), false, free_left,
 			common_only(economy, state.wave))
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "reroll"})
 	return true
