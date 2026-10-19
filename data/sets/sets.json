@@ -1,0 +1,34 @@
+{
+  "sets": [
+    {
+      "id": "default",
+      "name": "Padrão",
+      "description": "As torres do protótipo, com as classes Artilharia, Mecânica, Arcana e Sombria.",
+      "roster": [
+        "Morteiro",
+        "Ceifador",
+        "Relé",
+        "Obelisco",
+        "Balista",
+        "Relógio",
+        "Carrasco",
+        "Espelho"
+      ]
+    },
+    {
+      "id": "valcoroa",
+      "name": "Reino de Valcoroa",
+      "description": "Medieval clássico: disciplina e formação. Oito heróis do reino, um de cada classe.",
+      "roster": [
+        "Sir Aldric",
+        "Lyra, a Besteira",
+        "Irmão Tomás",
+        "Mestre Brom",
+        "Dama Selene",
+        "Wulf, Caçador Real",
+        "Engenheira Mabel",
+        "Rainha Isolde"
+      ]
+    }
+  ]
+}

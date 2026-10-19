@@ -28,6 +28,11 @@ var waves: Array[WaveDef] = []
 static var _default: WaveData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> WaveData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("waves.json"), EnemyData.game_data())

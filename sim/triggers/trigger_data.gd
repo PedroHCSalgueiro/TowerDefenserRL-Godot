@@ -61,8 +61,9 @@ static var DO_PARAMS := {
 	## `activateOnDischarge`: ao soltar o raio, ativa as vizinhas.
 	"chargeLightning": [_count("charges"), _count("targets"), _positive("jumpRadius"),
 			_positive("damagePercent"), _flag("activateOnDischarge")],
-	## `unlimited`: a linha atravessa o mapa (comprimento `unlimitedLineLength`).
-	"pierceLine": [_positive("halfWidth"), _positive("damagePercent"), _flag("unlimited")],
+	## `unlimited`: a linha atravessa o mapa (comprimento `unlimitedLineLength`). `maxTargets`: só os N
+	## primeiros da fila levam o dano (0 = todos).
+	"pierceLine": [_positive("halfWidth"), _positive("damagePercent"), _flag("unlimited"), _count("maxTargets", 0)],
 	## `bossMaxHpPercent`: o chefão nunca é executado; abaixo do limite de vida, leva um
 	## golpe de tantos % da vida máxima por disparo (0 = sem golpe). `explodeRadius` e
 	## `explodeDamagePercent` (juntos): cada execução explode.

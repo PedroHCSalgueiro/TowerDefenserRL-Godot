@@ -1,0 +1,238 @@
+{
+  "$replace": true,
+  "projectileRetargetRadius": 2,
+  "triggers": {
+    "neighborhood": 4,
+    "activationCooldownSeconds": 1,
+    "unlimitedLineLength": 64,
+    "maxChainDepthPerTick": 8,
+    "maxActivationsPerTick": 2000,
+    "maxQueueSize": 10000
+  },
+  "types": {
+    "basic": {
+      "name": "Básica",
+      "rarity": null,
+      "classes": [],
+      "damage": 10,
+      "shotsPerSecond": 2,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "cannon": {
+      "name": "Canhão",
+      "rarity": null,
+      "classes": [],
+      "damage": 8,
+      "shotsPerSecond": 0.8,
+      "range": 2.5,
+      "projectileSpeed": 5,
+      "shot": {
+        "kind": "area",
+        "radius": 1
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "aldric": {
+      "name": "Sir Aldric",
+      "rarity": "common",
+      "classes": [
+        "guardian",
+        "valcoroa"
+      ],
+      "damage": 8,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "lyra": {
+      "name": "Lyra, a Besteira",
+      "rarity": "common",
+      "classes": [
+        "shooter",
+        "valcoroa"
+      ],
+      "damage": 6,
+      "shotsPerSecond": 1.6,
+      "range": 4,
+      "projectileSpeed": 10,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "pierceLine",
+        "stars": [
+          {
+            "shots": 5,
+            "halfWidth": 0.4,
+            "damagePercent": 250,
+            "maxTargets": 3
+          },
+          {
+            "shots": 4,
+            "halfWidth": 0.4,
+            "damagePercent": 300,
+            "maxTargets": 4
+          },
+          {
+            "shots": 4,
+            "halfWidth": 0.5,
+            "damagePercent": 350,
+            "maxTargets": 5
+          }
+        ]
+      }
+    },
+    "tomas": {
+      "name": "Irmão Tomás",
+      "rarity": "common",
+      "classes": [
+        "support",
+        "valcoroa"
+      ],
+      "damage": 3,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "brom": {
+      "name": "Mestre Brom",
+      "rarity": "uncommon",
+      "classes": [
+        "artillerist",
+        "valcoroa"
+      ],
+      "damage": 8,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 5,
+      "shot": {
+        "kind": "area",
+        "radius": 1
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "selene": {
+      "name": "Dama Selene",
+      "rarity": "uncommon",
+      "classes": [
+        "mage",
+        "valcoroa"
+      ],
+      "damage": 5,
+      "shotsPerSecond": 1.5,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "onFire",
+        "do": "activateNeighbors",
+        "stars": [
+          {},
+          {
+            "activatedDamagePercent": 150
+          },
+          {
+            "activatedDamagePercent": 200,
+            "reach": 2
+          }
+        ]
+      }
+    },
+    "wulf": {
+      "name": "Wulf, Caçador Real",
+      "rarity": "uncommon",
+      "classes": [
+        "hunter",
+        "valcoroa"
+      ],
+      "damage": 10,
+      "shotsPerSecond": 0.6,
+      "range": 3.5,
+      "projectileSpeed": 10,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "multiShot",
+        "stars": [
+          {
+            "shots": 5,
+            "extraShots": 2,
+            "spread": true
+          },
+          {
+            "shots": 4,
+            "extraShots": 2,
+            "spread": true,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 4,
+            "extraShots": 3,
+            "spread": true,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "mabel": {
+      "name": "Engenheira Mabel",
+      "rarity": "rare",
+      "classes": [
+        "summoner",
+        "valcoroa"
+      ],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": null
+    },
+    "isolde": {
+      "name": "Rainha Isolde",
+      "rarity": "rare",
+      "classes": [
+        "controller",
+        "valcoroa"
+      ],
+      "damage": 7,
+      "shotsPerSecond": 1,
+      "range": 3.5,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": null
+    }
+  }
+}

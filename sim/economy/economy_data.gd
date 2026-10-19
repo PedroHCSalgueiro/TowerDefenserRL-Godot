@@ -36,6 +36,11 @@ var shop_rarity_chances: Array = []
 static var _default: EconomyData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> EconomyData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("economy.json"))

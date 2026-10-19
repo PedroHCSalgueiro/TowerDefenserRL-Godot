@@ -39,7 +39,13 @@ static func build_rows(class_state: Dictionary, classes: ClassData, towers: Towe
 			if l.count > row.count:
 				row.next = l.count
 				break
-		row.label = "%s %d · máx." % [data.name, row.count] if row.next < 0 else "%s %d/%d" % [data.name, row.count, row.next]
+		if row.next >= 0:
+			row.label = "%s %d/%d" % [data.name, row.count, row.next]
+		elif data.levels.is_empty():
+			# Classe sem bônus ainda: só a contagem.
+			row.label = "%s %d" % [data.name, row.count]
+		else:
+			row.label = "%s %d · máx." % [data.name, row.count]
 		for i in data.levels.size():
 			row.levels.append({"count": data.levels[i].count, "text": data.levels[i].text, "active": row.level == i + 1})
 		for type: String in member_types:

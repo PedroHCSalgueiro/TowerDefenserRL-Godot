@@ -35,6 +35,11 @@ var types: Dictionary = {}
 static var _default: EnemyData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 ## Dados do jogo (data/enemies.json), carregados uma vez.
 static func game_data() -> EnemyData:
 	if _default == null:

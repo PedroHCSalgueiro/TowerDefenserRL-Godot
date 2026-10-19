@@ -5,6 +5,7 @@ extends Control
 ## (porte de `endScreen.ts`).
 
 signal restart_pressed
+signal menu_pressed
 
 
 func show_report(report: RunReport) -> void:
@@ -51,6 +52,9 @@ func show_report(report: RunReport) -> void:
 	var restart := UiKit.button("Jogar de novo", func() -> void: restart_pressed.emit())
 	restart.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(restart)
+	var menu := UiKit.button("Escolher torres (menu)", func() -> void: menu_pressed.emit())
+	menu.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(menu)
 	visible = true
 
 

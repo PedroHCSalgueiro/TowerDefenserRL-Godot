@@ -10,6 +10,8 @@ extends Node3D
 
 ## Semente fixa para testes (vazio = sorteia ou usa --seed).
 static var forced_seed := ""
+## Semente digitada na tela inicial: vale para a próxima run e é consumida (vazio = sorteia).
+static var pending_seed := ""
 
 var runner: SimulationRunner
 var map: SimMap
@@ -50,8 +52,12 @@ var _demo_step := 0.0
 func _ready() -> void:
 	FontSetup.install()
 	_parse_args()
+	if _args.has("set"):
+		GameSets.select(_args["set"])
 	map = SimMap.load_map(DataLoader.load_json("map.json"))
-	seed_text = _args.get("seed", forced_seed if forced_seed != "" else _random_seed())
+	var chosen_seed := forced_seed if forced_seed != "" else pending_seed
+	pending_seed = ""
+	seed_text = _args.get("seed", chosen_seed if chosen_seed != "" else _random_seed())
 	runner = SimulationRunner.new(Simulation.create(seed_text, GameSystems.create(map)))
 	_build_world()
 	_build_ui()
@@ -170,6 +176,7 @@ func _build_ui() -> void:
 	root.add_child(end_screen)
 	end_screen.visible = false
 	end_screen.restart_pressed.connect(_restart)
+	end_screen.menu_pressed.connect(_back_to_menu)
 
 	debug_panel = DebugPanel.new()
 	root.add_child(debug_panel)
@@ -263,6 +270,10 @@ func _show_locked(tower_id: int) -> void:
 
 func _restart() -> void:
 	get_tree().reload_current_scene()
+
+
+func _back_to_menu() -> void:
+	get_tree().change_scene_to_file("res://scenes/menu.tscn")
 
 
 # ---------------------------------------------------------------- entrada

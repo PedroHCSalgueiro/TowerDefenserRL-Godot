@@ -218,6 +218,9 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 		var py := enemy.y - ty
 		var along := px * ux + py * uy
 		return along >= 0.0 and along <= reach and absf(px * uy - py * ux) <= half_width)
+	var max_targets := int(e.get("maxTargets", 0))
+	if max_targets > 0 and in_line.size() > max_targets:
+		in_line = in_line.slice(0, max_targets)
 	var event := {
 		"type": "lineFired",
 		"tick": ctx.state.tick,

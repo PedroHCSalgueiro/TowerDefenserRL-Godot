@@ -11,6 +11,11 @@ var max_gold_per_command: int
 static var _default: SimDebugData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> SimDebugData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("debug.json"))

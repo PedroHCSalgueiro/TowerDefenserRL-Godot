@@ -12,8 +12,10 @@ var classes: Array[String] = []
 
 
 ## Contagem com `count` torres: "1/2" ou "4 · máx.".
-static func _count_text(count: int, next: int) -> String:
-	return "%d · máx." % count if next < 0 else "%d/%d" % [count, next]
+static func _count_text(count: int, next: int, has_levels: bool = true) -> String:
+	if next < 0:
+		return "%d · máx." % count if has_levels else str(count)
+	return "%d/%d" % [count, next]
 
 
 ## Prévia da compra de uma cópia de `tower_type` com as torres de agora. null quando a compra não
@@ -51,8 +53,9 @@ static func preview(towers: Array, tower_type: String, data: TowerData, classes:
 		var lights := ""
 		if will["level"] > was["level"]:
 			lights = " (ativa nível %d)" % info.levels[will["level"] - 1].count
-		result.classes.append("%s %s → %s%s" % [info.name, _count_text(was_count, next),
-				_count_text((will["members"] as Array).size() + extra, next), lights])
+		var has_levels := not info.levels.is_empty()
+		result.classes.append("%s %s → %s%s" % [info.name, _count_text(was_count, next, has_levels),
+				_count_text((will["members"] as Array).size() + extra, next, has_levels), lights])
 	return result
 
 

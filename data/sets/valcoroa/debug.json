@@ -1,0 +1,26 @@
+{
+  "chainScenario": {
+    "name": "Cadeia (Valcoroa)",
+    "towerTypes": [
+      "lyra",
+      "selene",
+      "wulf",
+      "brom"
+    ],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 de Valcoroa)",
+    "towerTypes": [
+      "aldric",
+      "lyra",
+      "tomas",
+      "brom",
+      "selene",
+      "wulf",
+      "mabel",
+      "isolde"
+    ],
+    "towerLayout": "clustered"
+  }
+}

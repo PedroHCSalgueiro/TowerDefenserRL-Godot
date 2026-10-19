@@ -46,6 +46,11 @@ var ids: Array[String] = []
 static var _default: ClassData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 ## Dados do jogo (data/classes.json), carregados uma vez.
 static func game_data() -> ClassData:
 	if _default == null:

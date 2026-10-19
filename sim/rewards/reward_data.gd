@@ -64,6 +64,11 @@ const CLASS_SCOPED := ["areaDamagePercent", "triggerCountMinus", "eliteKillWeigh
 static var _default: RewardData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> RewardData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("rewards.json"))

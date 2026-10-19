@@ -35,6 +35,11 @@ var attack_range: float
 static var _default: NexusData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> NexusData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("nexus.json"))

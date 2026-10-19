@@ -42,6 +42,11 @@ var types: Dictionary = {}
 static var _default: TowerData = null
 
 
+## Esquece os dados carregados (troca de conjunto de torres; ver `GameSets`).
+static func reset_cache() -> void:
+	_default = null
+
+
 static func game_data() -> TowerData:
 	if _default == null:
 		_default = load_data(DataLoader.load_json("towers.json"))
