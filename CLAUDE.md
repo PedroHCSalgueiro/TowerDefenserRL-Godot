@@ -10,6 +10,7 @@ Este repositório é o **porte para o Godot** do jogo feito em Phaser 4 + TypeSc
 dos testes. Clone local de consulta: `C:\Users\pedro\Documents\TowerDefenserRL-reference`
 (somente leitura; nunca copiar código do Phaser para cá).
 
+Repositório (privado): https://github.com/PedroHCSalgueiro/TowerDefenserRL-Godot
 Plano do porte: `docs/plano-porte-godot.md`.
 
 ## Links do Notion (use sempre estes, não precisa buscar)
