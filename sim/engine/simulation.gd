@@ -15,6 +15,8 @@ var _state: Object
 var _systems: Array
 var _tick_events: Array = []
 
+## Guarda só o hash dos sistemas: guardar o Callable em si (lambdas que capturam objetos) numa
+## variável estática derruba o Godot na saída.
 static var _frozen_safe: Dictionary = {}
 
 
@@ -37,7 +39,7 @@ static func create(seed_text: String, systems: Array = []) -> Simulation:
 ## Marca o sistema para rodar também nos ticks congelados pela tela de
 ## recompensa (T24): ações, relógio e abertura da tela, ouro e classes.
 static func runs_while_frozen(system: Callable) -> Callable:
-	_frozen_safe[system] = true
+	_frozen_safe[system.hash()] = true
 	return system
 
 
@@ -66,7 +68,7 @@ func step() -> void:
 	_tick_events.clear()
 	var ctx := TickContext.new(_state, rng, commands, _tick_events, _events)
 	for system: Callable in _systems:
-		if frozen and not _frozen_safe.has(system):
+		if frozen and not _frozen_safe.has(system.hash()):
 			continue
 		system.call(ctx)
 
