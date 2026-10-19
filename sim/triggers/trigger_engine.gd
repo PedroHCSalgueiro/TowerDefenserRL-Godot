@@ -56,6 +56,8 @@ var enemies: EnemyData
 var towers: TowerData
 var classes: ClassData
 var scores: Dictionary
+## Rotas do mapa por tipo de movimento (as armadilhas escolhem o ponto na rota terrestre).
+var routes: Dictionary
 ## Trava de ativação do tick (a dos dados ou a do bônus "Fluxo arcano").
 var activation_cooldown_ticks: int
 var unlimited_line_length: float
@@ -94,6 +96,7 @@ func _init(deps: Dictionary) -> void:
 	towers = deps["towers"]
 	classes = deps["classes"] if deps.get("classes") != null else ClassData.game_data()
 	scores = deps["scores"]
+	routes = deps.get("routes", {})
 	_rules = towers.triggers
 	_ticks_per_second = deps["ticksPerSecond"]
 	activation_cooldown_ticks = _cooldown_ticks_for(_rules.activation_cooldown_seconds)

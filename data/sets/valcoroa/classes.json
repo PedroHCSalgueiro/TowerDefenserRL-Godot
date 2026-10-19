@@ -37,7 +37,26 @@
     },
     "valcoroa": {
       "name": "Reino de Valcoroa",
-      "levels": []
+      "levels": [
+        {
+          "count": 3,
+          "text": "+15% de velocidade de ataque",
+          "attackSpeedPercent": 15
+        },
+        {
+          "count": 5,
+          "text": "+30% de velocidade de ataque e +10% de dano",
+          "attackSpeedPercent": 30,
+          "damagePercent": 10
+        },
+        {
+          "count": 8,
+          "text": "Como o nível 5; heróis do Reino lado a lado recebem o bônus em dobro",
+          "attackSpeedPercent": 30,
+          "damagePercent": 10,
+          "doubleWithNeighbors": true
+        }
+      ]
     }
   }
 }

@@ -32,6 +32,9 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 		shot_damage = (shot_damage * damage_percent) / 100.0
 	if area:
 		shot_damage *= ClassBonuses.area_damage_multiplier(classes, ctx.state, type)
+	var region_damage := ClassBonuses.damage_multiplier(classes, ctx.state, type, tower)
+	if region_damage != 1.0:
+		shot_damage *= region_damage
 	ctx.emit({
 		"type": "towerFired",
 		"tick": ctx.state.tick,
@@ -56,7 +59,7 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 
 ## Devolve o sistema (Callable) de ataque das torres.
 static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Dictionary,
-		ticks_per_second: float, classes: ClassData = null) -> Callable:
+		ticks_per_second: float, classes: ClassData = null, routes: Dictionary = {}) -> Callable:
 	if classes == null:
 		classes = ClassData.game_data()
 	var cooldown_ticks := {}
@@ -65,6 +68,7 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 		if type.attacks:
 			cooldown_ticks[id] = maxi(1, SimMath.js_round(ticks_per_second / type.shots_per_second))
 	var has_auras := data.has_auras()
+	var has_speed_bonus := has_auras or classes.has_attack_speed_bonus
 
 	return func(ctx: TickContext) -> void:
 		var state := ctx.state
@@ -77,13 +81,22 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 			if tower.cooldown_ticks > 0:
 				continue
 
-			var target := find_tower_target(index, state, tower, type, scores)
-			if target == null:
+			var is_trap: bool = type.shot["kind"] == "trap"
+			var target: Enemy = null
+			if not is_trap:
+				target = find_tower_target(index, state, tower, type, scores)
+				if target == null:
+					continue
+			elif not TrapSystems.place_caltrop(ctx, routes, tower, type):
+				# Teto de armadilhas no chão (ou nenhum ponto livre): espera pronta.
 				continue
 
 			tower.cooldown_ticks = cooldown_ticks[tower.type]
-			if has_auras:
-				var haste := Auras.attack_speed_percent(state, data, tower)
+			if has_speed_bonus:
+				var haste := ClassBonuses.attack_speed_percent(classes, state, type, tower)
+				if has_auras:
+					haste += Auras.attack_speed_percent(state, data, tower)
 				if haste > 0.0:
 					tower.cooldown_ticks = maxi(1, SimMath.js_round(float(tower.cooldown_ticks) / (1.0 + haste / 100.0)))
-			fire_tower_shot(ctx, tower, type, target, "normal", classes)
+			if not is_trap:
+				fire_tower_shot(ctx, tower, type, target, "normal", classes)

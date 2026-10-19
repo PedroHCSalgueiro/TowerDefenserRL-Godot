@@ -99,6 +99,7 @@ static func create_command_system(map: SimMap, routes: Dictionary, enemies: Enem
 					state.enemies.release_all()
 					state.projectiles.release_all()
 					state.towers.clear()
+					state.traps.clear()
 					state.triggers.queue.clear()
 					state.debug.stress = null
 				"debugSetStress":

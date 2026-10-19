@@ -61,3 +61,15 @@ Fora do escopo atual (Sir Aldric, redução de glb/texturas, GodotSteam).
 ## Desempenho (GDScript)
 ~16 s para 40 ondas de bot sem renderização (Phaser: ~0,7 s). Estresse (`--open=stress`): ~4,6 ms/tick em média,
 picos de 40–60 ms; o Web é mais lento. Perfil por sistema em `dev/profile_systems.gd`.
+
+## Conjuntos de torres e Reino de Valcoroa (novo, além do porte)
+- **Tela inicial** (`scenes/menu.tscn`, cena principal): escolhe o conjunto da run (Padrão ou Reino de Valcoroa) e a
+  semente. `--set=valcoroa` e `--play` pulam a tela (capturas e testes).
+- **Conjuntos** (`GameSets`): `data/sets/<id>/` complementa `data/` (mescla em profundidade; `"$replace": true` troca o
+  arquivo inteiro). O Padrão não muda nada e continua provado pelos golden files.
+- **Valcoroa**: 8 heróis do Notion (Sir Aldric, Lyra, Irmão Tomás, Mestre Brom, Dama Selene, Wulf, Engenheira Mabel,
+  Rainha Isolde), as 8 classes novas (ainda sem bônus de classe, só a contagem) e o bônus do Reino (3/5/8).
+- **Mecânicas novas**: efeitos de estado (Lento que empilha até 50%, Atordoado, Sangramento), aura de velocidade,
+  armadilhas no caminho, gatilho por tempo (`everyNSeconds`), mira `strongest`, `onHit`, perfurante com teto de alvos.
+- **Números de Valcoroa são provisórios**: o Notion só dá exemplos; ★2 e ★3 de cada herói foram inventados como ponto
+  de partida e estão em `data/sets/valcoroa/towers.json` (ver "Perguntas de design" no Notion).

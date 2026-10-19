@@ -99,6 +99,9 @@ static func _effect_text(effect: Dictionary) -> String:
 			return "dispara um tiro em área extra, com raio ×%s e %s%% do dano" % [fmt(effect["radiusMultiplier"]), fmt(effect["damagePercent"])]
 		"stunFront":
 			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["seconds"])]
+		"trap":
+			return "põe uma armadilha de urso no caminho (até %s; prende por %s s e causa %s%% do dano por segundo)" % [
+					fmt(effect["maxTraps"]), fmt(effect["holdSeconds"]), fmt(effect["damagePercent"])]
 		"stunSlowed":
 			return "atordoa por %s s os inimigos Lentos no alcance" % fmt(effect["stunSeconds"])
 		"copyLast":
@@ -129,7 +132,11 @@ static func describe_tower(type: TowerData.TowerType, star: int, classes: ClassD
 	info.subtitle = " · ".join(parts)
 	var damage := (type.damage * (def.attack_damage_percent if def != null else 100.0)) / 100.0
 	var area := ", área de raio %s" % fmt(type.shot["radius"]) if type.shot["kind"] == "area" else ""
-	if type.attacks:
+	if type.attacks and type.shot["kind"] == "trap":
+		info.attack = "Estrepes no caminho: dano %s · %s/s · alcance %s · até %s no chão" % [
+				fmt(damage * type.shot["damagePercent"] / 100.0), _plural(type.shots_per_second, "tiro", "tiros"), fmt(type.range),
+				_plural(type.shot["maxTraps"], "estrepe", "estrepes")]
+	elif type.attacks:
 		info.attack = "Dano %s · %s/s · alcance %s%s" % [fmt(damage), _plural(type.shots_per_second, "tiro", "tiros"), fmt(type.range), area]
 	else:
 		info.attack = "Não ataca por conta própria"

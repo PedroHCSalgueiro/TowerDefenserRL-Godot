@@ -56,6 +56,8 @@ var shop: Shop.ShopState
 ## Recompensas de escolha (T24): bônus escolhidos, tela aberta, fila e RNG das cartas.
 var rewards: RewardsState
 var debug := DebugState.new()
+## Armadilhas no chão do caminho (Engenheira Mabel).
+var traps: Array[Trap] = []
 ## Ações enfileiradas que ainda não foram aplicadas.
 var command_queue: Array = []
 

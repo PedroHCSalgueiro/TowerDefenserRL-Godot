@@ -24,6 +24,7 @@ var tower_view: TowerView
 var nexus_view: NexusView
 var enemy_view: EnemyView
 var projectile_view: ProjectileView
+var trap_view: TrapView
 var trigger_fx: TriggerFxView
 var overlay: OverlayView
 
@@ -119,6 +120,9 @@ func _build_world() -> void:
 	projectile_view = ProjectileView.new()
 	add_child(projectile_view)
 	projectile_view.setup()
+	trap_view = TrapView.new()
+	add_child(trap_view)
+	trap_view.setup()
 	trigger_fx = TriggerFxView.new()
 	add_child(trigger_fx)
 	trigger_fx.setup(map, TowerData.game_data(), tower_view)
@@ -375,6 +379,7 @@ func _process(delta: float) -> void:
 	nexus_view.draw(state, frame_delta)
 	enemy_view.draw(state, alpha)
 	projectile_view.draw(state, alpha, frame_delta)
+	trap_view.draw(state)
 	trigger_fx.handle_events(state, events)
 	trigger_fx.draw(state, frame_delta)
 

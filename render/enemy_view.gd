@@ -6,6 +6,9 @@ extends Node3D
 ## roxa nos elites.
 
 const FLOATS := 16  # 12 da transformação 3D + 4 (cor ou dado custom)
+const STUN_TINT := Color("#ffe066")
+const SLOW_TINT := Color("#8fd3ff")
+const BLEED_TINT := Color("#ff2d2d")
 
 const BAR_SHADER := """
 shader_type spatial;
@@ -119,6 +122,13 @@ func draw(state: Object, alpha: float) -> void:
 		if _data.types[enemy.type].movement == "air":
 			y += flying
 		var c: Color = _colors.get(enemy.type, Color.MAGENTA)
+		# Efeitos de estado tingem o inimigo: atordoado amarelo, lento azul-gelo, sangrando vermelho.
+		if enemy.stun_ticks > 0:
+			c = c.lerp(STUN_TINT, 0.65)
+		elif enemy.slow_ticks > 0:
+			c = c.lerp(SLOW_TINT, 0.6)
+		if enemy.bleed_ticks > 0:
+			c = c.lerp(BLEED_TINT, 0.45)
 		var o := n * FLOATS
 		body[o] = scale
 		body[o + 1] = 0.0

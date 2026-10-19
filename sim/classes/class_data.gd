@@ -25,6 +25,11 @@ class ClassLevel:
 	var kill_weight_multiplier := 1.0
 	## Sombria: quais mortes o multiplicador atinge: "sameClass" ou "any".
 	var kill_weight_from := "sameClass"
+	## Região (Reino de Valcoroa): % de velocidade de ataque e % de dano das torres da classe.
+	var attack_speed_percent := 0.0
+	var damage_percent := 0.0
+	## Região: a torre com uma vizinha ortogonal da mesma classe recebe esses bônus em dobro.
+	var double_with_neighbors := false
 
 class TowerClass:
 	extends RefCounted
@@ -33,13 +38,17 @@ class TowerClass:
 	var levels: Array[ClassLevel] = []
 
 const LEVEL_KEYS := ["count", "text", "areaRadiusMultiplier", "areaDamageMultiplier",
-		"triggerCountReductionPercent", "neighborhoodRadius", "killWeightMultiplier", "killWeightFrom"]
+		"triggerCountReductionPercent", "neighborhoodRadius", "killWeightMultiplier", "killWeightFrom",
+		"attackSpeedPercent", "damagePercent", "doubleWithNeighbors"]
 
 ## Mecânica: a contagem de um "a cada N" nunca cai abaixo disto.
 var min_trigger_count: int
 ## Teto do peso de uma morte depois do bônus da Sombria.
 var max_kill_weight: int
 var classes: Dictionary = {}  # id -> TowerClass
+## Algum nível de alguma classe dá velocidade de ataque / dano (senão os cálculos são pulados).
+var has_attack_speed_bonus := false
+var has_damage_bonus := false
 ## Ids das classes, na ordem do arquivo.
 var ids: Array[String] = []
 
@@ -95,6 +104,9 @@ static func load_data(raw: Variant) -> ClassData:
 			return null
 		data.classes[id] = tower_class
 		data.ids.append(id)
+		for level: ClassLevel in tower_class.levels:
+			data.has_attack_speed_bonus = data.has_attack_speed_bonus or level.attack_speed_percent > 0.0
+			data.has_damage_bonus = data.has_damage_bonus or level.damage_percent > 0.0
 	return data
 
 
@@ -149,6 +161,9 @@ static func _parse_level(class_id: String, index: int, raw: Variant) -> ClassLev
 	if typeof(raw.get("text")) != TYPE_STRING or raw["text"] == "":
 		_fail('%s: "text" precisa ser um texto' % where)
 		return null
+	if raw.has("doubleWithNeighbors") and typeof(raw["doubleWithNeighbors"]) != TYPE_BOOL:
+		_fail('%s: "doubleWithNeighbors" precisa ser verdadeiro ou falso' % where)
+		return null
 	var from: Variant = raw.get("killWeightFrom", "sameClass")
 	if from != "sameClass" and from != "any":
 		_fail('%s: "killWeightFrom" precisa ser "sameClass" ou "any"' % where)
@@ -162,14 +177,19 @@ static func _parse_level(class_id: String, index: int, raw: Variant) -> ClassLev
 			func(v: float) -> bool: return v > 0.0, "> 0")
 	level.trigger_count_reduction_percent = _optional(where, raw, "triggerCountReductionPercent", 0.0,
 			func(v: float) -> bool: return v >= 0.0 and v < 100.0, "de 0 a menos de 100")
+	var speed := _optional(where, raw, "attackSpeedPercent", 0.0, func(v: float) -> bool: return v >= 0.0, "≥ 0")
+	var damage_bonus := _optional(where, raw, "damagePercent", 0.0, func(v: float) -> bool: return v >= 0.0, "≥ 0")
 	var radius := _optional(where, raw, "neighborhoodRadius", 0.0,
 			func(v: float) -> bool: return floorf(v) == v and v >= 1.0, "inteiro ≥ 1")
 	level.kill_weight_multiplier = _optional(where, raw, "killWeightMultiplier", 1.0,
 			func(v: float) -> bool: return v >= 1.0, "≥ 1")
 	if is_nan(level.area_radius_multiplier) or is_nan(level.area_damage_multiplier) \
 			or is_nan(level.trigger_count_reduction_percent) or is_nan(radius) \
-			or is_nan(level.kill_weight_multiplier):
+			or is_nan(level.kill_weight_multiplier) or is_nan(speed) or is_nan(damage_bonus):
 		return null
+	level.attack_speed_percent = speed
+	level.damage_percent = damage_bonus
+	level.double_with_neighbors = raw.get("doubleWithNeighbors", false)
 	level.neighborhood_radius = int(radius)
 	level.kill_weight_from = from
 	return level

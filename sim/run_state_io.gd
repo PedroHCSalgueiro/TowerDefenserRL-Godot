@@ -36,6 +36,10 @@ static func to_dict(state: RunState) -> Dictionary:
 			"invested": t.invested,
 			"lastEffect": null if t.last_effect == null else {"effect": t.last_effect.effect, "seq": t.last_effect.seq},
 		})
+	var traps := []
+	for trap: Trap in state.traps:
+		traps.append({"id": trap.id, "ownerId": trap.owner_id, "kind": trap.kind, "x": trap.x, "y": trap.y,
+				"damage": trap.damage, "holdTicks": trap.hold_ticks, "radius": trap.radius})
 	var queue := []
 	for q: TriggerState.PendingTrigger in state.triggers.queue:
 		queue.append({
@@ -75,6 +79,7 @@ static func to_dict(state: RunState) -> Dictionary:
 		"enemies": {"slots": enemies, "free": state.enemies.free.duplicate(), "activeCount": state.enemies.active_count},
 		"projectiles": {"slots": projectiles, "free": state.projectiles.free.duplicate(), "activeCount": state.projectiles.active_count},
 		"towers": towers,
+		"traps": traps,
 		"triggers": {"queue": queue, "nextSeq": state.triggers.next_seq,
 				"lastTick": {"fired": last.fired, "maxDepth": last.max_depth, "deferred": last.deferred, "dropped": last.dropped},
 				"droppedTotal": state.triggers.dropped_total, "nextChainId": state.triggers.next_chain_id, "chains": chains},
@@ -218,6 +223,18 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		if t["lastEffect"] != null:
 			tower.last_effect = Tower.LastEffect.new(_typed_effect(t["lastEffect"]["effect"]), t["lastEffect"]["seq"])
 		state.towers.append(tower)
+
+	for t: Dictionary in d.get("traps", []):
+		var trap := Trap.new()
+		trap.id = t["id"]
+		trap.owner_id = t["ownerId"]
+		trap.kind = t["kind"]
+		trap.x = float(t["x"])
+		trap.y = float(t["y"])
+		trap.damage = float(t["damage"])
+		trap.hold_ticks = t["holdTicks"]
+		trap.radius = float(t["radius"])
+		state.traps.append(trap)
 
 	var tr: Dictionary = d["triggers"]
 	for q: Dictionary in tr["queue"]:

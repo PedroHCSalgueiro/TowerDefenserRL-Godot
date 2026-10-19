@@ -33,8 +33,10 @@ const DISCHARGE_ACTIVATION := {
 
 
 ## % do dano da torre (na estrela dela).
-static func _percent_of(tower: Tower, type: TowerData.TowerType, percent: float) -> float:
-	return (Stars.tower_damage(type, tower) * percent) / 100.0
+static func _percent_of(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, percent: float) -> float:
+	var damage := (Stars.tower_damage(type, tower) * percent) / 100.0
+	var region := ClassBonuses.damage_multiplier(env.classes, env.ctx.state, type, tower)
+	return damage * region if region != 1.0 else damage
 
 
 static func _collect_sorted(env: TriggerEngine, x: float, y: float, radius: float) -> Array:
@@ -90,7 +92,7 @@ static func _explosion(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 		"damage": 0.0,
 	}
 	ctx.emit(event)
-	var damage := _percent_of(tower, type, e["damagePercent"]) \
+	var damage := _percent_of(env, tower, type, e["damagePercent"]) \
 			* ClassBonuses.area_damage_multiplier(env.classes, ctx.state, type)
 	var options := {"killWeight": e["killWeight"]} if e["killWeight"] != 1 else {}
 	for enemy: Enemy in _collect_sorted(env, x, y, radius):
@@ -117,6 +119,10 @@ static func _activate(env: TriggerEngine, source: Tower, target: Tower, entry: T
 	})
 	var target_type := env.towers.get_type(target.type)
 	if not target_type.attacks:
+		return
+	if target_type.shot["kind"] == "trap":
+		# Torre de armadilha ativada: põe estrepes na hora em vez de atirar.
+		TrapSystems.place_caltrop(ctx, env.routes, target, target_type)
 		return
 	var enemy := TowerSystems.find_tower_target(env.index, state, target, target_type, env.scores)
 	if enemy != null:
@@ -151,7 +157,7 @@ static func _activate_neighbors(env: TriggerEngine, tower: Tower, type: TowerDat
 static func _release_lightning(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary,
 		first: Enemy, entry: TriggerState.PendingTrigger) -> void:
 	var ctx := env.ctx
-	var damage := _percent_of(tower, type, e["damagePercent"])
+	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var skip := func(enemy: Enemy) -> bool: return _struck.has(enemy.id)
 	var event := {
 		"type": "lightningStruck",
@@ -212,7 +218,7 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 	var uy := dy / length if length > 0.0 else 0.0
 	var reach: float = env.unlimited_line_length if e["unlimited"] else type.range
 	var half_width: float = e["halfWidth"]
-	var damage := _percent_of(tower, type, e["damagePercent"])
+	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var in_line := _collect_sorted(env, tx, ty, reach + half_width).filter(func(enemy: Enemy) -> bool:
 		var px := enemy.x - tx
 		var py := enemy.y - ty
@@ -338,6 +344,8 @@ static func run_effect(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 			return _stun_front(env, tower, type, effect)
 		"stunSlowed":
 			return _stun_slowed(env, tower, type, effect)
+		"trap":
+			return _bear_trap(env, tower, type, effect)
 	return false
 
 
@@ -381,3 +389,12 @@ static func _stun_slowed(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 		return false
 	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun", "count": count})
 	return true
+
+
+## Armadilha de urso no ponto livre do caminho mais perto do núcleo, dentro do alcance. Devolve se pôs.
+static func _bear_trap(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var per_second := float(env.seconds_to_ticks(1.0))
+	var damage_per_tick := _percent_of(env, tower, type, e["damagePercent"]) / per_second
+	var radius: float = type.shot["radius"] if type.shot["kind"] == "trap" else 0.5
+	return TrapSystems.place_trap(env.ctx, env.routes, tower, type, "bear", damage_per_tick,
+			env.seconds_to_ticks(e["holdSeconds"]), radius, int(e["maxTraps"]))

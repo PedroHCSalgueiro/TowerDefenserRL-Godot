@@ -79,11 +79,14 @@ static var DO_PARAMS := {
 	"empoweredShot": [_positive("radiusMultiplier"), _positive("damagePercent")],
 	## Atordoa por `stunSeconds` os inimigos no alcance que já estão Lentos.
 	"stunSlowed": [_positive("stunSeconds")],
+	## Põe uma armadilha de urso no caminho: o inimigo que pisa fica preso `holdSeconds` e sangra
+	## `damagePercent`% do dano da torre por segundo. No máximo `maxTraps` dessas por torre.
+	"trap": [_positive("holdSeconds"), _positive("damagePercent"), _count("maxTraps")],
 }
 
 ## "O quê" que aplicam efeitos de estado: precisam do sistema de estados e só contam como visíveis
 ## na cadeia quando acertam alguém.
-const STATUS_EFFECTS := ["stunFront", "stunSlowed"]
+const STATUS_EFFECTS := ["stunFront", "stunSlowed", "trap"]
 
 ## Parâmetro de estrela que vale para qualquer gatilho: multiplica o dano do ataque
 ## normal da torre (e, com ele, tudo que é % do dano dela).

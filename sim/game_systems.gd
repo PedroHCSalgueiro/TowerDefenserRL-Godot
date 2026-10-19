@@ -12,8 +12,8 @@ extends RefCounted
 ## o índice espacial uma única vez por tick. O índice é compartilhado pelo núcleo, pelos projéteis
 ## (troca de alvo e área), pelas torres e pelos gatilhos.
 ##
-## O sistema de estados (Lento, Atordoado, Sangramento) roda depois das torres e só entra se algum tipo de
-## torre aplica estado (`TowerData.uses_statuses`).
+## O sistema de estados (Lento, Atordoado, Sangramento) e o de armadilhas rodam depois das torres e só entram
+## se algum tipo de torre aplica estado (`TowerData.uses_statuses`) ou põe armadilha (`uses_traps`).
 ##
 ## Os gatilhos enxergam todos os tiros e abates do tick; o ouro dos abates é somado depois deles, e
 ## só então a onda pode fechar (os juros já contam o ouro do último abate). As classes rodam por
@@ -48,11 +48,12 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		NexusSystems.create_nexus_contact_system(routes, enemies),
 		NexusSystems.create_nexus_attack_system(map.nexus, enemies, nexus, ticks_per_second, index),
 		ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius, ticks_per_second, towers),
-		TowerSystems.create_tower_system(index, towers, scores, ticks_per_second, classes),
+		TowerSystems.create_tower_system(index, towers, scores, ticks_per_second, classes, routes),
 		Status.create_status_system(enemies) if towers.uses_statuses() else Callable(),
+		TrapSystems.create_trap_system(enemies, index) if towers.uses_traps() else Callable(),
 		TriggerEngine.create_trigger_system({
 			"index": index, "enemies": enemies, "towers": towers, "classes": classes,
-			"scores": scores, "ticksPerSecond": ticks_per_second,
+			"scores": scores, "ticksPerSecond": ticks_per_second, "routes": routes,
 		}),
 		Economy.create_gold_system(enemies, economy),
 		WaveSystems.create_wave_progress_system(enemies, schedules, economy, towers),

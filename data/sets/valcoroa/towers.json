@@ -275,14 +275,42 @@
         "valcoroa"
       ],
       "damage": 6,
-      "shotsPerSecond": 1,
+      "shotsPerSecond": 0.5,
       "range": 3,
       "projectileSpeed": 8,
       "shot": {
-        "kind": "single"
+        "kind": "trap",
+        "radius": 0.5,
+        "damagePercent": 300,
+        "maxTraps": 4
       },
       "targetMode": "first",
-      "trigger": null
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "trap",
+        "stars": [
+          {
+            "seconds": 10,
+            "holdSeconds": 4,
+            "damagePercent": 60,
+            "maxTraps": 2
+          },
+          {
+            "seconds": 9,
+            "holdSeconds": 4.5,
+            "damagePercent": 80,
+            "maxTraps": 2,
+            "attackDamagePercent": 125
+          },
+          {
+            "seconds": 8,
+            "holdSeconds": 5,
+            "damagePercent": 100,
+            "maxTraps": 3,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
     },
     "isolde": {
       "name": "Rainha Isolde",

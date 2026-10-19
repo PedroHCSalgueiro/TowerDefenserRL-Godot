@@ -27,7 +27,8 @@ class TowerType:
 	var shots_per_second: float
 	var range: float
 	var projectile_speed: float
-	## Tiro único ({"kind": "single"}) ou em área ({"kind": "area", "radius": float}).
+	## Tiro único ({"kind": "single"}), em área ({"kind": "area", "radius": float}) ou armadilha
+	## ({"kind": "trap", "radius", "damagePercent", "maxTraps"}: estrepes no caminho, sem projétil).
 	var shot: Dictionary
 	var target_mode: String
 	## TriggerData.TriggerDef ou null.
@@ -58,6 +59,19 @@ func uses_statuses() -> bool:
 		if type.trigger != null:
 			for star in type.trigger.stars:
 				if TriggerData.STATUS_EFFECTS.has(star.effect["kind"]):
+					return true
+	return false
+
+
+## Algum tipo põe armadilhas (tiro "trap" ou o efeito "trap")? Sem isso, o sistema de armadilhas não entra.
+func uses_traps() -> bool:
+	for id: String in types:
+		var type: TowerType = types[id]
+		if type.shot["kind"] == "trap":
+			return true
+		if type.trigger != null:
+			for star in type.trigger.stars:
+				if star.effect["kind"] == "trap":
 					return true
 	return false
 
@@ -170,7 +184,11 @@ static func _parse_shot(id: String, raw: Variant) -> Dictionary:
 		return {"kind": "single"}
 	if raw is Dictionary and raw.get("kind") == "area" and _is_positive(raw.get("radius")):
 		return {"kind": "area", "radius": float(raw["radius"])}
-	push_error('Torre inválida: "%s" tem "shot" inválido (single, ou area com radius > 0)' % id)
+	if raw is Dictionary and raw.get("kind") == "trap" and _is_positive(raw.get("radius")) \
+			and _is_positive(raw.get("damagePercent")) and _is_positive(raw.get("maxTraps")):
+		return {"kind": "trap", "radius": float(raw["radius"]), "damagePercent": float(raw["damagePercent"]),
+				"maxTraps": int(raw["maxTraps"])}
+	push_error('Torre inválida: "%s" tem "shot" inválido (single, area com radius > 0, ou trap com radius, damagePercent e maxTraps)' % id)
 	return {}
 
 

@@ -262,7 +262,7 @@ func test_lyra_virote_perfurante_pega_no_maximo_3() -> void:
 
 
 func test_run_toda_de_valcoroa_ida_e_volta_do_save() -> void:
-	var result := _with_heroes("save-vc", ["aldric", "lyra", "tomas", "brom", "selene", "wulf", "isolde"], 500, 2)
+	var result := _with_heroes("save-vc", ["aldric", "lyra", "tomas", "brom", "selene", "wulf", "mabel", "isolde"], 700, 2)
 	var sim: Simulation = result[0]
 	assert_gt(sim.state.enemies.active_count, 0)
 	var restored := Simulation.restore(sim.serialize(), GameSystems.create(_map), _map)
@@ -271,3 +271,121 @@ func test_run_toda_de_valcoroa_ida_e_volta_do_save() -> void:
 	var b := _run(restored, 200)
 	assert_eq(a.size(), b.size())
 	assert_eq(restored.serialize(), sim.serialize(), "e a run segue igual")
+
+
+# ------------------------------------------------------------------ Mabel
+
+func test_mabel_poe_estrepes_e_armadilha_de_urso_e_os_inimigos_pisam() -> void:
+	var sim := _sim("mabel")
+	sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
+	var cell: Vector2i = WaveBot.bot_cells(_map)[0]
+	sim.enqueue({"type": "placeTower", "towerType": "mabel", "x": cell.x, "y": cell.y})
+	sim.enqueue({"type": "debugSetStress", "stress": {"count": 40, "layout": "spread"}})
+	var placed := {"caltrop": 0, "bear": 0}
+	var sprung := {"caltrop": 0, "bear": 0}
+	var max_alive := 0
+	for i in 1500:
+		sim.step()
+		for e: Dictionary in sim.drain_events():
+			if e["type"] == "trapPlaced":
+				placed[e["kind"]] += 1
+				var dx: float = e["x"] - float(cell.x)
+				var dy: float = e["y"] - float(cell.y)
+				assert_lte(sqrt(dx * dx + dy * dy), 3.0 + 1e-9, "a armadilha fica dentro do alcance")
+			elif e["type"] == "trapSprung":
+				sprung[e["kind"]] += 1
+		max_alive = maxi(max_alive, sim.state.traps.size())
+	assert_gt(placed["caltrop"], 0, "estrepes")
+	assert_gt(placed["bear"], 0, "armadilha de urso")
+	assert_gt(sprung["caltrop"], 0, "um inimigo pisou nos estrepes")
+	assert_lte(max_alive, 4 + 2, "o teto de armadilhas vivas vale")
+
+
+func test_armadilha_de_urso_prende_e_faz_sangrar() -> void:
+	var sim := _sim("urso")
+	var victim := _spawned(sim)
+	var trap := Trap.new()
+	trap.id = 5000
+	trap.owner_id = 9
+	trap.kind = "bear"
+	trap.x = victim.x
+	trap.y = victim.y
+	trap.damage = 0.5
+	trap.hold_ticks = 30
+	trap.radius = 0.5
+	sim.state.traps.append(trap)
+	var hp := victim.hp
+	_run(sim, 1)
+	assert_eq(sim.state.traps.size(), 0, "a armadilha some depois de pisada")
+	var where := victim.distance
+	_run(sim, 9)
+	assert_eq(victim.distance, where, "preso")
+	assert_lt(victim.hp, hp, "sangrando")
+
+
+func test_estrepes_dao_dano_uma_vez() -> void:
+	var sim := _sim("estrepes")
+	var victim := _spawned(sim)
+	var trap := Trap.new()
+	trap.id = 5001
+	trap.owner_id = 9
+	trap.kind = "caltrop"
+	trap.x = victim.x
+	trap.y = victim.y
+	trap.damage = 7.0
+	trap.radius = 0.5
+	sim.state.traps.append(trap)
+	var hp := victim.hp
+	_run(sim, 1)
+	assert_eq(victim.hp, hp - 7.0)
+	assert_eq(sim.state.traps.size(), 0)
+
+
+# ------------------------------------------------------------------ região
+
+func test_bonus_do_reino_de_valcoroa_3_5_8() -> void:
+	var cells := WaveBot.bot_cells(_map)
+	var ids := ["aldric", "lyra", "tomas", "brom", "selene", "wulf", "mabel", "isolde"]
+	var data := TowerData.game_data()
+	var classes := ClassData.game_data()
+	var sim := _sim("regiao")
+	var spots := _spread_cells(cells, 8)
+	for i in 8:
+		sim.state.towers.append(Tower.new(8000 + i, ids[i], spots[i], 1))
+	# Com 3 tipos: +15% de velocidade; com 5: +30% e +10% de dano; com 8: o mesmo (sem vizinhas, sem dobrar).
+	var expected := [[3, 15.0, 1.0], [5, 30.0, 1.1], [8, 30.0, 1.1]]
+	var all: Array[Tower] = sim.state.towers.duplicate()
+	for row in expected:
+		sim.state.towers.assign(all.slice(0, row[0]))
+		sim.step()
+		var member: Tower = sim.state.towers[0]
+		var type := data.get_type(member.type)
+		assert_eq(ClassBonuses.attack_speed_percent(classes, sim.state, type, member), row[1], "%d tipos: velocidade" % row[0])
+		assert_almost_eq(ClassBonuses.damage_multiplier(classes, sim.state, type, member), row[2], 1e-12, "%d tipos: dano" % row[0])
+	# Com 8, uma vizinha do Reino ao lado dobra o bônus.
+	var pair := _adjacent_cells()
+	all[0].x = pair[0].x
+	all[0].y = pair[0].y
+	all[1].x = pair[1].x
+	all[1].y = pair[1].y
+	sim.state.towers.assign(all)
+	sim.step()
+	var type0 := data.get_type(all[0].type)
+	assert_eq(ClassBonuses.attack_speed_percent(classes, sim.state, type0, all[0]), 60.0, "vizinhos do Reino dobram o bônus")
+	assert_almost_eq(ClassBonuses.damage_multiplier(classes, sim.state, type0, all[0]), 1.2, 1e-12)
+
+
+##  casas de torre bem separadas (nenhuma vizinha ortogonal de outra).
+func _spread_cells(cells: Array, count: int) -> Array:
+	var out: Array = []
+	for cell: Vector2i in cells:
+		var clear := true
+		for other: Vector2i in out:
+			if absi(other.x - cell.x) + absi(other.y - cell.y) <= 1:
+				clear = false
+				break
+		if clear:
+			out.append(cell)
+			if out.size() == count:
+				break
+	return out

@@ -46,6 +46,43 @@ static func area_damage_multiplier(data: ClassData, state: Object, type: TowerDa
 	return mult
 
 
+## Região (Reino de Valcoroa): % de velocidade de ataque que a torre recebe dos níveis ativos das
+## classes dela. No nível "dobra com vizinhos", a torre com uma vizinha ortogonal da mesma classe recebe
+## o bônus em dobro.
+static func attack_speed_percent(data: ClassData, state: Object, type: TowerData.TowerType, tower: Tower) -> float:
+	if not data.has_attack_speed_bonus:
+		return 0.0
+	var total := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null and level.attack_speed_percent > 0.0:
+			total += level.attack_speed_percent * _doubling(level, state, tower, id)
+	return total
+
+
+## Região: multiplicador do dano da torre (ataque normal e efeitos de gatilho), com o mesmo "dobra com vizinhos".
+static func damage_multiplier(data: ClassData, state: Object, type: TowerData.TowerType, tower: Tower) -> float:
+	if not data.has_damage_bonus:
+		return 1.0
+	var mult := 1.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null and level.damage_percent > 0.0:
+			mult *= 1.0 + (level.damage_percent * _doubling(level, state, tower, id)) / 100.0
+	return mult
+
+
+static func _doubling(level: ClassData.ClassLevel, state: Object, tower: Tower, class_id: String) -> float:
+	if not level.double_with_neighbors:
+		return 1.0
+	var towers_data := TowerData.game_data()
+	for other: Tower in state.towers:
+		if other != tower and absi(other.x - tower.x) + absi(other.y - tower.y) == 1 \
+				and towers_data.has_type(other.type) and towers_data.types[other.type].classes.has(class_id):
+			return 2.0
+	return 1.0
+
+
 ## Mecânica: contagem de um "a cada N" depois do desconto. Arredonda para baixo, nunca
 ## passa de `base` e nunca cai abaixo do mínimo dos dados. O desconto é aplicado sobre o N
 ## da estrela; a conta é em inteiros. Depois dele, a carta da Mecânica das recompensas
