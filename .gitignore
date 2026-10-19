@@ -16,3 +16,9 @@ export/
 # Testes e capturas temporárias
 _prints_teste/
 *.log
+
+# Texturas extraídas do sir-aldric.glb na importação (regeneradas pelo Godot)
+assets/sir-aldric_*.jpg
+assets/sir-aldric_*.jpg.import
+assets/sir-aldric_*.png
+assets/sir-aldric_*.png.import

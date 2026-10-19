@@ -57,8 +57,14 @@ citadas, apresente um plano e só então implemente.
 3. Nunca decidir regra de jogo sozinho: registrar em "Perguntas de design" e perguntar ao Pedro.
 4. Commit e push antes de marcar como Feito.
 
-## Comandos (a preencher conforme a instalação do Godot e do GUT)
-- Abrir editor: `godot --editor --path .`
-- Rodar jogo: `godot --path .`
-- Testes: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
-- Export: `godot --headless --export-release "Windows" build/windows/game.exe` e `"Web"` (presets a criar)
+## Comandos
+Godot 4.7.2 nesta máquina (a pasta se chama `.exe`; o executável está dentro dela):
+`E:\Download\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe` (use `$g` abaixo).
+O MCP do Godot procura em `C:\Program Files\Godot\Godot.exe`; definir `GODOT_PATH` se for usá-lo.
+- Importar assets (após clonar ou mudar arte): `$g --headless --path . --import`
+- Abrir editor: `$g --editor --path .`
+- Rodar jogo: `$g --path .`
+- Testes (GUT 9.7.1): `$g --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
+- Export: `$g --headless --export-release "Windows" build/windows/game.exe` e `"Web"` (presets a criar)
+
+Texturas extraídas do `sir-aldric.glb` na importação ficam fora do git (ver `.gitignore`).
