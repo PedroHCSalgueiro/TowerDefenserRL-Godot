@@ -129,6 +129,17 @@ for (const policy of policies) {
   P('"Dano por torre por onda" = dano total do herói ÷ (torres do herói no mapa somadas em cada onda): mostra quanto cada cópia rende, independente de quantas foram compradas. Dano de Sangramento e de armadilha conta para o herói que o causou.');
   P();
 
+  // Raridades: quando aparecem na prática
+  const RAR = [['common', 'Comum'], ['uncommon', 'Incomum'], ['rare', 'Raro'], ['legendary', 'Lendário']];
+  P('**Raridades compradas:** ' + RAR.map(([k, n]) => {
+    const firsts = rs.map((r) => (r.firstBuyWave || {})[k]).filter((x) => x !== undefined);
+    const buys = mean(rs.map((r) => (r.buysByRarity || {})[k] || 0));
+    return firsts.length
+      ? `${n}: ${fmt(buys, 1)} por run, primeira compra na onda ${fmt(mean(firsts), 1)} em média (a mais cedo: ${Math.min(...firsts)})`
+      : `${n}: nenhuma`;
+  }).join(' · ') + '.');
+  P();
+
   // Inimigos
   const ke = {};
   for (const r of rs) for (const [t, n] of Object.entries(r.killsByEnemy)) ke[t] = (ke[t] || 0) + n;

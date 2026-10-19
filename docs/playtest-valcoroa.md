@@ -8,133 +8,119 @@
 
 ## Política: sequential
 
-**Resultado:** 10 vitórias, 90 derrotas, 0 sem fim (10% de vitória).
-**Onda alcançada:** média 38,2 · mediana 38 · p10 37 · p90 40 (de 40).
-**Duração da run:** média 27min37s · mediana 27min33s · mais curta 21min18s · mais longa 33min16s.
+**Resultado:** 0 vitórias, 100 derrotas, 0 sem fim (0% de vitória).
+**Onda alcançada:** média 34,7 · mediana 35 · p10 32 · p90 37 (de 40).
+**Duração da run:** média 23min42s · mediana 23min56s · mais curta 18min00s · mais longa 28min47s.
 
-**Em que onda a run acaba (derrotas):** onda 40: 37 · onda 39: 28 · onda 38: 16 · onda 37: 8 · onda 36: 1.
+**Em que onda a run acaba (derrotas):** onda 35: 26 · onda 37: 24 · onda 36: 17 · onda 38: 13 · onda 34: 8 · onda 33: 5 · onda 32: 4 · onda 30: 1.
 
 ### Duração de cada onda, ouro guardado e torres, por faixa de ondas
 
 | Ondas | Duração média da onda | Ouro guardado (média) | Ouro guardado (p90) | Torres | Vida do núcleo ao fim |
 | --- | --- | --- | --- | --- | --- |
-| 1–5 | 22 s | 4 | 9 | 2,2 | 18,8 |
-| 6–10 | 24 s | 9 | 19 | 5,8 | 33,2 |
-| 11–15 | 25 s | 25 | 74 | 9,7 | 49,2 |
-| 16–20 | 30 s | 114 | 256 | 13,0 | 66,5 |
-| 21–25 | 39 s | 290 | 598 | 15,9 | 83,5 |
-| 26–30 | 51 s | 668 | 1.190 | 18,3 | 96,6 |
-| 31–35 | 69 s | 1.320 | 2.253 | 20,5 | 105,4 |
-| 36–40 | 91 s | 2.327 | 3.828 | 22,4 | 80,4 |
+| 1–5 | 23 s | 4 | 7 | 1,9 | 17,8 |
+| 6–10 | 27 s | 9 | 19 | 4,4 | 27,0 |
+| 11–15 | 28 s | 15 | 46 | 7,3 | 40,1 |
+| 16–20 | 33 s | 41 | 99 | 10,0 | 52,9 |
+| 21–25 | 42 s | 86 | 181 | 12,4 | 66,5 |
+| 26–30 | 51 s | 187 | 392 | 14,4 | 76,1 |
+| 31–35 | 70 s | 339 | 662 | 16,2 | 69,0 |
+| 36–40 | 82 s | 339 | 793 | 17,7 | 40,4 |
 
 ### Ouro
 
-Ouro ganho por run: média 20.364 (mediana 20.273). Sobra no fim: média 3.817; maior pico guardado: média 4.974, máximo 7.076.
+Ouro ganho por run: média 4.542 (mediana 4.595). Sobra no fim: média 557; maior pico guardado: média 904, máximo 1.268.
 
 | De onde vem | Ouro por run | % do total |
 | --- | --- | --- |
-| Abates | 17.451 | 85,7% |
-| Bônus de fim de onda | 2.556 | 12,6% |
-| Juros | 357 | 1,8% |
+| Abates | 2.755 | 60,6% |
+| Bônus de fim de onda | 1.546 | 34,0% |
+| Juros | 241 | 5,3% |
 | Chamada antecipada | 0 | 0,0% |
 | Cadeia lucrativa | 0 | 0,0% |
 
-Núcleo evoluído até o nível 18,9 em média; compras: 40,9 torres, 59,0 fusões e 55,4 rerolls por run.
+Núcleo evoluído até o nível 13,4 em média; compras: 29,5 torres, 41,8 fusões e 43,1 rerolls por run.
 
 ### Torres: dano, abates e uso
 
 | Herói | % do dano | % dos abates | Dano por torre por onda | vs. média | Dano por tiro | Estrela média | Compras/run | Presente em |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Sir Aldric | 4,9% | 9,6% | 1.002 | 0,71× | 19,6 | 2,40 | 1,7 | 86% das runs |
-| Lyra | 6,7% | 11,4% | 1.470 | 1,05× | 18,0 | 2,42 | 1,7 | 81% das runs |
-| Irmão Tomás | 0,7% | 1,4% | 149 | 0,11× | 3,7 | 2,34 | 1,6 | 85% das runs |
-| Mestre Brom | 37,7% | 22,6% | 4.464 | 3,18× | 87,2 | 2,61 | 4,6 | 100% das runs |
-| Dama Selene | 5,9% | 9,1% | 700 | 0,50× | 10,8 | 2,61 | 4,6 | 100% das runs |
-| Wulf | 10,9% | 4,8% | 1.226 | 0,87× | 21,3 | 2,59 | 4,8 | 100% das runs |
-| Engenheira Mabel | 16,1% | 15,2% | 1.095 | 0,78× | 0,0 | 2,74 | 10,8 | 100% das runs |
-| Rainha Isolde | 17,1% | 25,8% | 1.127 | 0,80× | 17,3 | 2,74 | 11,0 | 100% das runs |
+| Sir Aldric | 15,0% | 26,4% | 998 | 0,70× | 19,3 | 2,63 | 3,8 | 99% das runs |
+| Lyra | 19,9% | 30,2% | 1.375 | 0,96× | 16,7 | 2,61 | 3,6 | 100% das runs |
+| Irmão Tomás | 1,8% | 3,4% | 126 | 0,09× | 3,4 | 2,62 | 3,7 | 100% das runs |
+| Mestre Brom | 26,1% | 13,6% | 4.180 | 2,91× | 58,1 | 2,44 | 3,5 | 98% das runs |
+| Dama Selene | 8,9% | 10,8% | 719 | 0,50× | 10,8 | 2,62 | 4,4 | 100% das runs |
+| Wulf | 16,5% | 5,4% | 1.393 | 0,97× | 21,9 | 2,63 | 4,5 | 100% das runs |
+| Engenheira Mabel | 7,0% | 5,8% | 1.143 | 0,80× | 0,0 | 2,45 | 3,6 | 98% das runs |
+| Rainha Isolde | 4,7% | 4,4% | 1.543 | 1,08× | 17,2 | 2,30 | 2,6 | 87% das runs |
 
 "Dano por torre por onda" = dano total do herói ÷ (torres do herói no mapa somadas em cada onda): mostra quanto cada cópia rende, independente de quantas foram compradas. Dano de Sangramento e de armadilha conta para o herói que o causou.
 
-Abates por tipo de inimigo (por run): armored 169 · boss 1 · common 610 · fast 270 · flying 188 · bossFinal 0. Pico de inimigos no mapa: média 101, máximo 115.
+**Raridades compradas:** Comum: 11,0 por run, primeira compra na onda 1,0 em média (a mais cedo: 1) · Incomum: 8,9 por run, primeira compra na onda 9,4 em média (a mais cedo: 7) · Raro: 7,0 por run, primeira compra na onda 18,1 em média (a mais cedo: 10) · Lendário: 2,6 por run, primeira compra na onda 26,9 em média (a mais cedo: 18).
+
+Abates por tipo de inimigo (por run): armored 125 · boss 1 · common 465 · fast 201 · flying 139. Pico de inimigos no mapa: média 71, máximo 99.
 
 ## Política: stack
 
 **Resultado:** 0 vitórias, 100 derrotas, 0 sem fim (0% de vitória).
-**Onda alcançada:** média 31,2 · mediana 31 · p10 29 · p90 33 (de 40).
-**Duração da run:** média 11min59s · mediana 11min59s · mais curta 10min59s · mais longa 13min15s.
+**Onda alcançada:** média 24,9 · mediana 26 · p10 24 · p90 27 (de 40).
+**Duração da run:** média 9min50s · mediana 10min02s · mais curta 1min42s · mais longa 11min37s.
 
-**Em que onda a run acaba (derrotas):** onda 32: 28 · onda 33: 28 · onda 31: 16 · onda 34: 12 · onda 30: 9 · onda 29: 3 · onda 35: 3 · onda 36: 1.
+**Em que onda a run acaba (derrotas):** onda 27: 30 · onda 28: 19 · onda 25: 18 · onda 26: 18 · onda 20: 5 · onda 29: 3 · onda 30: 3 · onda 24: 2.
 
 ### Duração de cada onda, ouro guardado e torres, por faixa de ondas
 
 | Ondas | Duração média da onda | Ouro guardado (média) | Ouro guardado (p90) | Torres | Vida do núcleo ao fim |
 | --- | --- | --- | --- | --- | --- |
-| 1–5 | 24 s | 4 | 9 | 1,9 | 18,5 |
-| 6–10 | 23 s | 19 | 41 | 5,6 | 34,9 |
-| 11–15 | 25 s | 60 | 122 | 9,8 | 53,3 |
-| 16–20 | 31 s | 158 | 311 | 13,0 | 70,6 |
-| 21–25 | 46 s | 367 | 675 | 15,7 | 86,4 |
-| 26–30 | 67 s | 707 | 1.313 | 17,9 | 89,8 |
-| 31–35 | 84 s | 969 | 1.845 | 19,9 | 60,1 |
-| 36–40 | — | 1.495 | 2.562 | 21,1 | — |
+| 1–5 | 26 s | 3 | 7 | 1,7 | 16,8 |
+| 6–10 | 30 s | 10 | 23 | 4,1 | 26,8 |
+| 11–15 | 36 s | 23 | 55 | 6,7 | 39,5 |
+| 16–20 | 43 s | 48 | 95 | 9,8 | 53,2 |
+| 21–25 | 59 s | 99 | 192 | 11,8 | 58,1 |
+| 26–30 | 72 s | 175 | 329 | 13,7 | 35,4 |
+| 31–35 | — | 275 | 460 | 15,0 | — |
+| 36–40 | — | — | — | — | — |
 
 ### Ouro
 
-Ouro ganho por run: média 10.645 (mediana 10.570). Sobra no fim: média 1.331; maior pico guardado: média 2.206, máximo 3.073.
+Ouro ganho por run: média 1.981 (mediana 2.032). Sobra no fim: média 193; maior pico guardado: média 356, máximo 537.
 
 | De onde vem | Ouro por run | % do total |
 | --- | --- | --- |
-| Abates | 8.660 | 81,4% |
-| Bônus de fim de onda | 1.757 | 16,5% |
-| Juros | 227 | 2,1% |
+| Abates | 1.016 | 51,3% |
+| Bônus de fim de onda | 870 | 43,9% |
+| Juros | 95 | 4,8% |
 | Chamada antecipada | 0 | 0,0% |
 | Cadeia lucrativa | 0 | 0,0% |
 
-Núcleo evoluído até o nível 16,9 em média; compras: 36,1 torres, 50,8 fusões e 9,5 rerolls por run.
-Chamadas antecipadas por run: 29,5 · ondas ativas ao chamar: 2,45 em média, máximo 7.
+Núcleo evoluído até o nível 10,5 em média; compras: 23,1 torres, 31,5 fusões e 4,2 rerolls por run.
+Chamadas antecipadas por run: 24,1 · ondas ativas ao chamar: 2,47 em média, máximo 6.
 
 ### Torres: dano, abates e uso
 
 | Herói | % do dano | % dos abates | Dano por torre por onda | vs. média | Dano por tiro | Estrela média | Compras/run | Presente em |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Sir Aldric | 9,3% | 18,4% | 451 | 0,70× | 19,3 | 2,51 | 3,6 | 99% das runs |
-| Lyra | 14,3% | 22,3% | 755 | 1,17× | 19,1 | 2,51 | 3,3 | 99% das runs |
-| Irmão Tomás | 1,3% | 2,5% | 64 | 0,10× | 3,6 | 2,46 | 3,5 | 100% das runs |
-| Mestre Brom | 40,1% | 21,7% | 2.090 | 3,24× | 82,3 | 2,51 | 4,6 | 100% das runs |
-| Dama Selene | 6,1% | 8,3% | 338 | 0,52× | 11,0 | 2,47 | 4,3 | 99% das runs |
-| Wulf | 10,2% | 3,4% | 572 | 0,89× | 21,8 | 2,46 | 4,3 | 100% das runs |
-| Engenheira Mabel | 8,5% | 7,8% | 418 | 0,65× | 0,0 | 2,50 | 6,1 | 100% das runs |
-| Rainha Isolde | 10,1% | 15,5% | 480 | 0,74× | 17,3 | 2,50 | 6,3 | 100% das runs |
+| Sir Aldric | 23,8% | 36,6% | 438 | 0,81× | 17,2 | 2,59 | 4,6 | 98% das runs |
+| Lyra | 30,5% | 38,1% | 574 | 1,07× | 15,3 | 2,57 | 4,5 | 98% das runs |
+| Irmão Tomás | 3,7% | 5,2% | 66 | 0,12× | 3,2 | 2,57 | 4,8 | 100% das runs |
+| Mestre Brom | 12,0% | 4,8% | 1.258 | 2,34× | 41,0 | 2,01 | 1,4 | 74% das runs |
+| Dama Selene | 9,6% | 8,4% | 328 | 0,61× | 10,3 | 2,35 | 3,2 | 96% das runs |
+| Wulf | 14,9% | 2,8% | 574 | 1,07× | 20,9 | 2,33 | 2,9 | 97% das runs |
+| Engenheira Mabel | 3,9% | 2,7% | 466 | 0,87× | 0,0 | 1,90 | 1,1 | 73% das runs |
+| Rainha Isolde | 1,4% | 1,1% | 599 | 1,11× | 16,8 | 1,64 | 0,5 | 33% das runs |
 
 "Dano por torre por onda" = dano total do herói ÷ (torres do herói no mapa somadas em cada onda): mostra quanto cada cópia rende, independente de quantas foram compradas. Dano de Sangramento e de armadilha conta para o herói que o causou.
 
-Abates por tipo de inimigo (por run): armored 90 · boss 1 · common 385 · fast 156 · flying 120. Pico de inimigos no mapa: média 136, máximo 200.
+**Raridades compradas:** Comum: 14,0 por run, primeira compra na onda 1,0 em média (a mais cedo: 1) · Incomum: 6,1 por run, primeira compra na onda 9,7 em média (a mais cedo: 7) · Raro: 2,5 por run, primeira compra na onda 17,6 em média (a mais cedo: 9) · Lendário: 0,5 por run, primeira compra na onda 23,0 em média (a mais cedo: 17).
+
+Abates por tipo de inimigo (por run): armored 52 · boss 1 · common 238 · fast 90 · flying 68. Pico de inimigos no mapa: média 77, máximo 105.
 
 
-## Leitura (depois do balanço)
+## Leitura (raridade por onda, 4 raridades, ouro mais curto)
 
-Este relatório é o **depois**. O **antes** (regras da primeira versão) está em `playtest-valcoroa-antes.md`.
+Comparado com a rodada anterior (`playtest-valcoroa-rodada3.md`): vitória clássica 10% → 0%, onda média 38,2 → 34,7, ouro ganho por run 20.364 → 4.542, ouro guardado nas ondas 36–40 2.327 → 339, núcleo nível 18,9 → 13,4, duração 27,5 → 23,7 min.
 
-| | Antes | Depois |
-|---|---|---|
-| Vitória (jogador clássico) | 18% | 10% |
-| Onda alcançada (clássico) | 38,2 | 38,2 |
-| Vitória (jogador apressado) | 0% | 0% |
-| Ouro ganho por run (clássico) | 37.052 | 20.364 |
-| Ouro guardado nas ondas 36–40 | 4.676 | 2.327 |
-| Maior pico guardado (máximo) | 12.023 | 7.076 |
-| Mestre Brom no dano total | 52% | 38% |
-| Brom por cópia (média = 1,0×) | 4,2× | 3,2× |
-| Duração da run clássica | 29 min | 27,5 min |
-
-**O que mudou nas regras:** ouro por abate a cada 2 ondas (1 nas ondas 1–2 até 20 nas 39–40, em vez do número da onda); Mestre Brom com dano 7 e bola carregada mais fraca; Aldric 14, Selene 10, Mabel 11, Isolde 12,5 e Wulf 13 de dano; aura do Irmão Tomás +15% (+30% para o Reino).
-
-**Como se chegou aos números:** varredura de 30 runs por configuração (ver os commits "Balanço de Valcoroa"). O corte de ouro sozinho derrubava a vitória de ~23% para ~7%, e o nerf do Brom sozinho para ~3%; por isso o Brom ficou em meio-termo e os outros heróis ganharam dano.
-
-**Ainda aberto:**
-- O Brom continua o herói mais forte por cópia (3,2× a média) e o Irmão Tomás o mais fraco em dano (0,11×; ele é suporte e o ganho que dá às vizinhas não entra nessa conta).
-- O ouro guardado no fim das runs ainda passa de 2.000 nas ondas 36–40 (antes 4.700), porque depois da onda ~25 não há em que gastar além da evolução do núcleo.
-- O bot clássico perde quase sempre nas ondas 38–40; o apressado chega à onda ~31. A chamada antecipada nunca rendeu ouro, porque a janela do bônus quase nunca está aberta quando o bot chama.
-- Cadeias em Valcoroa são curtas (média 3 a 4 disparos); só a Dama Selene ativa vizinhas.
-- Bots não são pessoas: valem para comparar heróis e regras, não para prever o resultado de quem joga bem.
+- **Raridade por onda funciona:** a primeira compra de incomum fica na onda ~9, a de raro na ~18 e a de lendário na ~27. As compras mais cedo (incomum na 7, raro na 10, lendário na 18) vêm da carta de recompensa "Loja melhor", que empurra uma faixa.
+- **O acúmulo de ouro acabou** (pico máximo 1.268), mas a renda ficou curta para os bots: eles chegam a 14 torres na onda 26–30 (antes 18). Bots são mais fracos que uma pessoa; use a sensação de jogo para decidir se a curva está dura demais.
+- **Brom** ainda é ~2,9× a média por cópia, mas a parte dele no dano total caiu para 26% (os comuns carregam mais no começo). **Isolde** (lendária) rende 1,1× por cópia e aparece em 87% das runs.
+- Se ficar duro demais, os botões estão em `data/sets/valcoroa/economy.json`: `waveBonus` (8 + 2 por onda) e `killGold.waveStep` (10; com 5 o ouro por abate sobe duas vezes mais rápido).

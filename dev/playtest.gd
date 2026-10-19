@@ -91,7 +91,7 @@ func _play(seed_text: String, policy: String, interval: int) -> Dictionary:
 		"earlyGold": 0, "chainGold": 0, "maxGold": 0, "peakEnemies": 0, "earlyCalls": 0, "callsRefused": 0,
 		"waveStartGold": {}, "waveStartTowers": {}, "waveStartTick": {}, "waveEndTick": {}, "waveNexusHp": {},
 		"purchases": {}, "merges": 0, "rerolls": 0, "evolves": 0, "towerWaves": {}, "starWaves": {},
-		"killsByEnemy": {}, "rewards": [], "gotKillsAtWave": {}, "activeWavesAtCall": [],
+		"killsByEnemy": {}, "rewards": [], "gotKillsAtWave": {}, "activeWavesAtCall": [], "firstBuyWave": {}, "buysByRarity": {},
 	}
 	var next_call := 0
 	var rerolls := {"left": 0}
@@ -157,6 +157,11 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 			"towerPlaced":
 				_id_to_type[e["towerId"]] = e["towerType"]
 				m["purchases"][e["towerType"]] = m["purchases"].get(e["towerType"], 0) + 1
+				var rarity: Variant = TowerData.game_data().get_type(e["towerType"]).rarity
+				if rarity != null:
+					m["buysByRarity"][rarity] = m["buysByRarity"].get(rarity, 0) + 1
+					if not m["firstBuyWave"].has(rarity):
+						m["firstBuyWave"][rarity] = state.wave + 1
 			"towersMerged":
 				m["merges"] += 1
 			"towerFired":
