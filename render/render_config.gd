@@ -8,11 +8,14 @@ extends RefCounted
 const PX_TO_UNIT := 1.0 / 32.0
 
 static var _cfg: Dictionary = {}
+## Conjunto de torres a que `_cfg` pertence (trocar de conjunto muda cores e modelos).
+static var _cfg_set := ""
 
 
 static func data() -> Dictionary:
-	if _cfg.is_empty():
+	if _cfg.is_empty() or _cfg_set != DataLoader.set_id():
 		_cfg = DataLoader.load_json("render.json")
+		_cfg_set = DataLoader.set_id()
 	return _cfg
 
 

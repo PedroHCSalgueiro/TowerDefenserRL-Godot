@@ -537,6 +537,12 @@ func _open_for_dev() -> void:
 			_state().status = "lost"
 		"debug":
 			debug_panel.visible = true
+		"hero":
+			# Um herói só (`--hero=aldric`) na melhor casa, núcleo invulnerável e inimigos sem parar: para ver o modelo.
+			var cell: Vector2i = load("res://dev/wave_bot.gd").bot_cells(map)[0]
+			runner.sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
+			runner.sim.enqueue({"type": "placeTower", "towerType": String(_args.get("hero", "aldric")), "x": cell.x, "y": cell.y})
+			runner.sim.enqueue({"type": "debugSetStress", "stress": {"count": 25, "layout": "spread"}})
 		"stress":
 			# Medição de desempenho: núcleo invulnerável, 30 torres dos 8 tipos em ★2 e 1.000 inimigos.
 			var cfg: Dictionary = DataLoader.load_json("debug.json")

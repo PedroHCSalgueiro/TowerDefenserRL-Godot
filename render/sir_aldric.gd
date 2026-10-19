@@ -8,6 +8,8 @@ extends Node3D
 signal raio_disparado(ponta: Vector3)
 
 const ANIM := "ataque"
+# A animação do .glb não tem a faixa que dispara o raio; esta (com a faixa Call Method) a substitui.
+const ANIM_RES := "res://assets/sir_aldric_ataque.res"
 const PONTA_LOCAL := Vector3(0, 0.876, 0)   # ponta da lâmina no espaço local da malha "Espada"
 const FOLGA := 0.9                          # a animação usa no máximo 90% do intervalo entre ataques
 
@@ -18,6 +20,12 @@ var espada: Node3D
 func _ready() -> void:
 	ap = find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer
 	espada = find_child("Espada", true, false) as Node3D
+	var custom := load(ANIM_RES) as Animation
+	var library := ap.get_animation_library("")
+	if custom != null and library != null:
+		if library.has_animation(ANIM):
+			library.remove_animation(ANIM)
+		library.add_animation(ANIM, custom)
 	ap.animation_finished.connect(_ao_terminar)
 	_pose_parado()
 

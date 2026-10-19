@@ -10,6 +10,15 @@
       "summoner": "#3fc1c9",
       "controller": "#8fd3ff",
       "valcoroa": "#3d5fd6"
+    },
+    "models": {
+      "aldric": {
+        "scene": "res://scenes/sir_aldric.tscn",
+        "scale": 0.95,
+        "restYawDegrees": 0,
+        "beamColor": "#ffe066",
+        "starHeight": 1.5
+      }
     }
   }
 }

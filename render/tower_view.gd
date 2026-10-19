@@ -4,9 +4,15 @@ extends Node3D
 ## "tampa" na cor da segunda classe, as estrelas acima, o alcance da torre selecionada, o flash dos
 ## gatilhos, o brilho da fusão e o tremor de "travada". Um nó por torre, criado e removido conforme
 ## o estado.
+##
+## Heróis com modelo 3D (`towers.models` em `render.json`, ex.: o Sir Aldric): o modelo troca o bloco
+## colorido. Quando a torre atira, o modelo vira para o alvo e toca a animação de ataque; se o modelo
+## emite `raio_disparado(ponta)`, um raio de luz sai da ponta até o alvo. Sem o arquivo do modelo (a
+## exportação Web o deixa de fora por causa do tamanho), continua o bloco.
 
 const BODY_SIZE := Vector3(0.42, 0.56, 0.42)
 const FLASH_MS := 280.0
+const BEAM_MS := 220.0
 
 class TowerNode:
 	extends Node3D
@@ -21,6 +27,13 @@ class TowerNode:
 	## Tremor de "travada": tempo que falta, em ms.
 	var shake_ms := 0.0
 	var home := Vector3.ZERO
+	## Modelo 3D (null = bloco colorido) e o que a animação de ataque precisa.
+	var model: Node3D = null
+	var star_height := BODY_SIZE.y + 0.5
+	var attack_pending := false
+	var attack_target_id := -1
+	var beam_target := Vector3.ZERO
+	var beam_color := Color.WHITE
 
 var _data: TowerData
 var _nodes: Dictionary = {}  # id -> TowerNode
@@ -29,6 +42,8 @@ var _range_ring: MeshInstance3D
 var _star_mesh: SphereMesh
 var _star_material: StandardMaterial3D
 var _cfg: Dictionary
+## Raios de luz vivos: {"mesh": MeshInstance3D, "material": StandardMaterial3D, "left": ms}.
+var _beams: Array = []
 
 
 func setup(data: TowerData) -> void:
@@ -60,6 +75,8 @@ func draw(state: Object, selected_cell: Variant, delta_ms: float) -> void:
 			node = _create_node(tower)
 			_nodes[tower.id] = node
 		_update_node(node, tower, delta_ms)
+		if node.attack_pending and node.model != null:
+			_start_attack(node, tower, state)
 		if selected_cell != null and tower.x == selected_cell.x and tower.y == selected_cell.y:
 			selected = tower
 	for id: int in _nodes.keys():
@@ -67,6 +84,7 @@ func draw(state: Object, selected_cell: Variant, delta_ms: float) -> void:
 			(_nodes[id] as TowerNode).queue_free()
 			_nodes.erase(id)
 	show_range(selected)
+	_update_beams(delta_ms)
 
 
 ## Mostra o alcance da torre (ou esconde com null).
@@ -103,13 +121,92 @@ func _create_node(tower: Tower) -> TowerNode:
 		var second := RenderConfig.color(_cfg["classColors"].get(type.classes[1], _cfg["fallbackColor"]))
 		node.cap = MeshUtil.instance(cap_mesh, MeshUtil.lit_material(second), node)
 		node.cap.position = Vector3(0, BODY_SIZE.y + 0.1, 0)
+	var model_cfg: Dictionary = _cfg.get("models", {}).get(tower.type, {})
+	if not model_cfg.is_empty():
+		_attach_model(node, model_cfg)
 	node.stars = Node3D.new()
-	node.stars.position = Vector3(0, BODY_SIZE.y + 0.5, 0)
+	node.stars.position = Vector3(0, node.star_height, 0)
 	node.add_child(node.stars)
 	node.position = Vector3(tower.x, 0.0, tower.y)
 	node.home = node.position
 	add_child(node)
 	return node
+
+
+## Troca o bloco pelo modelo 3D da torre, se o arquivo existir (senão fica o bloco).
+func _attach_model(node: TowerNode, cfg: Dictionary) -> void:
+	var path: String = cfg["scene"]
+	if not ResourceLoader.exists(path):
+		return
+	var scene := load(path) as PackedScene
+	if scene == null:
+		return
+	var model := scene.instantiate() as Node3D
+	if model == null:
+		return
+	model.scale = Vector3.ONE * float(cfg.get("scale", 1.0))
+	model.rotation.y = deg_to_rad(float(cfg.get("restYawDegrees", 0.0)))
+	node.add_child(model)
+	node.model = model
+	node.star_height = float(cfg.get("starHeight", node.star_height))
+	node.beam_color = RenderConfig.color(cfg.get("beamColor", "#ffe066"))
+	node.body.visible = false
+	if node.cap != null:
+		node.cap.visible = false
+	if model.has_signal("raio_disparado"):
+		model.connect("raio_disparado", func(tip: Vector3) -> void: _spawn_beam(tip, node.beam_target, node.beam_color))
+
+
+## O modelo vira para o alvo do tiro e toca o ataque (a duração acompanha o intervalo entre tiros).
+func _start_attack(node: TowerNode, tower: Tower, state: Object) -> void:
+	node.attack_pending = false
+	var target: Enemy = null
+	for enemy: Enemy in state.enemies.slots:
+		if enemy.active and enemy.id == node.attack_target_id:
+			target = enemy
+			break
+	if target == null:
+		return
+	var dx := target.x - float(tower.x)
+	var dz := target.y - float(tower.y)
+	if dx != 0.0 or dz != 0.0:
+		node.model.rotation.y = atan2(dx, dz)
+	node.beam_target = Vector3(target.x, 0.35, target.y)
+	if node.model.has_method("atacar"):
+		node.model.call("atacar", 1.0 / maxf(0.1, _data.get_type(tower.type).shots_per_second))
+
+
+## Raio de luz da ponta (`from`) até o alvo; some em ~220 ms.
+func _spawn_beam(from: Vector3, to: Vector3, color: Color) -> void:
+	var delta := to - from
+	if delta.length() < 0.01:
+		return
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.035
+	mesh.bottom_radius = 0.035
+	mesh.height = delta.length()
+	mesh.radial_segments = 6
+	mesh.rings = 1
+	var material := MeshUtil.flat_material(color)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var beam := MeshUtil.instance(mesh, material, self)
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	beam.position = (from + to) / 2.0
+	beam.basis = Basis(Quaternion(Vector3.UP, delta.normalized()))
+	_beams.append({"mesh": beam, "material": material, "left": BEAM_MS, "color": color})
+
+
+func _update_beams(delta_ms: float) -> void:
+	for i in range(_beams.size() - 1, -1, -1):
+		var beam: Dictionary = _beams[i]
+		beam["left"] -= delta_ms
+		if beam["left"] <= 0.0:
+			(beam["mesh"] as MeshInstance3D).queue_free()
+			_beams.remove_at(i)
+		else:
+			var color: Color = beam["color"]
+			color.a = beam["left"] / BEAM_MS
+			(beam["material"] as StandardMaterial3D).albedo_color = color
 
 
 func _update_node(node: TowerNode, tower: Tower, delta_ms: float) -> void:
@@ -155,6 +252,11 @@ func handle_events(events: Array) -> void:
 			var node: TowerNode = _nodes.get(event["towerId"])
 			if node != null:
 				node.merge = 1.0
+		elif event["type"] == "towerFired" and event["shot"] == "normal":
+			var shooter: TowerNode = _nodes.get(event["towerId"])
+			if shooter != null and shooter.model != null:
+				shooter.attack_pending = true
+				shooter.attack_target_id = event["targetId"]
 
 
 ## Treme a torre (tentou mover com onda ativa).
