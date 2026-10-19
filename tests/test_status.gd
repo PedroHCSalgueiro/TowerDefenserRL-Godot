@@ -133,7 +133,7 @@ func _adjacent_cells() -> Array:
 	return []
 
 
-func test_aura_do_tomas_da_20_para_o_reino_e_10_para_os_outros() -> void:
+func test_aura_do_tomas_da_30_para_o_reino_e_15_para_os_outros() -> void:
 	var cells := _adjacent_cells()
 	var sim := _sim()
 	var data := TowerData.game_data()
@@ -143,11 +143,11 @@ func test_aura_do_tomas_da_20_para_o_reino_e_10_para_os_outros() -> void:
 	sim.state.towers.append(tomas)
 	sim.state.towers.append(lyra)
 	sim.state.towers.append(basic)
-	assert_eq(Auras.attack_speed_percent(sim.state, data, lyra), 20.0, "herói do Reino")
-	assert_eq(Auras.attack_speed_percent(sim.state, data, basic), 10.0, "fora do Reino")
+	assert_eq(Auras.attack_speed_percent(sim.state, data, lyra), 30.0, "herói do Reino")
+	assert_eq(Auras.attack_speed_percent(sim.state, data, basic), 15.0, "fora do Reino")
 	assert_eq(Auras.attack_speed_percent(sim.state, data, tomas), 0.0, "a aura não vale para quem a dá")
 	tomas.star = 3
-	assert_eq(Auras.attack_speed_percent(sim.state, data, lyra), 40.0, "estrela maior, aura maior")
+	assert_eq(Auras.attack_speed_percent(sim.state, data, lyra), 50.0, "estrela maior, aura maior")
 	lyra.x += 5
 	assert_eq(Auras.attack_speed_percent(sim.state, data, lyra), 0.0, "só as vizinhas ortogonais")
 

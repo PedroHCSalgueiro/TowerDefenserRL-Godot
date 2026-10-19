@@ -57,12 +57,12 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "newWave"})
 
 
-## Ouro de um abate: o `gold` do tipo (`enemies.json`) mais `killGold.base + killGold.perWave × onda`
-## (onda 1 = 1 de ouro por inimigo, onda 2 = 2, ...). Inimigo sem onda (debug, onda 0) não paga o extra.
+## Ouro de um abate: o `gold` do tipo (`enemies.json`) mais `killGold.base + killGold.perWave × ceil(onda / waveStep)`
+## (com waveStep 5: 1 de ouro por inimigo nas ondas 1 a 5, 2 nas 6 a 10, ...). Inimigo sem onda (debug, onda 0) não paga o extra.
 static func kill_gold_for(economy: EconomyData, type_gold: float, wave: int) -> float:
 	if wave <= 0:
 		return type_gold
-	return type_gold + float(economy.kill_gold_base + economy.kill_gold_per_wave * wave)
+	return type_gold + float(economy.kill_gold_base + economy.kill_gold_per_wave * ceili(float(wave) / float(economy.kill_gold_wave_step)))
 
 
 ## Sistema de ouro, depois dos gatilhos: soma o ouro de cada inimigo morto no tick (por qualquer

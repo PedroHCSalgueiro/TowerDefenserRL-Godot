@@ -138,16 +138,16 @@
         "region": "valcoroa",
         "stars": [
           {
-            "attackSpeedPercent": 10,
-            "regionPercent": 20
-          },
-          {
             "attackSpeedPercent": 15,
             "regionPercent": 30
           },
           {
             "attackSpeedPercent": 20,
             "regionPercent": 40
+          },
+          {
+            "attackSpeedPercent": 25,
+            "regionPercent": 50
           }
         ]
       }
@@ -159,7 +159,7 @@
         "artillerist",
         "valcoroa"
       ],
-      "damage": 8,
+      "damage": 6,
       "shotsPerSecond": 0.8,
       "range": 3,
       "projectileSpeed": 5,
@@ -174,19 +174,19 @@
         "stars": [
           {
             "shots": 4,
-            "radiusMultiplier": 1.5,
-            "damagePercent": 200
+            "radiusMultiplier": 1.25,
+            "damagePercent": 150
           },
           {
             "shots": 4,
-            "radiusMultiplier": 1.5,
-            "damagePercent": 250,
+            "radiusMultiplier": 1.25,
+            "damagePercent": 200,
             "attackDamagePercent": 125
           },
           {
             "shots": 3,
-            "radiusMultiplier": 1.75,
-            "damagePercent": 250,
+            "radiusMultiplier": 1.5,
+            "damagePercent": 200,
             "attackDamagePercent": 125
           }
         ]

@@ -14,10 +14,10 @@ func test_dados_do_jogo() -> void:
 	assert_eq(Economy.wave_bonus_for(e, 1), 10, "bônus de fim da onda 1")
 
 
-func test_ouro_do_abate_cresce_uma_unidade_por_onda() -> void:
+func test_ouro_do_abate_sobe_1_a_cada_5_ondas() -> void:
 	var e := _economy()
-	for wave in [1, 2, 3, 10, 40]:
-		assert_eq(Economy.kill_gold_for(e, 0.0, wave), float(wave), "onda %d" % wave)
+	for pair in [[1, 1.0], [5, 1.0], [6, 2.0], [10, 2.0], [11, 3.0], [36, 8.0], [40, 8.0]]:
+		assert_eq(Economy.kill_gold_for(e, 0.0, pair[0]), pair[1], "onda %d" % pair[0])
 
 
 func test_inimigo_sem_onda_nao_da_ouro_extra() -> void:
