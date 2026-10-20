@@ -10,6 +10,10 @@ extends RefCounted
 ## `hpScale` (opcional, em `waves.json`): pontos [onda, multiplicador] com interpolação linear entre eles
 ## (antes do primeiro e depois do último vale o valor do ponto mais próximo). Multiplica o `hpMultiplier` de
 ## cada onda: é o botão de dificuldade por conjunto, sem reescrever as 40 ondas.
+##
+## `hpGrowth` (opcional, ao lado do `hpScale`): crescimento exponencial da vida, `(1 + perWave) ^ (onda - 1)`.
+## Multiplica junto com o `hpScale`. É a curva de dificuldade pensada para o futuro: com as melhorias do
+## laboratório o jogador ficará mais forte, então a vida dos inimigos precisa crescer de forma composta.
 
 class WaveGroup:
 	extends RefCounted
@@ -30,6 +34,8 @@ class WaveDef:
 ## nascem quando abrir espaço (fila invisível).
 var max_active_enemies: int
 var waves: Array[WaveDef] = []
+## Crescimento exponencial da vida por onda (0 = nenhum); ver `hpGrowth`.
+var hp_growth := 0.0
 
 static var _default: WaveData = null
 
@@ -53,7 +59,10 @@ static func _is_positive(v: Variant) -> bool:
 func apply_hp_scale(points: Array) -> void:
 	for i in waves.size():
 		var def := waves[i]
-		def.hp_multiplier = def.base_hp_multiplier * (hp_scale_at(points, i + 1) if not points.is_empty() else 1.0)
+		var scale := hp_scale_at(points, i + 1) if not points.is_empty() else 1.0
+		if hp_growth > 0.0:
+			scale *= pow(1.0 + hp_growth, float(i))
+		def.hp_multiplier = def.base_hp_multiplier * scale
 
 
 ## Multiplicador da onda `wave` (a primeira é 1) numa curva de pontos [onda, multiplicador] em ordem.
@@ -133,6 +142,12 @@ static func load_data(raw: Variant, enemies: EnemyData) -> WaveData:
 	var data := WaveData.new()
 	data.max_active_enemies = int(raw["maxActiveEnemies"])
 	var scale_points: Array = []
+	var growth := 0.0
+	if raw.has("hpGrowth"):
+		var g: Variant = raw["hpGrowth"]
+		if not (g is Dictionary) or not (typeof(g.get("perWave")) == TYPE_INT or typeof(g.get("perWave")) == TYPE_FLOAT) or float(g["perWave"]) < 0.0:
+			return _fail('"hpGrowth" precisa de perWave >= 0')
+		growth = float(g["perWave"])
 	if raw.has("hpScale"):
 		scale_points = _parse_scale(raw["hpScale"])
 		if scale_points.is_empty():
@@ -153,5 +168,6 @@ static func load_data(raw: Variant, enemies: EnemyData) -> WaveData:
 		def.spawn_seconds = float(wave["spawnSeconds"])
 		def.enemies = groups
 		data.waves.append(def)
+	data.hp_growth = growth
 	data.apply_hp_scale(scale_points)
 	return data

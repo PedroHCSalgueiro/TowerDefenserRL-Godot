@@ -106,10 +106,13 @@ func test_primeira_loja_so_tem_comuns() -> void:
 			assert_eq(towers.get_type(id).rarity, "common")
 
 
-func test_curva_de_vida_das_ondas_de_valcoroa() -> void:
+func test_vida_das_ondas_de_valcoroa_cresce_6_por_cento_por_onda() -> void:
 	GameSets.select("valcoroa")
 	var waves := WaveData.game_data()
-	assert_almost_eq(waves.waves[11].hp_multiplier, waves.waves[11].base_hp_multiplier * 2.2, 1e-9, "onda 12")
-	assert_almost_eq(waves.waves[2].hp_multiplier, waves.waves[2].base_hp_multiplier * 1.5, 1e-9, "onda 3")
-	assert_almost_eq(waves.waves[39].hp_multiplier, waves.waves[39].base_hp_multiplier * 1.0, 1e-9, "onda 40")
-	assert_eq(WaveData.hp_scale_at([[3.0, 1.0], [13.0, 2.0]], 8), 1.5, "interpolação linear")
+	assert_eq(waves.hp_growth, 0.06)
+	for wave in [1, 3, 12, 25, 40]:
+		var def := waves.waves[wave - 1]
+		assert_almost_eq(def.hp_multiplier, def.base_hp_multiplier * pow(1.06, float(wave - 1)), 1e-9, "onda %d" % wave)
+	assert_eq(WaveData.hp_scale_at([[3.0, 1.0], [13.0, 2.0]], 8), 1.5, "curva de pontos: interpolação linear")
+	GameSets.select(GameSets.DEFAULT_ID)
+	assert_eq(WaveData.game_data().hp_growth, 0.0, "o Padrão não tem crescimento extra")

@@ -48,14 +48,18 @@ func _init() -> void:
 		for pair: String in String(args["buff"]).split(","):
 			var parts := pair.split(":")
 			TowerData.game_data().get_type(parts[0]).damage *= float(parts[1])
-	# `--hp=3:1.3,12:2.0,25:1.8` troca a curva de vida das ondas (`none` = sem curva): varredura de dificuldade.
-	if args.has("hp"):
+	# Varredura de dificuldade da vida das ondas: `--hp=3:1.3,12:2.0,25:1.8` troca a curva de pontos (`none` = sem curva)
+	# e `--growth=0.05` o crescimento exponencial por onda. Com `--growth` sem `--hp`, a curva de pontos sai.
+	if args.has("hp") or args.has("growth"):
+		var waves := WaveData.game_data()
 		var points: Array = []
-		if args["hp"] != "none":
+		if args.has("hp") and args["hp"] != "none":
 			for pair: String in String(args["hp"]).split(","):
 				var parts := pair.split(":")
 				points.append([float(parts[0]), float(parts[1])])
-		WaveData.game_data().apply_hp_scale(points)
+		if args.has("growth"):
+			waves.hp_growth = float(args["growth"])
+		waves.apply_hp_scale(points)
 	var policy: String = args.get("policy", "sequential")
 	var from := int(args.get("from", "0"))
 	var count := int(args.get("count", "10"))

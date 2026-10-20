@@ -18,6 +18,12 @@
         "restYawDegrees": 0,
         "beamColor": "#ffe066",
         "starHeight": 1.5
+      },
+      "lyra": {
+        "scene": "res://scenes/lyra.tscn",
+        "scale": 1.3,
+        "restYawDegrees": 0,
+        "starHeight": 1.6
       }
     }
   }
