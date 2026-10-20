@@ -104,3 +104,12 @@ func test_primeira_loja_so_tem_comuns() -> void:
 		var sim := Simulation.create("loja-r-" + s, GameSystems.create(_map))
 		for id: String in sim.state.shop.slots:
 			assert_eq(towers.get_type(id).rarity, "common")
+
+
+func test_curva_de_vida_das_ondas_de_valcoroa() -> void:
+	GameSets.select("valcoroa")
+	var waves := WaveData.game_data()
+	assert_almost_eq(waves.waves[11].hp_multiplier, waves.waves[11].base_hp_multiplier * 2.2, 1e-9, "onda 12")
+	assert_almost_eq(waves.waves[2].hp_multiplier, waves.waves[2].base_hp_multiplier * 1.5, 1e-9, "onda 3")
+	assert_almost_eq(waves.waves[39].hp_multiplier, waves.waves[39].base_hp_multiplier * 1.0, 1e-9, "onda 40")
+	assert_eq(WaveData.hp_scale_at([[3.0, 1.0], [13.0, 2.0]], 8), 1.5, "interpolação linear")

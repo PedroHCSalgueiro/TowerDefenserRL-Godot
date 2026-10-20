@@ -79,6 +79,9 @@ static var DO_PARAMS := {
 	"empoweredShot": [_positive("radiusMultiplier"), _positive("damagePercent")],
 	## Atordoa por `stunSeconds` os inimigos no alcance que já estão Lentos.
 	"stunSlowed": [_positive("stunSeconds")],
+	## Raio de luz nos `count` inimigos mais à frente (pelo modo "first") dentro do alcance, cada um com
+	## `damagePercent`% do dano da torre.
+	"frontBeam": [_count("count"), _positive("damagePercent")],
 	## Põe uma armadilha de urso no caminho: o inimigo que pisa fica preso `holdSeconds` e sangra
 	## `damagePercent`% do dano da torre por segundo. No máximo `maxTraps` dessas por torre.
 	"trap": [_positive("holdSeconds"), _positive("damagePercent"), _count("maxTraps")],

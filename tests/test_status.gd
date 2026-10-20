@@ -183,17 +183,6 @@ func _with_heroes(seed_text: String, heroes: Array, ticks: int, star: int = 1) -
 	return [sim, events]
 
 
-func test_sir_aldric_atordoa_os_da_frente() -> void:
-	var result := _with_heroes("aldric", ["aldric"], 700)
-	var stuns := (result[1] as Array).filter(func(e: Dictionary) -> bool:
-		return e["type"] == "statusApplied" and e["status"] == "stun")
-	assert_gt(stuns.size(), 0, "o raio atordoou inimigos")
-	assert_lte(int(stuns[0]["count"]), 3, "até 3 inimigos")
-	var fired := (result[1] as Array).filter(func(e: Dictionary) -> bool:
-		return e["type"] == "triggerFired" and e["effect"] == "stunFront" and e["visible"])
-	assert_gt(fired.size(), 0, "o gatilho aparece na cadeia quando atordoa")
-
-
 func test_wulf_mira_o_mais_forte_e_faz_sangrar() -> void:
 	var sim := _sim("wulf")
 	sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
@@ -389,3 +378,22 @@ func _spread_cells(cells: Array, count: int) -> Array:
 			if out.size() == count:
 				break
 	return out
+
+
+# ------------------------------------------------------------------ Sir Aldric: raio de dano (sem atordoar)
+
+func test_aldric_raio_bate_em_3_e_nao_atordoa() -> void:
+	var star: TriggerData.TriggerStar = TowerData.game_data().get_type("aldric").trigger.stars[0]
+	assert_eq(star.effect["kind"], "frontBeam")
+	assert_eq(int(star.effect["count"]), 3)
+	var result := _with_heroes("aldric-raio", ["aldric"], 700)
+	var events: Array = result[1]
+	var beams := events.filter(func(e: Dictionary) -> bool: return e["type"] == "lightningStruck")
+	assert_gt(beams.size(), 0, "o raio saiu")
+	for b: Dictionary in beams:
+		assert_lte(b["points"].size(), 3, "até 3 inimigos")
+		assert_gt(b["damage"], 0.0)
+	var stuns := events.filter(func(e: Dictionary) -> bool: return e["type"] == "statusApplied")
+	assert_eq(stuns.size(), 0, "o Aldric não atordoa mais")
+	for e: Enemy in (result[0] as Simulation).state.enemies.slots:
+		assert_eq(e.stun_ticks, 0)

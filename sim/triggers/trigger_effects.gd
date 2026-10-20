@@ -281,7 +281,7 @@ static func _scale_effect(effect: Dictionary, power: float) -> Dictionary:
 	if power == 100.0:
 		return effect
 	match effect["kind"]:
-		"explosion", "chargeLightning", "pierceLine":
+		"explosion", "chargeLightning", "pierceLine", "frontBeam":
 			var scaled := effect.duplicate()
 			scaled["damagePercent"] = (effect["damagePercent"] * power) / 100.0
 			return scaled
@@ -340,6 +340,8 @@ static func run_effect(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 			return true
 		"empoweredShot":
 			return _empowered_shot(env, tower, type, effect, entry)
+		"frontBeam":
+			return _front_beam(env, tower, type, effect)
 		"stunFront":
 			return _stun_front(env, tower, type, effect)
 		"stunSlowed":
@@ -398,3 +400,31 @@ static func _bear_trap(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 	var radius: float = type.shot["radius"] if type.shot["kind"] == "trap" else 0.5
 	return TrapSystems.place_trap(env.ctx, env.routes, tower, type, "bear", damage_per_tick,
 			env.seconds_to_ticks(e["holdSeconds"]), radius, int(e["maxTraps"]))
+
+
+## Raio de luz nos `count` inimigos mais à frente dentro do alcance (o raio do Sir Aldric): só dano, sem
+## efeito de estado. Emite `lightningStruck` (o mesmo desenho do raio em cadeia). Devolve se acertou
+## alguém.
+static func _front_beam(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), type.range,
+			env.scores["first"], int(e["count"]), _spread_targets)
+	if targets.is_empty():
+		return false
+	var damage := _percent_of(env, tower, type, e["damagePercent"])
+	var event := {
+		"type": "lightningStruck",
+		"tick": ctx.state.tick,
+		"towerId": tower.id,
+		"points": [],
+		"damage": 0.0,
+	}
+	ctx.emit(event)
+	# Copia: o dano pode matar e mexer na lista compartilhada por quem usa `_spread_targets`.
+	var struck: Array = targets.duplicate()
+	for enemy: Enemy in struck:
+		event["points"].append({"x": enemy.x, "y": enemy.y})
+		var before := enemy.hp
+		Damage.damage_enemy(ctx, env.enemies, enemy, damage, tower.id)
+		event["damage"] += before - enemy.hp
+	return true

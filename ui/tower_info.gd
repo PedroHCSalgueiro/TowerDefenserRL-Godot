@@ -97,6 +97,8 @@ static func _effect_text(effect: Dictionary) -> String:
 					fmt(effect["hpPercent"]), _plural(effect["killWeight"], "abate", "abates"), boss, blast]
 		"empoweredShot":
 			return "dispara um tiro em área extra, com raio ×%s e %s%% do dano" % [fmt(effect["radiusMultiplier"]), fmt(effect["damagePercent"])]
+		"frontBeam":
+			return "solta um raio de luz nos %s mais à frente da fila (%s%% do dano em cada)" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["damagePercent"])]
 		"stunFront":
 			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["seconds"])]
 		"trap":

@@ -56,23 +56,23 @@
       "targetMode": "first",
       "trigger": {
         "when": "everyNShots",
-        "do": "stunFront",
+        "do": "frontBeam",
         "stars": [
           {
             "shots": 6,
             "count": 3,
-            "seconds": 1
+            "damagePercent": 250
           },
           {
             "shots": 5,
             "count": 3,
-            "seconds": 1.25,
+            "damagePercent": 300,
             "attackDamagePercent": 125
           },
           {
             "shots": 4,
-            "count": 4,
-            "seconds": 1.5,
+            "count": 3,
+            "damagePercent": 350,
             "attackDamagePercent": 125
           }
         ]

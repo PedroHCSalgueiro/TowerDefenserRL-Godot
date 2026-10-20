@@ -9,6 +9,9 @@ extends SceneTree
 ##               a próxima onda e só chama outra quando a anterior acabou.
 ##   stack:      o jogador apressado. Chama uma onda nova a cada `--interval` ticks (padrão 600 = 20 s), com as
 ##               anteriores ainda em andamento, e compra durante as ondas.
+##   lazy:       o jogador que quase não joga (como no relato do Pedro): compra só até o limite de torres do núcleo
+##               (prefere Sir Aldric, depois Irmão Tomás, depois Lyra), funde quando dá, põe as torres lado a lado,
+##               nunca rerola nem evolui o núcleo e chama as ondas uma de cada vez.
 ## Ondas de chefão só podem ser chamadas com o mapa vazio (regra do jogo), então o empilhamento para nelas.
 
 const MAX_TICKS := 30 * 60 * 60  # 1 hora de jogo: teto de segurança
@@ -45,6 +48,14 @@ func _init() -> void:
 		for pair: String in String(args["buff"]).split(","):
 			var parts := pair.split(":")
 			TowerData.game_data().get_type(parts[0]).damage *= float(parts[1])
+	# `--hp=3:1.3,12:2.0,25:1.8` troca a curva de vida das ondas (`none` = sem curva): varredura de dificuldade.
+	if args.has("hp"):
+		var points: Array = []
+		if args["hp"] != "none":
+			for pair: String in String(args["hp"]).split(","):
+				var parts := pair.split(":")
+				points.append([float(parts[0]), float(parts[1])])
+		WaveData.game_data().apply_hp_scale(points)
 	var policy: String = args.get("policy", "sequential")
 	var from := int(args.get("from", "0"))
 	var count := int(args.get("count", "10"))
@@ -99,6 +110,16 @@ func _play(seed_text: String, policy: String, interval: int) -> Dictionary:
 	while state.status == "playing" and state.tick < MAX_TICKS:
 		if state.rewards.screen_open():
 			sim.enqueue({"type": "chooseReward", "index": 0})
+		elif policy == "lazy":
+			if state.waves.active.is_empty() and WaveState.next_wave_number(state) <= total:
+				var lazy_guard := 0
+				while lazy_guard < 20 and _lazy_action(sim):
+					_step(sim, m)
+					lazy_guard += 1
+					if state.status != "playing":
+						break
+				if state.status == "playing" and not state.rewards.screen_open():
+					sim.enqueue({"type": "callWave"})
 		elif policy == "sequential":
 			if state.waves.active.is_empty() and WaveState.next_wave_number(state) <= total:
 				rerolls = {"left": WaveBot.REROLLS_PER_BREAK}
@@ -202,3 +223,42 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 					m["rerolls"] += 1
 			"rewardChosen":
 				m["rewards"].append(str(e.get("rewardId", e.get("id", "?"))))
+
+
+## Uma compra do jogador preguiçoso (ver `lazy`); false = nada mais a fazer.
+func _lazy_action(sim: Simulation) -> bool:
+	var state: RunState = sim.state
+	var towers := TowerData.game_data()
+	for slot in state.shop.slots.size():
+		var type: Variant = state.shop.slots[slot]
+		if type == null or WaveBot._price(sim, type) > state.gold:
+			continue
+		if Fusion.plan_fusion(state.towers, towers, type) != null:
+			sim.enqueue({"type": "buyTower", "slot": slot})
+			return true
+	if not TowerLimit.has_room_for_tower(state):
+		return false
+	for wanted in ["aldric", "tomas", "lyra"]:
+		for slot in state.shop.slots.size():
+			if state.shop.slots[slot] == wanted and WaveBot._price(sim, wanted) <= state.gold:
+				var cell: Variant = _lazy_cell(sim)
+				if cell == null:
+					return false
+				sim.enqueue({"type": "buyTower", "slot": slot, "x": cell.x, "y": cell.y})
+				return true
+	return false
+
+
+## Casa da próxima torre: ao lado de uma já posta (lado a lado, como o Pedro fez); a primeira vai na melhor casa.
+func _lazy_cell(sim: Simulation) -> Variant:
+	var map := WaveBot.bot_map()
+	var state: RunState = sim.state
+	var taken := {}
+	for t: Tower in state.towers:
+		taken[Vector2i(t.x, t.y)] = true
+	for t: Tower in state.towers:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var c: Vector2i = Vector2i(t.x, t.y) + d
+			if not taken.has(c) and map.can_place_tower(c):
+				return c
+	return WaveBot._free_cell(sim)
