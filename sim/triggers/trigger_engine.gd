@@ -308,7 +308,8 @@ func _prepare(tick_ctx: TickContext) -> void:
 		armed.neighbor_radius = ClassBonuses.neighborhood_radius(classes, tick_ctx.state, type)
 		_armed.append(armed)
 		_armed_by_id[tower.id] = armed
-		if when["kind"] == "enemyDiesInRange" or when["kind"] == "everyNKillsInRange" or when["kind"] == "neighborKills":
+		if when["kind"] == "enemyDiesInRange" or when["kind"] == "everyNKillsInRange" or when["kind"] == "neighborKills" \
+				or when["kind"] == "ownKill":
 			_kill_listeners.append(armed)
 
 
@@ -427,6 +428,9 @@ func _on_kill(event: Dictionary, depth: int, tick_depth: int) -> void:
 				if killer != null and TriggerNeighborhood.is_neighbor(armed.tower, killer, _rules.neighborhood, armed.neighbor_radius):
 					var weight := _weight_for(armed, killer_type, event["weight"], elite_or_boss)
 					_enqueue(armed, killer.id, weight, depth, tick_depth, true, event["x"], event["y"])
+			"ownKill":
+				if killer == armed.tower and (not when["markedOnly"] or event.get("marked", false)):
+					_enqueue(armed, killer.id, 1.0, depth, tick_depth, true, event["x"], event["y"])
 
 
 ## Peso da morte para o contador ou as cargas de `armed`, com o bônus da Sombria.
@@ -470,7 +474,7 @@ func _execute(entry: TriggerState.PendingTrigger) -> void:
 
 	# O raio em cadeia só é visível se sair: ganhar carga sem soltar não conta na cadeia. O mesmo vale
 	# para os efeitos de estado: sem ninguém para atordoar, o gatilho não aparece na cadeia.
-	var lazy: bool = own["kind"] == "chargeLightning" or TriggerData.STATUS_EFFECTS.has(own["kind"])
+	var lazy: bool = own["kind"] == "chargeLightning" or TriggerData.LAZY_EFFECTS.has(own["kind"])
 	var event := _fired(armed, entry, own["kind"], not lazy, null)
 	if TriggerEffects.run_effect(self, tower, type, own, entry, false):
 		tower.last_effect = Tower.LastEffect.new(own, _state.next_seq)

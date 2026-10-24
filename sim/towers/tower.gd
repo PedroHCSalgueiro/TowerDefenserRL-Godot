@@ -34,6 +34,14 @@ var activation_ready_tick := 0
 var invested := 0
 ## null = ainda não disparou nenhum "o quê" copiável.
 var last_effect: LastEffect = null
+## Tiro duplo armado (Ruby): o próximo ataque normal sai com um segundo tiro.
+var double_shot := false
+## Ticks até o segundo tiro do tiro duplo sair (0 = nenhum esperando).
+var followup_ticks := 0
+## Maldição armada (Mama Zuri): os números que o próximo ataque leva ({} = nenhuma).
+var curse_next: Dictionary = {}
+## Ouro guardado por esta torre desde o fim da última onda (teto do Saque).
+var loot_count := 0
 
 
 func _init(p_id: int = 0, p_type: String = "", cell: Vector2i = Vector2i.ZERO, p_star: int = 1) -> void:

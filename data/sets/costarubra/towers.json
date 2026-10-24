@@ -1,0 +1,337 @@
+{
+  "types": {
+    "bart": {
+      "name": "Bart Canhoneiro",
+      "rarity": "common",
+      "classes": [
+        "artillerist",
+        "costarubra"
+      ],
+      "damage": 12,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 6,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "bounceShot",
+        "stars": [
+          {
+            "shots": 5,
+            "impacts": 3,
+            "radius": 1,
+            "damagePercent": 200,
+            "falloffPercent": 50,
+            "jumpRadius": 2.5
+          },
+          {
+            "shots": 4,
+            "impacts": 3,
+            "radius": 1,
+            "damagePercent": 250,
+            "falloffPercent": 50,
+            "jumpRadius": 2.5,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 4,
+            "impacts": 4,
+            "radius": 1,
+            "damagePercent": 300,
+            "falloffPercent": 50,
+            "jumpRadius": 2.5,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "ruby": {
+      "name": "Ruby Duas-Pistolas",
+      "rarity": "common",
+      "classes": [
+        "shooter",
+        "costarubra"
+      ],
+      "damage": 7,
+      "shotsPerSecond": 1.4,
+      "range": 3.5,
+      "projectileSpeed": 10,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "ownKill",
+        "do": "doubleShot",
+        "stars": [
+          {
+            "delaySeconds": 0.2
+          },
+          {
+            "delaySeconds": 0.2,
+            "attackDamagePercent": 125
+          },
+          {
+            "delaySeconds": 0.15,
+            "attackDamagePercent": 150
+          }
+        ]
+      }
+    },
+    "anchor": {
+      "name": "Imediato Âncora",
+      "rarity": "common",
+      "classes": [
+        "guardian",
+        "costarubra"
+      ],
+      "damage": 12,
+      "shotsPerSecond": 0.5,
+      "range": 3,
+      "projectileSpeed": 6,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "anchorPush",
+        "stars": [
+          {
+            "shots": 6,
+            "cells": 2,
+            "gap": 1
+          },
+          {
+            "shots": 5,
+            "cells": 2,
+            "gap": 1,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 4,
+            "cells": 2,
+            "gap": 1.5,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "morgana": {
+      "name": "Morgana do Mar",
+      "rarity": "uncommon",
+      "classes": [
+        "controller",
+        "costarubra"
+      ],
+      "damage": 5,
+      "shotsPerSecond": 1.2,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "tide",
+        "stars": [
+          {
+            "seconds": 7,
+            "damagePercent": 150,
+            "slowPercent": 30,
+            "slowCap": 50,
+            "slowSeconds": 2
+          },
+          {
+            "seconds": 6,
+            "damagePercent": 175,
+            "slowPercent": 30,
+            "slowCap": 50,
+            "slowSeconds": 2,
+            "attackDamagePercent": 125
+          },
+          {
+            "seconds": 5,
+            "damagePercent": 200,
+            "slowPercent": 40,
+            "slowCap": 50,
+            "slowSeconds": 2,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "pena": {
+      "name": "Capitão Pena",
+      "rarity": "uncommon",
+      "classes": [
+        "support",
+        "costarubra"
+      ],
+      "damage": 4,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 9,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "neighborKills",
+        "do": "loot",
+        "stars": [
+          {
+            "gold": 1,
+            "maxPerWave": 5
+          },
+          {
+            "gold": 1,
+            "maxPerWave": 7,
+            "attackDamagePercent": 125
+          },
+          {
+            "gold": 1,
+            "maxPerWave": 10,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "kraus": {
+      "name": "Kraus Arpoador",
+      "rarity": "uncommon",
+      "classes": [
+        "hunter",
+        "costarubra"
+      ],
+      "damage": 15,
+      "shotsPerSecond": 0.6,
+      "range": 3.5,
+      "projectileSpeed": 9,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "strongest",
+      "trigger": {
+        "when": "ownKill",
+        "do": "loot",
+        "stars": [
+          {
+            "markedOnly": true,
+            "gold": 1
+          },
+          {
+            "markedOnly": true,
+            "gold": 1,
+            "attackDamagePercent": 125
+          },
+          {
+            "markedOnly": true,
+            "gold": 2,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "zuri": {
+      "name": "Mama Zuri",
+      "rarity": "rare",
+      "classes": [
+        "mage",
+        "costarubra"
+      ],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 9,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "curseNext",
+        "stars": [
+          {
+            "shots": 5,
+            "seconds": 6,
+            "sharePercent": 30,
+            "spread": 2,
+            "radius": 2,
+            "jumps": 3
+          },
+          {
+            "shots": 4,
+            "seconds": 6,
+            "sharePercent": 30,
+            "spread": 2,
+            "radius": 2,
+            "jumps": 3,
+            "attackDamagePercent": 125
+          },
+          {
+            "shots": 4,
+            "seconds": 6,
+            "sharePercent": 40,
+            "spread": 3,
+            "radius": 2,
+            "jumps": 3,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    },
+    "nerea": {
+      "name": "Nerea, Domadora Abissal",
+      "rarity": "rare",
+      "classes": [
+        "summoner",
+        "costarubra"
+      ],
+      "damage": 6,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": {
+        "kind": "single"
+      },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "tentacle",
+        "stars": [
+          {
+            "seconds": 12,
+            "radius": 1,
+            "stunSeconds": 1,
+            "eliteStunPercent": 50,
+            "damagePercent": 60,
+            "damageSeconds": 2
+          },
+          {
+            "seconds": 11,
+            "radius": 1,
+            "stunSeconds": 1,
+            "eliteStunPercent": 50,
+            "damagePercent": 80,
+            "damageSeconds": 2,
+            "attackDamagePercent": 125
+          },
+          {
+            "seconds": 10,
+            "radius": 1.25,
+            "stunSeconds": 1,
+            "eliteStunPercent": 50,
+            "damagePercent": 100,
+            "damageSeconds": 2,
+            "attackDamagePercent": 125
+          }
+        ]
+      }
+    }
+  }
+}

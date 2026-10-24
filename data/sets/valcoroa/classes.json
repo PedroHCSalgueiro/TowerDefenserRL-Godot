@@ -1,40 +1,5 @@
 {
-  "minTriggerCount": 2,
-  "maxKillWeight": 4,
-  "$replace": true,
   "classes": {
-    "guardian": {
-      "name": "Guardião",
-      "levels": []
-    },
-    "shooter": {
-      "name": "Atirador",
-      "levels": []
-    },
-    "support": {
-      "name": "Suporte",
-      "levels": []
-    },
-    "artillerist": {
-      "name": "Artilheiro",
-      "levels": []
-    },
-    "mage": {
-      "name": "Mago",
-      "levels": []
-    },
-    "hunter": {
-      "name": "Caçador",
-      "levels": []
-    },
-    "summoner": {
-      "name": "Invocador",
-      "levels": []
-    },
-    "controller": {
-      "name": "Controlador",
-      "levels": []
-    },
     "valcoroa": {
       "name": "Reino de Valcoroa",
       "levels": [

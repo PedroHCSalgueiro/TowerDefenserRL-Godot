@@ -1,12 +1,12 @@
 {
   "texts": {
     "towerSummaries": {
-      "aldric": "Guardião: ergue a espada e solta raios de luz; de tempos em tempos, um raio atinge os 3 inimigos mais à frente.",
+      "aldric": "Guardião: ergue a espada e solta raios de luz; de tempos em tempos, um raio atinge os 3 inimigos mais à frente e os deixa lentos.",
       "lyra": "Atirador: virote rápido; de tempos em tempos, um virote perfurante atravessa até 3 inimigos da fila.",
       "tomas": "Suporte: abençoa as torres encostadas.",
       "brom": "Artilheiro: bola de canhão lenta, em área.",
       "selene": "Mago: quando atira, faz as torres encostadas atirarem também.",
-      "wulf": "Caçador: flecha pesada; de tempos em tempos, dispara em vários inimigos diferentes.",
+      "wulf": "Caçador: flecha pesada que marca o alvo; de tempos em tempos, dispara em vários inimigos diferentes.",
       "mabel": "Invocador: armadilhas no caminho.",
       "isolde": "Controlador: raio de gelo que deixa os inimigos lentos."
     }

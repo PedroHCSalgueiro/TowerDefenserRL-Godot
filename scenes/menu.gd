@@ -1,12 +1,14 @@
 class_name MainMenu
 extends Control
-## Tela inicial: o jogador escolhe o conjunto de torres da run (Padrão ou uma região, como o Reino de
-## Valcoroa; ver `GameSets`) e, se quiser, a semente. "Jogar" carrega a cena do jogo.
+## Tela inicial: o jogador escolhe o conjunto de torres da run (Padrão, uma região — Reino de Valcoroa,
+## Costa Rubra — ou as duas juntas; ver `GameSets`) e, se quiser, a semente. "Jogar" carrega a cena do jogo.
 ##
 ## Linha de comando (depois de `--`): `--set=valcoroa` escolhe o conjunto, `--seed=abc` a semente e
 ## `--play` pula a tela e já abre o jogo (para capturas de tela e testes manuais).
 
 const GAME_SCENE := "res://scenes/game.tscn"
+## Largura de cada cartão de conjunto (quatro lado a lado cabem em 1280 px).
+const CARD_WIDTH := 290
 const SETTINGS_PATH := "user://menu.cfg"
 
 var _sets: Array = []
@@ -111,7 +113,7 @@ func _build(seed_text: String) -> void:
 	var play_row := CenterContainer.new()
 	play_row.add_child(_play_button)
 	column.add_child(play_row)
-	var hint := UiKit.label("Teclas 1 e 2 escolhem o conjunto · Enter joga", 12, Color("#777777"))
+	var hint := UiKit.label("Teclas 1 a %d escolhem o conjunto · Enter joga" % _sets.size(), 12, Color("#777777"))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(hint)
 	var version_label := UiKit.label("v %s" % ProjectSettings.get_setting("application/config/version", ""), 12, Color("#555555"))
@@ -122,8 +124,8 @@ func _build(seed_text: String) -> void:
 
 func _make_card(index: int) -> PanelContainer:
 	var info: Dictionary = _sets[index]
-	var card := UiKit.panel(Color("#1d1f21"), UiKit.BORDER, 10, Vector2(22, 18))
-	card.custom_minimum_size = Vector2(340, 0)
+	var card := UiKit.panel(Color("#1d1f21"), UiKit.BORDER, 10, Vector2(18, 16))
+	card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -135,7 +137,7 @@ func _make_card(index: int) -> PanelContainer:
 	box.add_child(UiKit.label(str(info["name"]), 24, UiKit.TEXT, true))
 	var description := UiKit.label(str(info.get("description", "")), 14, UiKit.MUTED)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	description.custom_minimum_size = Vector2(296, 0)
+	description.custom_minimum_size = Vector2(CARD_WIDTH - 36, 0)
 	box.add_child(description)
 	box.add_child(UiKit.label("Torres", 13, UiKit.GOLD, true))
 	for tower_name in info.get("roster", []):

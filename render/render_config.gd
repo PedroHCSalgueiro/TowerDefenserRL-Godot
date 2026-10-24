@@ -35,6 +35,15 @@ static func tower_color(towers: TowerData, type: String) -> Color:
 	return color(cfg["classColors"].get(t.classes[0], cfg["fallbackColor"]))
 
 
+## Cor de efeito da torre (`towers.effectColors` em render.json, por campeão: pulsos dos gatilhos e a tampa
+## do bloco); sem ela, a cor da classe principal.
+static func effect_color(towers: TowerData, type: String) -> Color:
+	var colors: Dictionary = data()["towers"].get("effectColors", {})
+	if colors.has(type):
+		return color(colors[type])
+	return tower_color(towers, type)
+
+
 ## Cor do inimigo pelo tipo.
 static func enemy_color(type: String) -> Color:
 	var cfg: Dictionary = data()["enemies"]

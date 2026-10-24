@@ -2,10 +2,11 @@ class_name DataLoader
 extends RefCounted
 ## Carrega os JSON de data/ (copiados do Phaser, mesma estrutura e chaves em camelCase).
 ##
-## Conjuntos de torres (`GameSets`): se o conjunto escolhido tem um arquivo com o mesmo nome em
-## data/sets/<conjunto>/, ele é combinado com o de data/: objetos se mesclam em profundidade (o do
-## conjunto vence), qualquer outro valor é trocado. Com `"$replace": true` no objeto de cima, o
-## arquivo do conjunto substitui o de data/ por inteiro.
+## Conjuntos de torres (`GameSets`): o conjunto é uma lista de camadas (pastas de data/sets/), aplicadas
+## em ordem sobre data/. Para cada camada que tem um arquivo com o mesmo nome, ele é combinado com o
+## resultado até ali: objetos se mesclam em profundidade (a camada vence), qualquer outro valor é
+## trocado. Com `"$replace": true` no objeto de cima, o arquivo da camada substitui tudo que veio antes
+## (é assim que a camada "heroes" troca as torres do protótipo pelas regras dos heróis).
 ##
 ## ATENÇÃO: o JSON do Godot devolve todo número como float (como o JS, que não
 ## distingue int de float). Converta com int() onde o valor é inteiro e NUNCA
@@ -17,6 +18,8 @@ const REPLACE_KEY := "$replace"
 
 static var _cache: Dictionary = {}
 static var _set_id := "default"
+## Pastas de data/sets/ aplicadas, em ordem (vazio = só data/).
+static var _layers: Array = []
 
 
 ## Conjunto de torres em uso ("default" = só data/).
@@ -24,10 +27,15 @@ static func set_id() -> String:
 	return _set_id
 
 
-## Troca o conjunto e esquece tudo que foi lido. Quem guarda dados já tratados (`TowerData.game_data()`
-## etc.) precisa esquecê-los também: use `GameSets.select`.
-static func use_set(id: String) -> void:
+## Troca o conjunto e esquece tudo que foi lido. `layers`: as pastas do conjunto, em ordem (sem
+## a lista, a pasta com o id do conjunto; "default" não tem nenhuma). Quem guarda dados já tratados
+## (`TowerData.game_data()` etc.) precisa esquecê-los também: use `GameSets.select`.
+static func use_set(id: String, layers: Variant = null) -> void:
 	_set_id = id
+	if layers is Array:
+		_layers = layers.duplicate()
+	else:
+		_layers = [] if id == "default" else [id]
 	_cache.clear()
 
 
@@ -41,13 +49,13 @@ static func load_json(file_name: String) -> Variant:
 	if base == null:
 		return null
 	var data: Variant = base
-	if _set_id != "default":
-		var override_path := SETS_DIR + _set_id + "/" + file_name
+	for layer: String in _layers:
+		var override_path := SETS_DIR + layer + "/" + file_name
 		if FileAccess.file_exists(override_path):
 			var override: Variant = _read(override_path)
 			if override == null:
 				return null
-			data = _combine(base, override)
+			data = _combine(data, override)
 	_cache[key] = data
 	return data
 

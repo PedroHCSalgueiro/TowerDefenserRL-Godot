@@ -19,6 +19,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"x": e.x, "y": e.y, "prevX": e.prev_x, "prevY": e.prev_y,
 			"slowPercent": e.slow_percent, "slowTicks": e.slow_ticks, "stunTicks": e.stun_ticks,
 			"bleedDamage": e.bleed_damage, "bleedTicks": e.bleed_ticks, "bleedSource": e.bleed_source,
+			"marks": _marks_to_list(e.marks), "curse": e.curse.duplicate(),
 		})
 	var projectiles := []
 	for p in state.projectiles.slots:
@@ -27,6 +28,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"originTowerId": p.origin_tower_id, "targetId": p.target_id, "targetSlot": p.target_slot,
 			"targetX": p.target_x, "targetY": p.target_y, "retargeted": p.retargeted, "damage": p.damage,
 			"areaRadius": p.area_radius, "statusType": p.status_type, "speed": p.speed, "x": p.x, "y": p.y, "prevX": p.prev_x, "prevY": p.prev_y,
+			"curse": p.curse.duplicate(),
 		})
 	var towers := []
 	for t: Tower in state.towers:
@@ -35,6 +37,8 @@ static func to_dict(state: RunState) -> Dictionary:
 			"triggerCounter": t.trigger_counter, "charges": t.charges, "activationReadyTick": t.activation_ready_tick,
 			"invested": t.invested,
 			"lastEffect": null if t.last_effect == null else {"effect": t.last_effect.effect, "seq": t.last_effect.seq},
+			"doubleShot": t.double_shot, "followupTicks": t.followup_ticks, "curseNext": t.curse_next.duplicate(),
+			"lootCount": t.loot_count,
 		})
 	var traps := []
 	for trap: Trap in state.traps:
@@ -85,6 +89,7 @@ static func to_dict(state: RunState) -> Dictionary:
 				"droppedTotal": state.triggers.dropped_total, "nextChainId": state.triggers.next_chain_id, "chains": chains},
 		"classes": classes,
 		"gold": state.gold,
+		"pendingLoot": state.pending_loot,
 		"reportedGold": state.reported_gold,
 		"wave": state.wave,
 		"waves": {"active": active_waves},
@@ -96,6 +101,14 @@ static func to_dict(state: RunState) -> Dictionary:
 				"stress": state.debug.stress},
 		"commandQueue": state.command_queue.duplicate(true),
 	}
+
+
+## Marcas do inimigo como lista de [id da torre, ticks] (as chaves de um objeto JSON viram texto).
+static func _marks_to_list(marks: Dictionary) -> Array:
+	var out: Array = []
+	for id: int in marks:
+		out.append([id, marks[id]])
+	return out
 
 
 ## O estado todo em JSON (floats exatos).
@@ -120,12 +133,14 @@ static func _has_all(d: Variant, keys: Array) -> bool:
 
 
 ## Restaura o estado. `map`: o mapa da run (as rotas dos inimigos são refeitas dele). Inválido:
-## push_error e null.
+## push_error e null. Saves de versões antigas que ainda abrem (`RunState.OLDEST_VERSION`) voltam com os
+## campos que não existiam vazios (o save 16 não tem marcas, Maldição, tiro duplo nem ouro guardado).
 static func from_dict(d: Variant, map: SimMap) -> RunState:
 	if not (d is Dictionary):
 		return _fail("não é um objeto")
-	if d.get("version") != RunState.VERSION:
-		return _fail("versão não suportada: %s" % d.get("version"))
+	var version: Variant = d.get("version")
+	if typeof(version) != TYPE_INT or version < RunState.OLDEST_VERSION or version > RunState.VERSION:
+		return _fail("versão não suportada: %s (este jogo abre de %d a %d)" % [version, RunState.OLDEST_VERSION, RunState.VERSION])
 	if not _has_all(d, ["seed", "tick", "rngState", "nextEntityId", "status", "cheated", "nexus", "enemies",
 			"projectiles", "towers", "triggers", "classes", "gold", "reportedGold", "wave", "waves", "stats",
 			"shop", "rewards", "debug", "commandQueue"]):
@@ -169,6 +184,9 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		enemy.bleed_damage = float(e["bleedDamage"])
 		enemy.bleed_ticks = e["bleedTicks"]
 		enemy.bleed_source = e["bleedSource"]
+		for pair in e.get("marks", []):
+			enemy.marks[int(pair[0])] = int(pair[1])
+		enemy.curse = e.get("curse", {})
 		if enemy.active:
 			# Caches de desempenho: refeitos da rota do tipo.
 			var type := enemy_data.get_type(enemy.type)
@@ -200,6 +218,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		proj.damage = float(p["damage"])
 		proj.area_radius = float(p["areaRadius"])
 		proj.status_type = p["statusType"]
+		proj.curse = p.get("curse", {})
 		proj.speed = float(p["speed"])
 		proj.x = float(p["x"])
 		proj.y = float(p["y"])
@@ -222,6 +241,10 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		tower.invested = t["invested"]
 		if t["lastEffect"] != null:
 			tower.last_effect = Tower.LastEffect.new(_typed_effect(t["lastEffect"]["effect"]), t["lastEffect"]["seq"])
+		tower.double_shot = t.get("doubleShot", false)
+		tower.followup_ticks = t.get("followupTicks", 0)
+		tower.curse_next = t.get("curseNext", {})
+		tower.loot_count = t.get("lootCount", 0)
 		state.towers.append(tower)
 
 	for t: Dictionary in d.get("traps", []):
@@ -274,6 +297,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 			status.members.append(m)
 
 	state.gold = d["gold"]
+	state.pending_loot = d.get("pendingLoot", 0)
 	state.reported_gold = d["reportedGold"]
 	state.wave = d["wave"]
 	for w: Dictionary in d["waves"]["active"]:

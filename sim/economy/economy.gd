@@ -11,10 +11,12 @@ static func interest_for(economy: EconomyData, gold: int, cap: int = -1) -> int:
 	return mini(cap, int(floorf(float(maxi(0, gold) * economy.interest_percent) / 100.0)))
 
 
-## Teto dos juros na run: o da economia ou o do bônus "Cofre maior" (T24).
+## Teto dos juros na run: o da economia ou o do bônus "Cofre maior" (T24), mais o bônus de região da
+## Costa Rubra (nível 3).
 static func interest_cap_for(economy: EconomyData, state: Object) -> int:
 	var cap: Variant = RewardMods.of(state).interest_cap
-	return int(cap) if cap != null else economy.interest_cap
+	var base := int(cap) if cap != null else economy.interest_cap
+	return base + ClassBonuses.interest_cap_bonus(ClassData.game_data(), state)
 
 
 ## Renda de fim da onda `wave` (a primeira onda é a 1): `base + perWave × wave`, mais a
@@ -30,10 +32,12 @@ static func early_bonus_for(economy: EconomyData, active_waves: int) -> int:
 
 
 ## Fecha uma onda: juros primeiro, sobre o ouro guardado; depois a renda; o bônus da chamada
-## antecipada daquela onda, se houver; e a loja nova grátis. É o que o fim de cada onda real e o
-## "Encerrar onda" do debug chamam. Os bônus das recompensas (T24) entram no teto dos juros, na
-## renda, na raridade e nos rerolls grátis da loja nova; a tela de recompensa sai do `waveEnded`
-## (`Rewards.create_reward_open_system`).
+## antecipada daquela onda, se houver; o ouro guardado para o fim da onda (Saque do Capitão Pena e
+## Recompensa do Kraus) e o baú da Costa Rubra (nível 5); e a loja nova grátis. É o que o fim de cada
+## onda real e o "Encerrar onda" do debug chamam. Os bônus das recompensas (T24) entram no teto dos
+## juros, na renda, na raridade e nos rerolls grátis da loja nova; a tela de recompensa sai do
+## `waveEnded` (`Rewards.create_reward_open_system`). Com ondas empilhadas, o ouro guardado vai para a
+## primeira que fechar, e o teto do Saque recomeça.
 static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, early_bonus: int = 0) -> void:
 	var state := ctx.state
 	state.wave += 1
@@ -43,9 +47,16 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 	var bonus := wave_bonus_for(economy, state.wave, mods.income_per_wave)
 	Gold.earn_gold(state, bonus)
 	Gold.earn_gold(state, early_bonus)
+	var loot: int = state.pending_loot
+	state.pending_loot = 0
+	for tower: Tower in state.towers:
+		tower.loot_count = 0
+	Gold.earn_gold(state, loot)
+	var chest := ClassBonuses.wave_end_gold(ClassData.game_data(), state)
+	Gold.earn_gold(state, chest)
 	state.shop = Shop.new_shop(ctx.rng, economy, towers, Shop.chances_for_state(economy, state), false,
-			mods.free_rerolls_per_shop, Shop.common_only(economy, state.wave))
-	ctx.emit({
+			mods.free_rerolls_per_shop, Shop.common_only(economy, state.wave), Shop.slot_count(economy, state) - economy.shop_slots)
+	var event := {
 		"type": "waveEnded",
 		"tick": state.tick,
 		"wave": state.wave,
@@ -53,7 +64,11 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 		"bonus": bonus,
 		"earlyBonus": early_bonus,
 		"gold": state.gold,
-	})
+	}
+	if loot > 0 or chest > 0:
+		event["loot"] = loot
+		event["chest"] = chest
+	ctx.emit(event)
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "newWave"})
 
 

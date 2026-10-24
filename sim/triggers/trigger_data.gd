@@ -46,6 +46,8 @@ static var WHEN_PARAMS := {
 	"everyNKillsInRange": [_count("kills")],
 	## A cada N segundos (o relógio da torre anda a cada tick; pausa com a tela de recompensa).
 	"everyNSeconds": [_positive("seconds")],
+	## A própria torre abate um inimigo (abate duplo conta 1). `markedOnly`: só se ele estava Marcado.
+	"ownKill": [_flag("markedOnly")],
 }
 
 ## Parâmetros de cada "o quê". Porcentagens de dano são do dano da torre.
@@ -80,16 +82,46 @@ static var DO_PARAMS := {
 	## Atordoa por `stunSeconds` os inimigos no alcance que já estão Lentos.
 	"stunSlowed": [_positive("stunSeconds")],
 	## Raio de luz nos `count` inimigos mais à frente (pelo modo "first") dentro do alcance, cada um com
-	## `damagePercent`% do dano da torre.
-	"frontBeam": [_count("count"), _positive("damagePercent")],
+	## `damagePercent`% do dano da torre. Com `slowPercent`, deixa cada um Lento (o Lento da Rainha Isolde:
+	## soma até `slowCap`, por `slowSeconds`).
+	"frontBeam": [_count("count"), _positive("damagePercent"), _positive("slowPercent", 100, 0),
+			_positive("slowCap", 100, 0), _positive("slowSeconds", null, 0)],
 	## Põe uma armadilha de urso no caminho: o inimigo que pisa fica preso `holdSeconds` e sangra
 	## `damagePercent`% do dano da torre por segundo. No máximo `maxTraps` dessas por torre.
 	"trap": [_positive("holdSeconds"), _positive("damagePercent"), _count("maxTraps")],
+	## Bala que quica (Bart): `impacts` impactos, o primeiro no alvo normal e cada quique no inimigo mais
+	## perto do impacto anterior (até `jumpRadius`) que a bala ainda não atingiu. Cada impacto é uma área de
+	## raio `radius` com `damagePercent`% do dano; a cada quique, raio e dano ficam em `falloffPercent`%.
+	"bounceShot": [_count("impacts"), _positive("radius"), _positive("damagePercent"), _positive("falloffPercent", 100),
+			_positive("jumpRadius")],
+	## Âncora: prende o primeiro da fila no alcance e o empurra `cells` casas para trás; o inimigo colado
+	## atrás dele (até `gap` casas no caminho) vai junto.
+	"anchorPush": [_count("cells"), _positive("gap")],
+	## Maré (Morgana): uma onda da torre até o limite do alcance; cada inimigo terrestre no caminho leva
+	## `damagePercent`% do dano e fica Lento (`slowPercent`, até `slowCap`, por `slowSeconds`).
+	"tide": [_positive("damagePercent"), _positive("slowPercent", 100), _positive("slowCap", 100), _positive("slowSeconds")],
+	## Tentáculo (Nerea): numa casa do caminho no alcance (onde houver mais inimigos; empate, o mais à
+	## frente) agarra os terrestres no raio `radius`: Atordoa por `stunSeconds` (chefão imune, elite
+	## `eliteStunPercent`% do tempo) e causa `damagePercent`% do dano por segundo por `damageSeconds`.
+	"tentacle": [_positive("radius"), _positive("stunSeconds"), _positive("eliteStunPercent", 100),
+			_positive("damagePercent"), _positive("damageSeconds")],
+	## Guarda `gold` de ouro para o fim da onda. `maxPerWave`: teto por torre a cada onda (0 = sem teto).
+	"loot": [_count("gold"), _count("maxPerWave", 0)],
+	## O próximo ataque normal sai com dois tiros: o segundo `delaySeconds` depois, no alvo da hora.
+	"doubleShot": [_positive("delaySeconds")],
+	## O próximo ataque amaldiçoa o alvo por `seconds`: ele divide `sharePercent`% do dano que recebe com os
+	## `spread` inimigos mais próximos (até `radius` casas) e, ao morrer, a Maldição pula para eles (no
+	## máximo `jumps` saltos).
+	"curseNext": [_positive("seconds"), _positive("sharePercent", 100), _count("spread"), _positive("radius"),
+			_count("jumps")],
 }
 
-## "O quê" que aplicam efeitos de estado: precisam do sistema de estados e só contam como visíveis
-## na cadeia quando acertam alguém.
-const STATUS_EFFECTS := ["stunFront", "stunSlowed", "trap"]
+## "O quê" que aplicam efeitos de estado: precisam do sistema de estados.
+const STATUS_EFFECTS := ["stunFront", "stunSlowed", "trap", "tide", "tentacle", "curseNext"]
+## "O quê" que só contam como visíveis na cadeia quando fazem alguma coisa (acertam alguém, guardam ouro):
+## sem ninguém para atordoar, o gatilho não aparece na cadeia. Armar o próximo tiro não é visível.
+const LAZY_EFFECTS := ["stunFront", "stunSlowed", "trap", "tide", "tentacle", "curseNext", "bounceShot",
+		"anchorPush", "loot", "doubleShot"]
 
 ## Parâmetro de estrela que vale para qualquer gatilho: multiplica o dano do ataque
 ## normal da torre (e, com ele, tudo que é % do dano dela).

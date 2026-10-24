@@ -34,6 +34,9 @@ citadas, apresente um plano e só então implemente.
 - `render/`: nós 3D. Só lê estado e eventos da simulação.
 - `ui/`: nós `Control` + `Theme` central. Lógica de tela em "model" puro, nós só desenham.
 - `data/`: todos os números do jogo, em JSON (copiados do repo Phaser, mesma estrutura).
+  Conjuntos da tela inicial em `data/sets/sets.json`: cada um lista camadas (`layers`) de `data/sets/`
+  mescladas em ordem sobre `data/` — `heroes` (regras comuns dos heróis: 8 classes, economia, ondas),
+  `valcoroa`, `costarubra` e `valcoroa_costarubra` (só o cenário de debug dos 16).
 - `tests/`: testes da simulação.
 - `assets/`, `scenes/`, `blender/` (com `.gdignore`): arte.
 

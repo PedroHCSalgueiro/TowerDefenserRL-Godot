@@ -9,10 +9,11 @@ func after_each() -> void:
 	GameSets.select(GameSets.DEFAULT_ID)
 
 
-func test_lista_tem_padrao_e_valcoroa() -> void:
+func test_lista_tem_padrao_valcoroa_costa_rubra_e_as_duas() -> void:
 	var ids := GameSets.list().map(func(s: Dictionary) -> String: return s["id"])
-	assert_eq(ids, ["default", "valcoroa"])
+	assert_eq(ids, ["default", "valcoroa", "costarubra", "valcoroa_costarubra"])
 	assert_true(GameSets.has_set("valcoroa"))
+	assert_true(GameSets.has_set("costarubra"))
 	assert_false(GameSets.has_set("nao-existe"))
 
 

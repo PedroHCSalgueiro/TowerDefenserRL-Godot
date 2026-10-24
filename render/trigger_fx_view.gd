@@ -110,7 +110,7 @@ func handle_events(state: Object, events: Array) -> void:
 func _sync_towers(state: Object) -> void:
 	_tower_info.clear()
 	for tower: Tower in state.towers:
-		_tower_info[tower.id] = {"x": float(tower.x), "y": float(tower.y), "color": RenderConfig.tower_color(_towers, tower.type)}
+		_tower_info[tower.id] = {"x": float(tower.x), "y": float(tower.y), "color": RenderConfig.effect_color(_towers, tower.type)}
 
 
 func draw(state: Object, frame_delta_ms: float) -> void:

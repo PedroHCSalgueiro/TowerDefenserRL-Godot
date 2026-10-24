@@ -3,8 +3,10 @@ extends PanelContainer
 ## Painel de debug sobre o jogo (F2), simplificado em relação ao do Phaser: FPS, tempo de tick, os
 ## contadores do motor de gatilhos, inimigos, projéteis, torres e a semente; velocidades (inclusive
 ## 5x e 10x), trapaças (+ouro, ouro infinito, núcleo invulnerável), ondas (encerrar, pular,
-## recompensa extra), posicionar torre na casa selecionada e spawn de inimigos e torres (inclusive
-## o cenário "Cadeia"). Toda ação que muda o jogo passa pela fila de comandos da simulação.
+## recompensa extra), posicionar torre na casa selecionada e spawn de inimigos (inclusive elite) e torres
+## (inclusive o cenário "Cadeia"). Mostra também os efeitos de estado nos inimigos vivos (Lento,
+## Atordoado, Marcado com 1 e com 2 marcas, Amaldiçoado) e os empurrões por normal, elite e chefão.
+## Toda ação que muda o jogo passa pela fila de comandos da simulação.
 ##
 ## Em builds de depuração o painel já nasce liberado; na build de lançamento, só depois de
 ## Ctrl+Shift+D (a sessão) ou do argumento `--debug`.
@@ -61,6 +63,10 @@ var _layout_option: OptionButton
 var _skip_wave: SpinBox
 var _tower_ids: Array[String] = []
 var _enemy_ids: Array[String] = []
+var _elite: CheckBox
+## Empurrões vistos desde o começo (para conferir chefão imune e elite no máximo 1 casa):
+## {"normal": [vezes, maior], "elite": [vezes, maior], "boss": [vezes, maior]}.
+var _pushes := {"normal": [0, 0.0], "elite": [0, 0.0], "boss": [0, 0.0]}
 
 
 func setup(runner: SimulationRunner, state: Callable, hovered_cell: Callable, selected_cell: Callable) -> void:
@@ -178,6 +184,10 @@ func _build() -> void:
 		_enemy_option.add_item(id)
 	_enemy_count = _spin(0, 5000, int(_cfg["defaults"]["spawnCount"]))
 	box.add_child(_row("Tipo", _enemy_option, _enemy_count))
+	_elite = CheckBox.new()
+	_elite.text = "elite"
+	_elite.focus_mode = Control.FOCUS_NONE
+	box.add_child(_elite)
 	var enemy_row := UiKit.hbox(4)
 	enemy_row.add_child(_small_button("Spawnar", _spawn_enemies))
 	enemy_row.add_child(_small_button("Estresse", func() -> void:
@@ -244,7 +254,51 @@ func _spawn_towers() -> void:
 func _spawn_enemies() -> void:
 	var idx := _enemy_option.selected
 	_send({"type": "debugSpawnEnemies", "count": int(_enemy_count.value),
-			"enemyType": null if idx == 0 else _enemy_ids[idx - 1], "layout": _layout()})
+			"enemyType": null if idx == 0 else _enemy_ids[idx - 1], "layout": _layout(), "elite": _elite.button_pressed})
+
+
+## Eventos do quadro: guarda os empurrões (Imediato Âncora) por tipo de inimigo.
+func handle_events(events: Array) -> void:
+	for event: Dictionary in events:
+		if event["type"] != "enemiesPushed":
+			continue
+		for push: Dictionary in event["pushes"]:
+			var kind := "boss" if push["boss"] else ("elite" if push["elite"] else "normal")
+			var entry: Array = _pushes[kind]
+			entry[0] += 1
+			entry[1] = maxf(entry[1], float(push["cells"]))
+
+
+## Contagem dos efeitos de estado nos inimigos vivos (Lento, Atordoado, Sangrando, Marcado com 1 e com 2+
+## marcas, Amaldiçoado) e os empurrões vistos.
+func _status_lines(state: RunState) -> Array[String]:
+	var slow := 0
+	var stun := 0
+	var bleed := 0
+	var marked := [0, 0]
+	var cursed := 0
+	var slow_stunned := 0
+	for enemy: Enemy in state.enemies.slots:
+		if not enemy.active:
+			continue
+		slow += 1 if enemy.slow_ticks > 0 else 0
+		stun += 1 if enemy.stun_ticks > 0 else 0
+		slow_stunned += 1 if enemy.slow_ticks > 0 and enemy.stun_ticks > 0 else 0
+		bleed += 1 if enemy.bleed_ticks > 0 else 0
+		if not enemy.marks.is_empty():
+			marked[0 if enemy.marks.size() == 1 else 1] += 1
+		cursed += 0 if enemy.curse.is_empty() else 1
+	var hunter: ClassState.ClassStatus = state.classes.get("hunter")
+	var push_text := "Empurrões: normal %dx (máx %s) · elite %dx (máx %s) · chefão %dx (máx %s)" % [
+			_pushes["normal"][0], TowerInfo.fmt(_pushes["normal"][1]), _pushes["elite"][0], TowerInfo.fmt(_pushes["elite"][1]),
+			_pushes["boss"][0], TowerInfo.fmt(_pushes["boss"][1])]
+	return [
+		"Lento %d  Atordoado %d (Lento e atordoado %d)  Sangrando %d" % [slow, stun, slow_stunned, bleed],
+		"Marcado 1 marca %d · 2+ marcas %d · bônus Caçador %s  Amaldiçoado %d" % [marked[0], marked[1],
+				"ativo" if hunter != null and hunter.level > 0 else "inativo", cursed],
+		push_text,
+		"Ouro guardado para o fim da onda %d" % state.pending_loot,
+	]
 
 
 ## Resumo de desempenho desde o começo da run (para medições por linha de comando).
@@ -264,7 +318,7 @@ func update_panel() -> void:
 	_refresh_left = float(_cfg["panel"]["refreshMs"]) / 1000.0
 	var state: RunState = _state.call()
 	var t := state.triggers.last_tick
-	_stats.text = "\n".join([
+	var lines: Array[String] = [
 		"FPS %d" % Engine.get_frames_per_second(),
 		"Tick %.2f / máx %.2f ms" % [_profiler.average(), _profiler.max_ms],
 		"Ticks descartados %d" % _runner.clock.dropped_ticks,
@@ -272,7 +326,9 @@ func update_panel() -> void:
 		"Inimigos %d  Projéteis %d  Torres %d" % [state.enemies.active_count, state.projectiles.active_count, state.towers.size()],
 		"Casa sob o mouse %s  selecionada %s" % [_cell_text(_hovered_cell.call()), _cell_text(_selected_cell.call())],
 		"Semente %s  tick %d%s" % [state.seed_text, state.tick, "  [trapaça]" if state.cheated else ""],
-	])
+	]
+	lines.append_array(_status_lines(state))
+	_stats.text = "\n".join(lines)
 	_profiler.reset()
 
 

@@ -10,7 +10,7 @@ extends RefCounted
 ## Um comando é um Dictionary com "type" e os campos do Phaser (camelCase):
 ##   spawnEnemy{enemyType}  placeTower{towerType,x,y,star?}  buyTower{slot,x?,y?}  rerollShop
 ##   sellTower{towerId}  moveTower{towerId,x,y}  endWave  callWave  evolveNexus
-##   chooseReward{index}  rerollRewards  debugSpawnEnemies{count,enemyType,layout}
+##   chooseReward{index}  rerollRewards  debugSpawnEnemies{count,enemyType,layout,elite?}
 ##   debugSpawnTowers{count,towerTypes,layout,star?}  debugClear  debugSetStress{stress}
 ##   debugSetNexusInvulnerable{value}  debugSkipToWave{wave}  debugAddGold{amount}
 ##   debugSetInfiniteGold{value}  debugOpenReward
@@ -85,7 +85,8 @@ static func create_command_system(map: SimMap, routes: Dictionary, enemies: Enem
 				"debugSpawnEnemies":
 					var count: int = clamp_count.call(command["count"])
 					for i in count:
-						Stress.spawn_debug_enemy(ctx, routes, enemies, command["enemyType"], command["layout"])
+						Stress.spawn_debug_enemy(ctx, routes, enemies, command["enemyType"], command["layout"],
+								command.get("elite", false))
 				"debugSpawnTowers":
 					var occupied := {}
 					for t: Tower in state.towers:

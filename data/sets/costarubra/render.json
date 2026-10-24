@@ -1,0 +1,23 @@
+{
+  "towers": {
+    "classColors": {
+      "costarubra": "#b3242e"
+    },
+    "effectColors": {
+      "bart": "#ff8c32",
+      "ruby": "#ff4f7b",
+      "anchor": "#9aa5b1",
+      "morgana": "#37a7e0",
+      "pena": "#5fd35f",
+      "kraus": "#c9a227",
+      "zuri": "#a24bd9",
+      "nerea": "#1fb5a5"
+    },
+    "parrots": {
+      "pena": {
+        "color": "#5fd35f",
+        "speed": 4
+      }
+    }
+  }
+}

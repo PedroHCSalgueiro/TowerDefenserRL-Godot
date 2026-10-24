@@ -6,10 +6,14 @@ extends RefCounted
 ## Inimigo que chegou ao fim da rota causa `nexusDamage` (o do elite, se for) e sai do mapa. Se a
 ## vida do núcleo zerar, a run termina (`runLost` é emitido uma vez). O chefão que chega é derrota
 ## imediata, qualquer que seja a vida: o núcleo vai a 0. Com o núcleo invulnerável (debug), o
-## inimigo (chefão inclusive) sai do mapa sem causar dano.
-static func create_nexus_contact_system(routes: Dictionary, data: EnemyData) -> Callable:
+## inimigo (chefão inclusive) sai do mapa sem causar dano. O bônus do Guardião (nível 4) reduz o dano
+## de quem chega (não salva do chefão).
+static func create_nexus_contact_system(routes: Dictionary, data: EnemyData, classes: ClassData = null) -> Callable:
+	if classes == null:
+		classes = ClassData.game_data()
 	return func(ctx: TickContext) -> void:
 		var state := ctx.state
+		var reduction := -1.0
 		for enemy: Enemy in state.enemies.slots:
 			if not enemy.active:
 				continue
@@ -23,6 +27,11 @@ static func create_nexus_contact_system(routes: Dictionary, data: EnemyData) -> 
 			var damage := 0.0
 			if not invulnerable:
 				damage = state.nexus.hp if type.boss else data.enemy_nexus_damage(type, enemy.elite)
+				if not type.boss:
+					if reduction < 0.0:
+						reduction = ClassBonuses.nexus_damage_multiplier(classes, state)
+					if reduction != 1.0:
+						damage *= reduction
 			state.nexus.hp = maxf(0.0, state.nexus.hp - damage)
 			state.enemies.release(enemy)
 			ctx.emit({"type": "enemyReachedNexus", "tick": state.tick, "enemyId": enemy.id, "damage": damage})

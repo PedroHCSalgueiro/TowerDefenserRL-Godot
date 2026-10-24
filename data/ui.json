@@ -62,7 +62,7 @@
     "controls": [
       {
         "keys": "1 a 5",
-        "action": "Pegar a torre do slot da loja; clique numa casa para comprar e posicionar"
+        "action": "Pegar a torre do slot da loja (6 com a vaga extra da Costa Rubra); clique numa casa para comprar e posicionar"
       },
       {
         "keys": "Arrastar slot",

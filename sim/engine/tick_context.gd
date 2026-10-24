@@ -9,6 +9,9 @@ var commands: Array
 ## Eventos emitidos neste tick até agora, em ordem. É por aqui que o motor de
 ## gatilhos enxerga tiros e abates do próprio tick. Não vai para o save.
 var tick_events: Array
+## Índice espacial da partida (o mesmo das torres e dos gatilhos), posto pelo primeiro sistema de
+## `GameSystems`; null fora dela (testes com sistemas avulsos). A Maldição usa para achar os vizinhos.
+var index: SpatialIndex = null
 
 var _bus: EventBus
 

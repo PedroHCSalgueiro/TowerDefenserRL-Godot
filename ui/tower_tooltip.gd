@@ -11,6 +11,8 @@ var _shown := false
 var _delay_ms: float
 var _offset: Vector2
 var _edge_margin: float
+var _progress: Label
+var _progress_text := ""
 
 
 func _init() -> void:
@@ -34,8 +36,10 @@ func is_shown() -> bool:
 
 ## Chame a cada quadro. `info` é a torre a mostrar (null = nenhuma) e `key` identifica a torre e a
 ## estrela: a espera de `delayMs` recomeça quando ela muda. `purchase`: prévia da compra (só no slot
-## da loja). `now_ms`: relógio em ms.
-func update_info(info: TowerInfo, key: String, now_ms: float, mouse: Vector2, purchase: ClassPreview = null) -> void:
+## da loja). `now_ms`: relógio em ms. `progress`: a carga da habilidade ("Carga: 2 de 5 ataques"),
+## atualizada sem recomeçar a espera ("" = nenhuma).
+func update_info(info: TowerInfo, key: String, now_ms: float, mouse: Vector2, purchase: ClassPreview = null,
+		progress: String = "") -> void:
 	if info == null or key == "":
 		_key = ""
 		_hide()
@@ -45,6 +49,12 @@ func update_info(info: TowerInfo, key: String, now_ms: float, mouse: Vector2, pu
 		_since_ms = now_ms
 		_hide()
 		_fill(info, purchase)
+		_progress_text = ""
+	if progress != _progress_text:
+		_progress_text = progress
+		_progress.text = progress
+		_progress.visible = progress != ""
+		reset_size()
 	if not _shown and now_ms - _since_ms >= _delay_ms:
 		_shown = true
 		visible = true
@@ -61,6 +71,9 @@ func _fill(info: TowerInfo, purchase: ClassPreview) -> void:
 	_box.add_child(_labelled("Ataque", info.attack))
 	if info.trigger != "":
 		_box.add_child(_labelled("Gatilho", info.trigger))
+	_progress = UiKit.label("", 12, Color("#9fd6a0"))
+	_progress.visible = false
+	_box.add_child(_progress)
 	if purchase != null and purchase.fusion != "":
 		_box.add_child(_labelled("Compra", "funde: %s" % purchase.fusion))
 	elif purchase != null and not purchase.classes.is_empty():

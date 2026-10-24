@@ -55,10 +55,10 @@ func _grow(needed: int) -> void:
 
 
 ## Explosões em área nascem dos eventos `areaExploded` (sem gatilho; as de gatilho têm o próprio
-## efeito no `TriggerFxView`).
+## efeito no `TriggerFxView`, menos as que pedem o anel: quique do Bart, maré da Morgana e tentáculo da Nerea).
 func handle_events(events: Array) -> void:
 	for event: Dictionary in events:
-		if event["type"] == "areaExploded" and not event["trigger"]:
+		if event["type"] == "areaExploded" and (not event["trigger"] or event.get("ring", false)):
 			_spawn_ring(event["x"], event["y"], event["radius"])
 
 

@@ -39,10 +39,16 @@ class TowerType:
 	## Aura passiva nas vizinhas (vazio = nenhuma):
 	## {"region": String, "stars": [{"attackSpeedPercent", "regionPercent"}, ...]} (índice 0 = ★1).
 	var aura: Dictionary = {}
+	## Todo acerto dos tiros da torre deixa o alvo Marcado (a torre é da classe que marca: o Caçador).
+	var marks := false
 
 ## Raio, em casas, em que o projétil procura um alvo novo quando o dele some.
 var projectile_retarget_radius: float
 var triggers: TriggerData.TriggerRules
+## Regras gerais dos efeitos de estado (bloco opcional `statuses` de `towers.json`):
+## "mark": {"class": id, "seconds": float} — a classe cujos tiros marcam e a duração da marca ({} = sem marca);
+## "push": {"eliteMaxCells": float, "bossImmune": bool} — o Empurrado no elite e no chefão.
+var statuses: Dictionary = {"mark": {}, "push": {"eliteMaxCells": 1.0, "bossImmune": true}}
 ## id -> TowerType, na ordem do JSON.
 var types: Dictionary = {}
 
@@ -54,7 +60,7 @@ static var _default: TowerData = null
 func uses_statuses() -> bool:
 	for id: String in types:
 		var type: TowerType = types[id]
-		if not type.on_hit.is_empty():
+		if not type.on_hit.is_empty() or type.marks:
 			return true
 		if type.trigger != null:
 			for star in type.trigger.stars:
@@ -63,7 +69,8 @@ func uses_statuses() -> bool:
 	return false
 
 
-## Algum tipo põe armadilhas (tiro "trap" ou o efeito "trap")? Sem isso, o sistema de armadilhas não entra.
+## Algum tipo põe armadilhas (tiro "trap", o efeito "trap" ou o tentáculo da Nerea, que vive no mesmo
+## sistema)? Sem isso, o sistema de armadilhas não entra.
 func uses_traps() -> bool:
 	for id: String in types:
 		var type: TowerType = types[id]
@@ -71,7 +78,7 @@ func uses_traps() -> bool:
 			return true
 		if type.trigger != null:
 			for star in type.trigger.stars:
-				if star.effect["kind"] == "trap":
+				if star.effect["kind"] == "trap" or star.effect["kind"] == "tentacle":
 					return true
 	return false
 
@@ -114,15 +121,45 @@ static func load_data(raw: Variant, classes: ClassData = null) -> TowerData:
 		return null
 	var data := TowerData.new()
 	data.projectile_retarget_radius = float(raw["projectileRetargetRadius"])
+	if raw.has("statuses"):
+		var statuses: Variant = _parse_statuses(raw["statuses"], classes)
+		if statuses == null:
+			return null
+		data.statuses = statuses
+	var mark_class: String = data.statuses["mark"].get("class", "")
 	for id: String in raw["types"]:
 		var type := _parse_type(id, raw["types"][id], classes)
 		if type == null:
 			return null
+		type.marks = mark_class != "" and type.classes.has(mark_class)
 		data.types[id] = type
 	data.triggers = TriggerData.parse_trigger_rules(raw.get("triggers"))
 	if data.triggers == null:
 		return null
 	return data
+
+
+## Bloco `statuses`: {"mark": {"class", "seconds"}?, "push": {"eliteMaxCells", "bossImmune"}?}. Devolve o
+## Dictionary completo (com os padrões) ou null (push_error).
+static func _parse_statuses(raw: Variant, classes: ClassData) -> Variant:
+	var out := {"mark": {}, "push": {"eliteMaxCells": 1.0, "bossImmune": true}}
+	if not (raw is Dictionary):
+		push_error('Dados de torres inválidos: "statuses" não é um objeto')
+		return null
+	var mark: Variant = raw.get("mark")
+	if mark != null:
+		if not (mark is Dictionary) or typeof(mark.get("class")) != TYPE_STRING or not classes.classes.has(mark["class"]) \
+				or not _is_positive(mark.get("seconds")):
+			push_error('Dados de torres inválidos: "statuses.mark" precisa de "class" existente e "seconds" positivo')
+			return null
+		out["mark"] = {"class": mark["class"], "seconds": float(mark["seconds"])}
+	var push: Variant = raw.get("push")
+	if push != null:
+		if not (push is Dictionary) or not _is_positive(push.get("eliteMaxCells")) or typeof(push.get("bossImmune")) != TYPE_BOOL:
+			push_error('Dados de torres inválidos: "statuses.push" precisa de "eliteMaxCells" positivo e "bossImmune"')
+			return null
+		out["push"] = {"eliteMaxCells": float(push["eliteMaxCells"]), "bossImmune": push["bossImmune"]}
+	return out
 
 
 ## `onHit` opcional: slow {percent, cap, seconds, bounces?, bounceRadius?} e bleed {percentPerSecond, seconds}.

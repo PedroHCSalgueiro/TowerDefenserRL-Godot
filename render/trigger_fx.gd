@@ -51,6 +51,18 @@ static func segments_of(event: Dictionary, tower_at: Callable) -> Array:
 			var tower: Dictionary = tower_at.call(event["towerId"])
 			if not tower.is_empty():
 				out.append({"from": Vector2(tower["x"], tower["y"]), "to": Vector2(event["toX"], event["toY"]), "color": tower["color"]})
+		"enemiesPushed":
+			# A corrente da âncora: da torre até cada inimigo empurrado (já na casa nova).
+			var tower: Dictionary = tower_at.call(event["towerId"])
+			if not tower.is_empty():
+				for push: Dictionary in event["pushes"]:
+					out.append({"from": Vector2(tower["x"], tower["y"]), "to": Vector2(push["x"], push["y"]), "color": tower["color"]})
+		"curseJumped":
+			# A Maldição pulando do ponto da morte para os vizinhos.
+			var tower: Dictionary = tower_at.call(event["towerId"])
+			var color: Color = tower["color"] if not tower.is_empty() else Color("#a24bd9")
+			for point: Dictionary in event["points"]:
+				out.append({"from": Vector2(event["x"], event["y"]), "to": Vector2(point["x"], point["y"]), "color": color})
 		"triggerFired":
 			if event["copiedFromTowerId"] == null:
 				return out

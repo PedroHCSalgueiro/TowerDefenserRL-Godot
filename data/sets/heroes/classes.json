@@ -1,0 +1,64 @@
+{
+  "minTriggerCount": 2,
+  "maxKillWeight": 4,
+  "$replace": true,
+  "classes": {
+    "guardian": {
+      "name": "Guardião",
+      "levels": [
+        {
+          "count": 2,
+          "text": "Lento dos Guardiões +20% mais forte e Empurrado +1 casa (elite no máximo 1, chefão imune)",
+          "slowBonusPercent": 20,
+          "pushBonusCells": 1
+        },
+        {
+          "count": 4,
+          "text": "Como o nível 2; o núcleo recebe 20% menos dano de quem chega nele",
+          "slowBonusPercent": 20,
+          "pushBonusCells": 1,
+          "nexusDamageReductionPercent": 20
+        }
+      ]
+    },
+    "shooter": {
+      "name": "Atirador",
+      "levels": []
+    },
+    "support": {
+      "name": "Suporte",
+      "levels": []
+    },
+    "artillerist": {
+      "name": "Artilheiro",
+      "levels": []
+    },
+    "mage": {
+      "name": "Mago",
+      "levels": []
+    },
+    "hunter": {
+      "name": "Caçador",
+      "levels": [
+        {
+          "count": 2,
+          "text": "Caçadores causam +10% de dano por marca no alvo Marcado",
+          "markDamagePercent": 10
+        },
+        {
+          "count": 4,
+          "text": "Caçadores causam +15% de dano por marca no alvo Marcado",
+          "markDamagePercent": 15
+        }
+      ]
+    },
+    "summoner": {
+      "name": "Invocador",
+      "levels": []
+    },
+    "controller": {
+      "name": "Controlador",
+      "levels": []
+    }
+  }
+}

@@ -45,6 +45,11 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 	var area_radius := 0.0
 	if area:
 		area_radius = type.shot["radius"] * ClassBonuses.area_radius_multiplier(classes, ctx.state, type) * radius_multiplier
+	# A Maldição armada (Mama Zuri) vai no próximo ataque que não é tiro extra.
+	var curse := ProjectileSystems.NO_CURSE
+	if not tower.curse_next.is_empty() and shot != "extra":
+		curse = tower.curse_next
+		tower.curse_next = {}
 	ProjectileSystems.fire_projectile(ctx, {
 		"sourceId": tower.id,
 		"x": float(tower.x),
@@ -53,7 +58,8 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 		"speed": type.projectile_speed,
 		"areaRadius": area_radius,
 		"chain": chain,
-		"statusType": tower.type if not type.on_hit.is_empty() else "",
+		"statusType": tower.type if not type.on_hit.is_empty() or type.marks else "",
+		"curse": curse,
 	}, target)
 
 
@@ -76,6 +82,8 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 			var type := data.get_type(tower.type)
 			if not type.attacks:
 				continue
+			if tower.followup_ticks > 0:
+				_followup_shot(ctx, index, tower, type, scores, classes)
 			if tower.cooldown_ticks > 0:
 				tower.cooldown_ticks -= 1
 			if tower.cooldown_ticks > 0:
@@ -100,3 +108,26 @@ static func create_tower_system(index: SpatialIndex, data: TowerData, scores: Di
 					tower.cooldown_ticks = maxi(1, SimMath.js_round(float(tower.cooldown_ticks) / (1.0 + haste / 100.0)))
 			if not is_trap:
 				fire_tower_shot(ctx, tower, type, target, "normal", classes)
+				if tower.double_shot:
+					_arm_followup(tower, type, ticks_per_second)
+
+
+## Tiro duplo (Ruby): o ataque normal com o tiro duplo armado agenda o segundo tiro para daqui a
+## `delaySeconds` (pelo menos 1 tick).
+static func _arm_followup(tower: Tower, type: TowerData.TowerType, ticks_per_second: float) -> void:
+	tower.double_shot = false
+	var star := Stars.tower_star(type, tower)
+	var delay: float = star.effect.get("delaySeconds", 0.0) if star != null else 0.0
+	tower.followup_ticks = maxi(1, SimMath.js_round(delay * ticks_per_second))
+
+
+## O segundo tiro do tiro duplo: conta o tempo e, na hora, atira no alvo do momento (se o primeiro matou,
+## é o próximo da fila). É tiro extra: não gasta a recarga nem conta como tiro. Sem alvo, se perde.
+static func _followup_shot(ctx: TickContext, index: SpatialIndex, tower: Tower, type: TowerData.TowerType,
+		scores: Dictionary, classes: ClassData) -> void:
+	tower.followup_ticks -= 1
+	if tower.followup_ticks > 0:
+		return
+	var target := find_tower_target(index, ctx.state, tower, type, scores)
+	if target != null:
+		fire_tower_shot(ctx, tower, type, target, "extra", classes)

@@ -17,9 +17,13 @@ extends RefCounted
 ## que o slot é reaproveitado, vale a última posição guardada no projétil.
 
 
+## Sem Maldição (compartilhado, só leitura).
+const NO_CURSE := {}
+
+
 ## Cria um projétil na posição de quem disparou, mirando `target`.
 ## `params` (Dictionary): sourceId, x, y, damage, speed, areaRadius (0 = tiro único),
-## chain (ChainMark, opcional — padrão: sem cadeia).
+## chain (ChainMark, opcional — padrão: sem cadeia), statusType e curse (opcionais).
 static func fire_projectile(ctx: TickContext, params: Dictionary, target: Enemy) -> void:
 	var projectile: Projectile = ctx.state.projectiles.acquire()
 	projectile.id = ctx.allocate_id()
@@ -31,6 +35,7 @@ static func fire_projectile(ctx: TickContext, params: Dictionary, target: Enemy)
 	projectile.retargeted = false
 	projectile.damage = params["damage"]
 	projectile.status_type = params.get("statusType", "")
+	projectile.curse = params.get("curse", NO_CURSE)
 	projectile.area_radius = params["areaRadius"]
 	projectile.speed = params["speed"]
 	projectile.x = params["x"]
@@ -60,15 +65,30 @@ static func _track_target(state: Object, projectile: Projectile) -> Enemy:
 	return enemy if enemy.active else null
 
 
-## Devolve o sistema (Callable) que move os projéteis e aplica o dano.
+## Devolve o sistema (Callable) que move os projéteis e aplica o dano. Tiro de Caçador (`marks`) num alvo
+## Marcado leva o bônus de classe do Caçador por marca (`ClassBonuses.mark_damage_multiplier`), contando as
+## marcas de antes deste acerto; depois do dano, o acerto põe a marca (`Status.apply_on_hit`).
 static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
-		retarget_radius: float, ticks_per_second: float, towers: TowerData = null) -> Callable:
+		retarget_radius: float, ticks_per_second: float, towers: TowerData = null, classes: ClassData = null) -> Callable:
 	if towers == null:
 		towers = TowerData.game_data()
+	if classes == null:
+		classes = ClassData.game_data()
 	var hits: Array = []
 	# Cadeia do projétil que está causando dano (reaproveitada).
 	var mark := ChainMark.new(0, null)
 	var damage_options := {"chain": mark}
+
+	# Dano do tiro neste alvo: com o bônus do Caçador contra as marcas que ele já tem.
+	var damage_on := func(state: Object, projectile: Projectile, enemy: Enemy) -> float:
+		if projectile.status_type == "" or enemy.marks.is_empty():
+			return projectile.damage
+		var type: TowerData.TowerType = towers.types.get(projectile.status_type)
+		if type == null or not type.marks:
+			return projectile.damage
+		return projectile.damage * ClassBonuses.mark_damage_multiplier(classes, state, type, enemy.marks.size())
+	var has_effects := func(projectile: Projectile) -> bool:
+		return projectile.status_type != "" or not projectile.curse.is_empty()
 
 	# Dano em área: todos no raio do ponto de impacto, em ordem de id.
 	var explode := func(ctx: TickContext, projectile: Projectile, x: float, y: float) -> void:
@@ -85,11 +105,13 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 		ctx.emit(event)
 		hits.clear()
 		index.collect_in_range(ctx.state, x, y, projectile.area_radius, hits)
+		var effects: bool = has_effects.call(projectile)
 		for enemy: Enemy in EnemyOrder.sort_by_id(hits):
 			var before := enemy.hp
-			Damage.damage_enemy(ctx, enemies, enemy, projectile.damage, projectile.source_id, damage_options)
+			var damage: float = damage_on.call(ctx.state, projectile, enemy) if effects else projectile.damage
+			Damage.damage_enemy(ctx, enemies, enemy, damage, projectile.source_id, damage_options)
 			event["damage"] += before - enemy.hp
-			if projectile.status_type != "":
+			if effects:
 				Status.apply_on_hit(ctx, towers, index, enemy, projectile, ticks_per_second)
 
 	return func(ctx: TickContext) -> void:
@@ -123,10 +145,12 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 				mark.origin_tower_id = projectile.origin_tower_id
 				if projectile.area_radius > 0.0:
 					explode.call(ctx, projectile, target.x, target.y)
+				elif has_effects.call(projectile):
+					Damage.damage_enemy(ctx, enemies, target, damage_on.call(state, projectile, target),
+							projectile.source_id, damage_options)
+					Status.apply_on_hit(ctx, towers, index, target, projectile, ticks_per_second)
 				else:
 					Damage.damage_enemy(ctx, enemies, target, projectile.damage, projectile.source_id, damage_options)
-					if projectile.status_type != "":
-						Status.apply_on_hit(ctx, towers, index, target, projectile, ticks_per_second)
 			else:
 				projectile.x += (dx / dist) * step
 				projectile.y += (dy / dist) * step

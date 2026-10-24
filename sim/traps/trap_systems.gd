@@ -71,16 +71,29 @@ static func place_caltrop(ctx: TickContext, routes: Dictionary, tower: Tower, ty
 
 
 ## Sistema de armadilhas, depois das torres e antes dos gatilhos: o primeiro inimigo terrestre que
-## pisa numa armadilha a dispara (estrepes: dano; urso: prende e sangra) e ela some.
+## pisa numa armadilha a dispara (estrepes: dano; urso: prende e sangra) e ela some. O tentáculo da
+## Nerea ("tentacle") não é pisado: a cada tick causa `damage` em todos os terrestres no raio, até
+## acabar o tempo (`hold_ticks`).
 static func create_trap_system(enemies: EnemyData, index: SpatialIndex) -> Callable:
 	var not_ground := func(enemy: Enemy) -> bool:
 		return enemies.get_type(enemy.type).movement != "ground"
+	var grabbed: Array = []
 	return func(ctx: TickContext) -> void:
 		var state := ctx.state
 		if state.traps.is_empty():
 			return
 		var kept: Array[Trap] = []
 		for trap: Trap in state.traps:
+			if trap.kind == "tentacle":
+				grabbed.clear()
+				index.collect_in_range(state, trap.x, trap.y, trap.radius, grabbed)
+				for enemy: Enemy in EnemyOrder.sort_by_id(grabbed):
+					if not not_ground.call(enemy):
+						Damage.damage_enemy(ctx, enemies, enemy, trap.damage, trap.owner_id)
+				trap.hold_ticks -= 1
+				if trap.hold_ticks > 0:
+					kept.append(trap)
+				continue
 			var victim := index.find_nearest(state, trap.x, trap.y, trap.radius, not_ground)
 			if victim == null:
 				kept.append(trap)

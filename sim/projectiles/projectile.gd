@@ -22,8 +22,10 @@ var target_y := 0.0
 ## Já trocou de alvo uma vez (não troca de novo).
 var retargeted := false
 var damage := 0.0
-## Tipo da torre que atirou, quando o tipo aplica efeitos no acerto (`onHit`); "" = nenhum.
+## Tipo da torre que atirou, quando o tipo aplica efeitos no acerto (`onHit` ou a marca do Caçador); "" = nenhum.
 var status_type := ""
+## Maldição que o tiro carrega (Mama Zuri), com os números de `Tower.curse_next`; {} = nenhuma.
+var curse: Dictionary = {}
 ## Raio do tiro em área, em casas; 0 = tiro único.
 var area_radius := 0.0
 ## Velocidade em casas por segundo.

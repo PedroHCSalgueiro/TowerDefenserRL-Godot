@@ -1,0 +1,26 @@
+{
+  "chainScenario": {
+    "name": "Cadeia (Costa Rubra)",
+    "towerTypes": [
+      "pena",
+      "ruby",
+      "kraus",
+      "bart"
+    ],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 da Costa Rubra)",
+    "towerTypes": [
+      "bart",
+      "ruby",
+      "anchor",
+      "morgana",
+      "pena",
+      "kraus",
+      "zuri",
+      "nerea"
+    ],
+    "towerLayout": "clustered"
+  }
+}

@@ -83,6 +83,82 @@ static func _doubling(level: ClassData.ClassLevel, state: Object, tower: Tower, 
 	return 1.0
 
 
+## Guardião: multiplicador da intensidade do Lento que a torre aplica (+20% = ×1,2).
+static func slow_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	var mult := 1.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null and level.slow_bonus_percent > 0.0:
+			mult *= 1.0 + level.slow_bonus_percent / 100.0
+	return mult
+
+
+## Guardião: casas a mais no Empurrado que a torre aplica.
+static func push_bonus_cells(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	var cells := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			cells += level.push_bonus_cells
+	return cells
+
+
+## Caçador: multiplicador do dano do tiro da torre contra um inimigo com `marks` marcas (só para as torres
+## da classe com o bônus ativo; sem nível ativo, ×1 mesmo com o alvo marcado).
+static func mark_damage_multiplier(data: ClassData, state: Object, type: TowerData.TowerType, marks: int) -> float:
+	if marks <= 0:
+		return 1.0
+	var percent := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			percent += level.mark_damage_percent
+	return 1.0 + percent * float(marks) / 100.0
+
+
+## Níveis ativos de todas as classes (bônus que valem para a run inteira, não para uma torre).
+static func _active_levels(data: ClassData, state: Object) -> Array[ClassData.ClassLevel]:
+	var out: Array[ClassData.ClassLevel] = []
+	for id: String in data.ids:
+		var level := active_level(data, state, id)
+		if level != null:
+			out.append(level)
+	return out
+
+
+## Guardião (nível 4): multiplicador do dano que o núcleo recebe de quem chega nele.
+static func nexus_damage_multiplier(data: ClassData, state: Object) -> float:
+	var mult := 1.0
+	for level in _active_levels(data, state):
+		if level.nexus_damage_reduction_percent > 0.0:
+			mult *= 1.0 - level.nexus_damage_reduction_percent / 100.0
+	return mult
+
+
+## Região (Costa Rubra): ouro a mais no teto dos juros.
+static func interest_cap_bonus(data: ClassData, state: Object) -> int:
+	var bonus := 0
+	for level in _active_levels(data, state):
+		bonus += level.interest_cap_bonus
+	return bonus
+
+
+## Região (Costa Rubra): ouro do baú no fim de cada onda.
+static func wave_end_gold(data: ClassData, state: Object) -> int:
+	var gold := 0
+	for level in _active_levels(data, state):
+		gold += level.wave_end_gold
+	return gold
+
+
+## Região (Costa Rubra): vagas a mais na loja.
+static func shop_extra_slots(data: ClassData, state: Object) -> int:
+	var slots := 0
+	for level in _active_levels(data, state):
+		slots += level.shop_extra_slots
+	return slots
+
+
 ## Mecânica: contagem de um "a cada N" depois do desconto. Arredonda para baixo, nunca
 ## passa de `base` e nunca cai abaixo do mínimo dos dados. O desconto é aplicado sobre o N
 ## da estrela; a conta é em inteiros. Depois dele, a carta da Mecânica das recompensas

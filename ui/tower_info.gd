@@ -60,6 +60,8 @@ static func _when_text(when: Dictionary) -> String:
 			return "A cada %s abates no alcance" % fmt(when["kills"])
 		"everyNSeconds":
 			return "A cada %s s" % fmt(when["seconds"])
+		"ownKill":
+			return "Quando abate um inimigo Marcado" if when["markedOnly"] else "Quando abate um inimigo"
 	return ""
 
 
@@ -98,7 +100,33 @@ static func _effect_text(effect: Dictionary) -> String:
 		"empoweredShot":
 			return "dispara um tiro em área extra, com raio ×%s e %s%% do dano" % [fmt(effect["radiusMultiplier"]), fmt(effect["damagePercent"])]
 		"frontBeam":
-			return "solta um raio de luz nos %s mais à frente da fila (%s%% do dano em cada)" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["damagePercent"])]
+			var slow := ""
+			if effect["slowPercent"] > 0.0:
+				slow = " e os deixa Lentos (%s%%, por %s s)" % [fmt(effect["slowPercent"]), fmt(effect["slowSeconds"])]
+			return "solta um raio de luz nos %s mais à frente da fila (%s%% do dano em cada)%s" % [
+					_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["damagePercent"]), slow]
+		"bounceShot":
+			return "dispara uma bala que quica em %s (área de raio %s e %s%% do dano no primeiro; a cada quique, área e dano caem para %s%%)" % [
+					_plural(effect["impacts"], "alvo", "alvos"), fmt(effect["radius"]), fmt(effect["damagePercent"]),
+					fmt(effect["falloffPercent"])]
+		"anchorPush":
+			return "prende o primeiro da fila e o empurra %s para trás, junto com quem estiver colado atrás dele (chefão imune, elite no máximo 1 casa)" % \
+					_plural(effect["cells"], "casa", "casas")
+		"tide":
+			return "solta uma maré até o fim do alcance: %s%% do dano e Lento (%s%%, por %s s) em quem ela atravessar" % [
+					fmt(effect["damagePercent"]), fmt(effect["slowPercent"]), fmt(effect["slowSeconds"])]
+		"tentacle":
+			return "um tentáculo agarra o grupo maior no alcance: Atordoa por %s s (chefão imune, elite pela metade) e causa %s%% do dano por segundo por %s s" % [
+					fmt(effect["stunSeconds"]), fmt(effect["damagePercent"]), fmt(effect["damageSeconds"])]
+		"loot":
+			var cap := " (até %s por onda)" % fmt(effect["maxPerWave"]) if effect["maxPerWave"] > 0 else ""
+			return "guarda +%s de ouro para o fim da onda%s" % [fmt(effect["gold"]), cap]
+		"doubleShot":
+			return "o próximo ataque sai com dois tiros, um logo depois do outro"
+		"curseNext":
+			return "o próximo ataque amaldiçoa o alvo por %s s: ele divide %s%% do dano que recebe com os %s mais próximos e, se morrer, a maldição pula para eles (até %s)" % [
+					fmt(effect["seconds"]), fmt(effect["sharePercent"]), fmt(effect["spread"]),
+					_plural(effect["jumps"], "salto", "saltos")]
 		"stunFront":
 			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["seconds"])]
 		"trap":
@@ -112,6 +140,29 @@ static func _effect_text(effect: Dictionary) -> String:
 			var power := "" if effect["powerPercent"] == 100.0 else ", com %s%% do dano" % fmt(effect["powerPercent"])
 			return "copia %s%s" % [from, power]
 	return ""
+
+
+## Progresso da carga de uma torre do mapa, só para o tooltip (nunca na tela): "Carga: 2 de 5 ataques"
+## nos gatilhos "a cada N tiros" e "a cada N abates" (com o desconto de classe da contagem). "" = nada a
+## mostrar.
+static func charge_progress(type: TowerData.TowerType, tower: Tower, classes: ClassData, state: Object) -> String:
+	var star := Stars.tower_star(type, tower)
+	if star == null:
+		return ""
+	var when := star.when
+	var unit := ""
+	var base := 0
+	match when["kind"]:
+		"everyNShots":
+			base = int(when["shots"])
+			unit = "ataques"
+		"everyNKillsInRange":
+			base = int(when["kills"])
+			unit = "abates"
+		_:
+			return ""
+	var count := ClassBonuses.reduced_trigger_count(classes, state, type, base)
+	return "Carga: %s de %d %s" % [fmt(minf(tower.trigger_counter, float(count))), count, unit]
 
 
 ## Frase simples da torre em `ui.json` ("" = sem frase, como as torres do debug).

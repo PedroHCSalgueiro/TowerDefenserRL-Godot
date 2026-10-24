@@ -71,7 +71,9 @@ func hovered_tower_type() -> String:
 
 ## Tecla do jogo (já filtrada: sem Ctrl/Alt, sem repetição). Devolve true se tratou.
 func handle_key(event: InputEventKey) -> bool:
-	if event.keycode >= KEY_1 and event.keycode <= KEY_5:
+	# 1 a 5 (e 6 com a vaga extra da Costa Rubra).
+	var slot_count: int = _state.call().shop.slots.size()
+	if event.keycode >= KEY_1 and event.keycode < KEY_1 + mini(9, slot_count):
 		_pick_up(event.keycode - KEY_1, false, Vector2.ZERO)
 		return true
 	match event.keycode:

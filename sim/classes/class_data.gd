@@ -30,6 +30,18 @@ class ClassLevel:
 	var damage_percent := 0.0
 	## Região: a torre com uma vizinha ortogonal da mesma classe recebe esses bônus em dobro.
 	var double_with_neighbors := false
+	## Guardião: % a mais na intensidade do Lento dos Guardiões (30% com +20% = 36%).
+	var slow_bonus_percent := 0.0
+	## Guardião: casas a mais no Empurrado dos Guardiões (o teto do elite e a imunidade do chefão continuam).
+	var push_bonus_cells := 0.0
+	## Guardião: % a menos no dano que o núcleo recebe dos inimigos que chegam nele (vale para todos).
+	var nexus_damage_reduction_percent := 0.0
+	## Caçador: % de dano a mais por marca no alvo, nos tiros dos Caçadores.
+	var mark_damage_percent := 0.0
+	## Região (Costa Rubra): ouro a mais no teto dos juros; baú de ouro no fim de cada onda; vagas a mais na loja.
+	var interest_cap_bonus := 0
+	var wave_end_gold := 0
+	var shop_extra_slots := 0
 
 class TowerClass:
 	extends RefCounted
@@ -39,7 +51,8 @@ class TowerClass:
 
 const LEVEL_KEYS := ["count", "text", "areaRadiusMultiplier", "areaDamageMultiplier",
 		"triggerCountReductionPercent", "neighborhoodRadius", "killWeightMultiplier", "killWeightFrom",
-		"attackSpeedPercent", "damagePercent", "doubleWithNeighbors"]
+		"attackSpeedPercent", "damagePercent", "doubleWithNeighbors", "slowBonusPercent", "pushBonusCells",
+		"nexusDamageReductionPercent", "markDamagePercent", "interestCapBonus", "waveEndGold", "shopExtraSlots"]
 
 ## Mecânica: a contagem de um "a cada N" nunca cai abaixo disto.
 var min_trigger_count: int
@@ -183,10 +196,26 @@ static func _parse_level(class_id: String, index: int, raw: Variant) -> ClassLev
 			func(v: float) -> bool: return floorf(v) == v and v >= 1.0, "inteiro ≥ 1")
 	level.kill_weight_multiplier = _optional(where, raw, "killWeightMultiplier", 1.0,
 			func(v: float) -> bool: return v >= 1.0, "≥ 1")
+	var non_negative := func(v: float) -> bool: return v >= 0.0
+	var whole := func(v: float) -> bool: return v >= 0.0 and floorf(v) == v
+	level.slow_bonus_percent = _optional(where, raw, "slowBonusPercent", 0.0, non_negative, "≥ 0")
+	level.push_bonus_cells = _optional(where, raw, "pushBonusCells", 0.0, non_negative, "≥ 0")
+	level.nexus_damage_reduction_percent = _optional(where, raw, "nexusDamageReductionPercent", 0.0,
+			func(v: float) -> bool: return v >= 0.0 and v < 100.0, "de 0 a menos de 100")
+	level.mark_damage_percent = _optional(where, raw, "markDamagePercent", 0.0, non_negative, "≥ 0")
+	var interest_cap := _optional(where, raw, "interestCapBonus", 0.0, whole, "inteiro ≥ 0")
+	var wave_end_gold := _optional(where, raw, "waveEndGold", 0.0, whole, "inteiro ≥ 0")
+	var shop_slots := _optional(where, raw, "shopExtraSlots", 0.0, whole, "inteiro ≥ 0")
 	if is_nan(level.area_radius_multiplier) or is_nan(level.area_damage_multiplier) \
 			or is_nan(level.trigger_count_reduction_percent) or is_nan(radius) \
-			or is_nan(level.kill_weight_multiplier) or is_nan(speed) or is_nan(damage_bonus):
+			or is_nan(level.kill_weight_multiplier) or is_nan(speed) or is_nan(damage_bonus) \
+			or is_nan(level.slow_bonus_percent) or is_nan(level.push_bonus_cells) \
+			or is_nan(level.nexus_damage_reduction_percent) or is_nan(level.mark_damage_percent) \
+			or is_nan(interest_cap) or is_nan(wave_end_gold) or is_nan(shop_slots):
 		return null
+	level.interest_cap_bonus = int(interest_cap)
+	level.wave_end_gold = int(wave_end_gold)
+	level.shop_extra_slots = int(shop_slots)
 	level.attack_speed_percent = speed
 	level.damage_percent = damage_bonus
 	level.double_with_neighbors = raw.get("doubleWithNeighbors", false)

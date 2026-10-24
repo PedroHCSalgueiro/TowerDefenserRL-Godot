@@ -19,6 +19,7 @@
       "id": "valcoroa",
       "name": "Reino de Valcoroa",
       "description": "Medieval clássico: disciplina e formação. Oito heróis do reino, um de cada classe.",
+      "layers": ["heroes", "valcoroa"],
       "roster": [
         "Sir Aldric",
         "Lyra, a Besteira",
@@ -28,6 +29,32 @@
         "Wulf, Caçador Real",
         "Engenheira Mabel",
         "Rainha Isolde"
+      ]
+    },
+    {
+      "id": "costarubra",
+      "name": "Costa Rubra",
+      "description": "Piratas: ouro e saque. Oito campeões da costa, um de cada classe.",
+      "layers": ["heroes", "costarubra"],
+      "roster": [
+        "Bart Canhoneiro",
+        "Ruby Duas-Pistolas",
+        "Imediato Âncora",
+        "Morgana do Mar",
+        "Capitão Pena",
+        "Kraus Arpoador",
+        "Mama Zuri",
+        "Nerea, Domadora Abissal"
+      ]
+    },
+    {
+      "id": "valcoroa_costarubra",
+      "name": "Valcoroa + Costa Rubra",
+      "description": "As duas regiões juntas: 16 heróis, dois de cada classe. Testa os bônus de classe (Caçador com Wulf e Kraus, Guardião com Aldric e Âncora) e as regiões misturadas.",
+      "layers": ["heroes", "valcoroa", "costarubra", "valcoroa_costarubra"],
+      "roster": [
+        "Os 8 do Reino de Valcoroa",
+        "Os 8 da Costa Rubra"
       ]
     }
   ]

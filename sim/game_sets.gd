@@ -1,14 +1,14 @@
 class_name GameSets
 extends RefCounted
 ## Conjuntos de torres que o jogador escolhe antes da run: o "Padrão" (as torres do protótipo,
-## que usam só data/) e as regiões (Reino de Valcoroa, ...), que complementam os dados com os
-## arquivos de data/sets/<id>/ (ver `DataLoader`). A lista e os textos da tela inicial vêm de
-## data/sets/sets.json.
+## que usam só data/) e as regiões (Reino de Valcoroa, Costa Rubra e as duas juntas), que complementam
+## os dados com as camadas de data/sets/ listadas em `layers` (ver `DataLoader`; sem `layers`, a pasta
+## com o id do conjunto). A lista e os textos da tela inicial vêm de data/sets/sets.json.
 
 const DEFAULT_ID := "default"
 
 
-## Todos os conjuntos, na ordem do arquivo: Array de {"id", "name", "description", "roster"}.
+## Todos os conjuntos, na ordem do arquivo: Array de {"id", "name", "description", "roster", "layers"?}.
 static func list() -> Array:
 	var raw: Variant = _manifest()
 	var out: Array = []
@@ -20,10 +20,14 @@ static func list() -> Array:
 
 
 static func has_set(id: String) -> bool:
+	return not _entry(id).is_empty()
+
+
+static func _entry(id: String) -> Dictionary:
 	for entry: Dictionary in list():
 		if entry["id"] == id:
-			return true
-	return false
+			return entry
+	return {}
 
 
 ## Conjunto em uso.
@@ -33,12 +37,13 @@ static func current() -> String:
 
 ## Escolhe o conjunto da próxima run. Desconhecido: push_error e fica como está (false).
 static func select(id: String) -> bool:
-	if not has_set(id):
+	var entry := _entry(id)
+	if entry.is_empty():
 		push_error('Conjunto de torres desconhecido: "%s"' % id)
 		return false
 	if id == DataLoader.set_id():
 		return true
-	DataLoader.use_set(id)
+	DataLoader.use_set(id, entry.get("layers"))
 	TowerData.reset_cache()
 	ClassData.reset_cache()
 	RewardData.reset_cache()

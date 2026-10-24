@@ -28,6 +28,11 @@ var stun_ticks := 0
 var bleed_damage := 0.0
 var bleed_ticks := 0
 var bleed_source: Variant = null
+## Marcado (Caçadores): id da torre -> ticks que faltam, uma marca por Caçador, na ordem em que foram postas.
+var marks: Dictionary = {}
+## Amaldiçoado (Mama Zuri): vazio = não; senão {"ticks", "duration", "percent", "spread", "radius",
+## "jumps", "source"} (ver `Status.apply_curse`).
+var curse: Dictionary = {}
 
 # Cache de desempenho (derivado; não faz parte do estado da simulação): preenchido no spawn.
 ## Dados do tipo, rota, comprimento da rota, segmento atual da rota e distância por tick.

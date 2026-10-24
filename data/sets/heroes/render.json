@@ -1,0 +1,14 @@
+{
+  "towers": {
+    "classColors": {
+      "guardian": "#f2c14e",
+      "shooter": "#5fbf5f",
+      "support": "#f0f0f0",
+      "artillerist": "#e0703c",
+      "mage": "#8a5cd6",
+      "hunter": "#d9534f",
+      "summoner": "#3fc1c9",
+      "controller": "#8fd3ff"
+    }
+  }
+}

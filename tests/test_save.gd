@@ -88,12 +88,46 @@ func test_save_com_tela_de_recompensa_aberta() -> void:
 	assert_eq(restored.state.rewards.taken.size(), 1)
 
 
+## Um save da versão 16 (antes da Costa Rubra) não tem marcas, Maldição, tiro duplo nem ouro guardado:
+## abre com tudo isso vazio e a run continua (e volta a salvar como 17).
+func test_save_16_antigo_abre_com_os_campos_novos_vazios() -> void:
+	var map := _map()
+	var sim := Simulation.create("save-16", GameSystems.create(map))
+	for c in _scenario_commands():
+		sim.enqueue(c)
+	sim.enqueue({"type": "callWave"})
+	_run(sim, 200, {})
+	var d := RunStateIO.to_dict(sim.state)
+	d["version"] = 16
+	d.erase("pendingLoot")
+	for e: Dictionary in d["enemies"]["slots"]:
+		e.erase("marks")
+		e.erase("curse")
+	for p: Dictionary in d["projectiles"]["slots"]:
+		p.erase("curse")
+	for t: Dictionary in d["towers"]:
+		for key in ["doubleShot", "followupTicks", "curseNext", "lootCount"]:
+			t.erase(key)
+	var old_text := JSON.stringify(SaveCodec.encode(d))
+	var restored := Simulation.restore(old_text, GameSystems.create(map), map)
+	assert_not_null(restored, "o save 16 ainda abre")
+	assert_eq(restored.state.version, RunState.VERSION, "e volta a salvar na versão nova")
+	assert_eq(restored.state.pending_loot, 0)
+	assert_eq(restored.serialize(), sim.serialize(), "o mesmo estado da run")
+	_run(restored, 50, {})
+	_run(sim, 50, {})
+	assert_eq(restored.serialize(), sim.serialize(), "e segue igual")
+
+
 func test_rejeita_save_invalido() -> void:
 	var map := _map()
 	var sim := Simulation.create("save-ruim", GameSystems.create(map))
 	var d := RunStateIO.to_dict(sim.state)
 	d["version"] = 14
 	assert_null(RunStateIO.from_dict(d, map))
+	assert_push_error("versão")
+	d["version"] = RunState.VERSION + 1
+	assert_null(RunStateIO.from_dict(d, map), "save de uma versão mais nova que o jogo")
 	assert_push_error("versão")
 	assert_null(RunStateIO.deserialize("isto não é json", map))
 	assert_push_error("ilegível")

@@ -1,0 +1,14 @@
+{
+  "texts": {
+    "towerSummaries": {
+      "bart": "Artilheiro: tiro de canhão; de tempos em tempos, uma bala que quica em 3 alvos e explode a cada quique.",
+      "ruby": "Atirador: um tiro por vez; depois de um abate, o próximo ataque sai com dois tiros.",
+      "anchor": "Guardião: arremessa a âncora; de tempos em tempos, empurra para trás os primeiros da fila.",
+      "morgana": "Controlador: jato de água; de tempos em tempos, uma maré que deixa os inimigos lentos.",
+      "pena": "Suporte: o papagaio ataca; cada abate das torres encostadas guarda ouro para o fim da onda.",
+      "kraus": "Caçador: arpão que marca o alvo; abater um inimigo marcado rende ouro no fim da onda.",
+      "zuri": "Mago: agulhas de vodu; de tempos em tempos, amaldiçoa um inimigo, que divide o dano com os vizinhos.",
+      "nerea": "Invocador: conchas afiadas; de tempos em tempos, um tentáculo agarra e atordoa um grupo."
+    }
+  }
+}

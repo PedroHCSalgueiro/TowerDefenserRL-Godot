@@ -1,44 +1,5 @@
 {
-  "$replace": true,
-  "projectileRetargetRadius": 2,
-  "triggers": {
-    "neighborhood": 4,
-    "activationCooldownSeconds": 1,
-    "unlimitedLineLength": 64,
-    "maxChainDepthPerTick": 8,
-    "maxActivationsPerTick": 2000,
-    "maxQueueSize": 10000
-  },
   "types": {
-    "basic": {
-      "name": "Básica",
-      "rarity": null,
-      "classes": [],
-      "damage": 10,
-      "shotsPerSecond": 2,
-      "range": 3,
-      "projectileSpeed": 8,
-      "shot": {
-        "kind": "single"
-      },
-      "targetMode": "first",
-      "trigger": null
-    },
-    "cannon": {
-      "name": "Canhão",
-      "rarity": null,
-      "classes": [],
-      "damage": 8,
-      "shotsPerSecond": 0.8,
-      "range": 2.5,
-      "projectileSpeed": 5,
-      "shot": {
-        "kind": "area",
-        "radius": 1
-      },
-      "targetMode": "first",
-      "trigger": null
-    },
     "aldric": {
       "name": "Sir Aldric",
       "rarity": "common",
@@ -61,18 +22,27 @@
           {
             "shots": 6,
             "count": 3,
-            "damagePercent": 250
+            "damagePercent": 250,
+            "slowPercent": 30,
+            "slowCap": 50,
+            "slowSeconds": 3
           },
           {
             "shots": 5,
             "count": 3,
             "damagePercent": 300,
+            "slowPercent": 30,
+            "slowCap": 50,
+            "slowSeconds": 3,
             "attackDamagePercent": 125
           },
           {
             "shots": 4,
             "count": 3,
             "damagePercent": 350,
+            "slowPercent": 30,
+            "slowCap": 50,
+            "slowSeconds": 3,
             "attackDamagePercent": 125
           }
         ]

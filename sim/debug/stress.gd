@@ -22,13 +22,14 @@ static func random_types(data: EnemyData) -> Array:
 
 ## Cria um inimigo segundo a disposição ("clustered" nasce na entrada; "spread" nasce num ponto
 ## sorteado da sua rota). `enemy_type` null sorteia o tipo entre os que não são chefão (o chefão só
-## vem pelas ondas ou pelo tipo escolhido no painel).
+## vem pelas ondas ou pelo tipo escolhido no painel). `elite`: a versão forte (para conferir as regras
+## de elite, como o Empurrado de no máximo 1 casa).
 static func spawn_debug_enemy(ctx: TickContext, routes: Dictionary, data: EnemyData,
-		enemy_type: Variant, layout: String) -> void:
+		enemy_type: Variant, layout: String, elite: bool = false) -> void:
 	var type_id: String = enemy_type if enemy_type != null else ctx.rng.pick(random_types(data))
 	var route: Route = routes[data.get_type(type_id).movement]
 	var distance := ctx.rng.next_float() * route.length if layout == "spread" else 0.0
-	EnemySystems.spawn_enemy(ctx, routes, data, type_id, distance)
+	EnemySystems.spawn_enemy(ctx, routes, data, type_id, distance, 1.0, 0, elite)
 
 
 static func create_stress_system(routes: Dictionary, data: EnemyData) -> Callable:

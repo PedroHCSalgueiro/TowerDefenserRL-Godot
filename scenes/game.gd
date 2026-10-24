@@ -321,7 +321,7 @@ func _handle_game_key(key: InputEventKey) -> bool:
 			_cancel_hand()
 			return true
 	if _blocked() and key.keycode != KEY_R and key.keycode != KEY_S and key.keycode != KEY_E \
-			and not (key.keycode >= KEY_1 and key.keycode <= KEY_5):
+			and not (key.keycode >= KEY_1 and key.keycode <= KEY_6):
 		return false
 	return shop.handle_key(key)
 
@@ -396,6 +396,7 @@ func _process(delta: float) -> void:
 	shop.update()
 	tower_drag.update()
 	_update_overlays(state, mouse, over_ui, now_ms)
+	debug_panel.handle_events(events)
 	debug_panel.update_panel()
 
 	if state.status != "playing" and not _end_shown:
@@ -478,6 +479,7 @@ func _update_overlays(state: RunState, mouse: Vector2, over_ui: bool, now_ms: fl
 	# Janela de informações: slot da loja sob o mouse ou torre do mapa (sem torre na mão).
 	var info: TowerInfo = null
 	var key := ""
+	var progress := ""
 	var preview: ClassPreview = null
 	var tower_hover: Tower = null
 	var shop_type := shop.hovered_tower_type()
@@ -490,7 +492,8 @@ func _update_overlays(state: RunState, mouse: Vector2, over_ui: bool, now_ms: fl
 		if tower_hover != null:
 			info = TowerInfo.describe_tower(towers.get_type(tower_hover.type), tower_hover.star, classes, tower_hover.type)
 			key = "torre:%d:%d" % [tower_hover.id, tower_hover.star]
-	tooltip.update_info(info, key, now_ms, mouse, preview)
+			progress = TowerInfo.charge_progress(towers.get_type(tower_hover.type), tower_hover, classes, state)
+	tooltip.update_info(info, key, now_ms, mouse, preview, progress)
 	var shown: Tower = tower_hover if (tower_hover != null and tooltip.is_shown()) else null
 	var neighbors: Array = TriggerNeighborhood.affected_neighbors(state, shown, towers, classes) if shown != null else []
 	overlay.draw_info(shown, neighbors, links)

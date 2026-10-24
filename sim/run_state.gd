@@ -6,7 +6,11 @@ extends RngHolder
 ## Convenções: propriedades em snake_case; comandos e eventos são Dictionaries com as chaves do
 ## Phaser (camelCase). `status`: "playing" | "lost" | "won".
 
-const VERSION := 16
+## 17: Costa Rubra (marcas, Maldição, tiro duplo, ouro guardado para o fim da onda). Um save 16 ainda
+## abre (os campos novos começam vazios; ver `RunStateIO.from_dict`).
+const VERSION := 17
+## Versões de save que ainda abrem.
+const OLDEST_VERSION := 16
 
 ## Estado do núcleo.
 class NexusState:
@@ -45,6 +49,9 @@ var triggers := TriggerState.new()
 var classes: Dictionary
 ## Ouro guardado.
 var gold: int
+## Ouro guardado para o fim da onda (Saque do Capitão Pena e Recompensa do Kraus): entra no ouro quando
+## a próxima onda fechar.
+var pending_loot := 0
 ## Último saldo informado em `goldChanged` (para emitir no máximo um por tick).
 var reported_gold: int
 ## Ondas encerradas até agora (a primeira a fechar é a 1).

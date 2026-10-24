@@ -1,0 +1,27 @@
+{
+  "classes": {
+    "costarubra": {
+      "name": "Costa Rubra",
+      "levels": [
+        {
+          "count": 3,
+          "text": "Teto dos juros +5 de ouro",
+          "interestCapBonus": 5
+        },
+        {
+          "count": 5,
+          "text": "Como o nível 3; baú com 5 de ouro no fim de cada onda",
+          "interestCapBonus": 5,
+          "waveEndGold": 5
+        },
+        {
+          "count": 8,
+          "text": "Como o nível 5; a loja ganha 1 vaga extra",
+          "interestCapBonus": 5,
+          "waveEndGold": 5,
+          "shopExtraSlots": 1
+        }
+      ]
+    }
+  }
+}

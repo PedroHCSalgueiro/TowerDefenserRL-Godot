@@ -5,6 +5,8 @@ extends Node3D
 ## gatilhos, o brilho da fusão e o tremor de "travada". Um nó por torre, criado e removido conforme
 ## o estado.
 ##
+## Papagaio (`towers.parrots`, o Capitão Pena): uma bolinha que pousa no ombro e voa até os alvos.
+##
 ## Heróis com modelo 3D (`towers.models` em `render.json`, ex.: o Sir Aldric): o modelo troca o bloco
 ## colorido. Quando a torre atira, o modelo vira para o alvo e toca a animação de ataque; se o modelo
 ## emite `raio_disparado(ponta)`, um raio de luz sai da ponta até o alvo. Sem o arquivo do modelo (a
@@ -34,6 +36,11 @@ class TowerNode:
 	var attack_target_id := -1
 	var beam_target := Vector3.ZERO
 	var beam_color := Color.WHITE
+	## Papagaio do Capitão Pena (null = sem papagaio): voa até o alvo do último tiro e pousa no ombro.
+	var parrot: MeshInstance3D = null
+	var parrot_target_id := -1
+	var parrot_phase := 0.0
+	var parrot_speed := 4.0
 
 var _data: TowerData
 var _nodes: Dictionary = {}  # id -> TowerNode
@@ -77,11 +84,16 @@ func draw(state: Object, selected_cell: Variant, delta_ms: float) -> void:
 		_update_node(node, tower, delta_ms)
 		if node.attack_pending and node.model != null:
 			_start_attack(node, tower, state)
+		if node.parrot != null:
+			_update_parrot(node, state, delta_ms)
 		if selected_cell != null and tower.x == selected_cell.x and tower.y == selected_cell.y:
 			selected = tower
 	for id: int in _nodes.keys():
 		if not seen.has(id):
-			(_nodes[id] as TowerNode).queue_free()
+			var gone: TowerNode = _nodes[id]
+			if gone.parrot != null:
+				gone.parrot.queue_free()
+			gone.queue_free()
 			_nodes.erase(id)
 	show_range(selected)
 	_update_beams(delta_ms)
@@ -118,12 +130,25 @@ func _create_node(tower: Tower) -> TowerNode:
 		cap_mesh.height = 0.34
 		cap_mesh.radial_segments = 12
 		cap_mesh.rings = 6
+		# A tampa: cor de efeito do campeão (heróis sem modelo da Costa Rubra) ou a da segunda classe.
 		var second := RenderConfig.color(_cfg["classColors"].get(type.classes[1], _cfg["fallbackColor"]))
+		if _cfg.get("effectColors", {}).has(tower.type):
+			second = RenderConfig.effect_color(_data, tower.type)
 		node.cap = MeshUtil.instance(cap_mesh, MeshUtil.lit_material(second), node)
 		node.cap.position = Vector3(0, BODY_SIZE.y + 0.1, 0)
 	var model_cfg: Dictionary = _cfg.get("models", {}).get(tower.type, {})
 	if not model_cfg.is_empty():
 		_attach_model(node, model_cfg)
+	var parrot_cfg: Dictionary = _cfg.get("parrots", {}).get(tower.type, {})
+	if not parrot_cfg.is_empty():
+		var parrot_mesh := SphereMesh.new()
+		parrot_mesh.radius = 0.09
+		parrot_mesh.height = 0.14
+		parrot_mesh.radial_segments = 8
+		parrot_mesh.rings = 4
+		node.parrot = MeshUtil.instance(parrot_mesh, MeshUtil.lit_material(RenderConfig.color(parrot_cfg["color"])), self)
+		node.parrot.position = Vector3(tower.x, 0.0, tower.y) + _shoulder()
+		node.parrot_speed = float(parrot_cfg.get("speed", 4.0))
 	node.stars = Node3D.new()
 	node.stars.position = Vector3(0, node.star_height, 0)
 	node.add_child(node.stars)
@@ -238,6 +263,34 @@ func _update_node(node: TowerNode, tower: Tower, delta_ms: float) -> void:
 	node.body.position.y = BODY_SIZE.y / 2.0 * pulse
 
 
+## Ombro do Capitão (onde o papagaio pousa), relativo à casa da torre.
+static func _shoulder() -> Vector3:
+	return Vector3(0.16, BODY_SIZE.y + 0.12, 0.0)
+
+
+## Papagaio do Capitão Pena: pousado no ombro sem inimigos e sem onda em andamento; senão voa até o alvo
+## do último tiro e, entre um alvo e outro (ou sem alvo), circula sobre a torre. Só visual.
+func _update_parrot(node: TowerNode, state: Object, delta_ms: float) -> void:
+	var speed := node.parrot_speed
+	var flying: bool = state.enemies.active_count > 0 or not state.waves.active.is_empty()
+	var goal: Vector3 = node.home + _shoulder()
+	node.parrot_phase += delta_ms / 1000.0
+	if flying:
+		var target: Enemy = null
+		if node.parrot_target_id >= 0:
+			for enemy: Enemy in state.enemies.slots:
+				if enemy.active and enemy.id == node.parrot_target_id:
+					target = enemy
+					break
+		if target != null:
+			goal = Vector3(target.x, 0.55, target.y)
+		else:
+			goal = node.home + Vector3(cos(node.parrot_phase * 2.0) * 0.45, 0.9, sin(node.parrot_phase * 2.0) * 0.45)
+	var step := speed * delta_ms / 1000.0
+	var delta := goal - node.parrot.position
+	node.parrot.position = goal if delta.length() <= step else node.parrot.position + delta.normalized() * step
+
+
 ## A torre disparou um gatilho visível: pisca.
 func flash(tower_id: int) -> void:
 	var node: TowerNode = _nodes.get(tower_id)
@@ -257,6 +310,8 @@ func handle_events(events: Array) -> void:
 			if shooter != null and shooter.model != null:
 				shooter.attack_pending = true
 				shooter.attack_target_id = event["targetId"]
+			if shooter != null and shooter.parrot != null:
+				shooter.parrot_target_id = event["targetId"]
 
 
 ## Treme a torre (tentou mover com onda ativa).

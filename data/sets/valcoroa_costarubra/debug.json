@@ -1,0 +1,34 @@
+{
+  "chainScenario": {
+    "name": "Caçada e Guarda (Wulf, Kraus, Aldric, Âncora)",
+    "towerTypes": [
+      "wulf",
+      "kraus",
+      "aldric",
+      "anchor"
+    ],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (16 heróis)",
+    "towerTypes": [
+      "aldric",
+      "lyra",
+      "tomas",
+      "brom",
+      "selene",
+      "wulf",
+      "mabel",
+      "isolde",
+      "bart",
+      "ruby",
+      "anchor",
+      "morgana",
+      "pena",
+      "kraus",
+      "zuri",
+      "nerea"
+    ],
+    "towerLayout": "clustered"
+  }
+}

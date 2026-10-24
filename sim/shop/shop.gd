@@ -1,6 +1,6 @@
 class_name Shop
 extends RefCounted
-## Loja: 5 slots sorteados com reposição pelo RNG da simulação, compra, reroll e venda. Só
+## Loja: 5 slots (6 com o bônus da Costa Rubra) sorteados com reposição pelo RNG da simulação, compra, reroll e venda. Só
 ## torres com raridade entram (Básica e Canhão ficam de fora). Slot comprado fica null até o
 ## próximo reroll ou loja nova (porte de `shop.ts`).
 
@@ -120,15 +120,35 @@ static func _draw_rarity(rng: Rng, chances: Dictionary) -> String:
 	return EconomyData.RARITIES[0]
 
 
+## Chances sem as raridades que não têm torre no conjunto (a Costa Rubra não tem lendária): a fatia delas
+## cai na sobra do sorteio, que vai para a última raridade com chance. Sem pool vazio, as chances ficam
+## como estão.
+static func _without_empty(chances: Dictionary, pools: Dictionary) -> Dictionary:
+	var out := chances
+	for rarity: String in EconomyData.RARITIES:
+		if float(chances.get(rarity, 0)) > 0.0 and pools[rarity].is_empty():
+			if out == chances:
+				out = chances.duplicate()
+			out[rarity] = 0
+	return out
+
+
+## Vagas da loja na run: as da economia mais o bônus de região da Costa Rubra (nível 8).
+static func slot_count(economy: EconomyData, state: Object) -> int:
+	return economy.shop_slots + ClassBonuses.shop_extra_slots(ClassData.game_data(), state)
+
+
 ## Loja nova: por slot, a raridade sai da tabela do nível e depois uma torre da raridade com
 ## chance igual. Na primeira loja da run, se nenhum slot trouxer a raridade garantida, um slot
 ## sorteado vira uma torre dela. `free_rerolls`: rerolls grátis da loja (bônus das recompensas).
 ## `only_common`: todos os slots saem do pool de comuns (primeira rodada; ver `common_only`).
+## `extra_slots`: vagas a mais (bônus da Costa Rubra).
 static func new_shop(rng: Rng, economy: EconomyData, towers: TowerData, chances: Dictionary,
-		is_first_shop: bool, free_rerolls: int = 0, only_common: bool = false) -> ShopState:
+		is_first_shop: bool, free_rerolls: int = 0, only_common: bool = false, extra_slots: int = 0) -> ShopState:
 	var pools := shop_pools(towers)
+	chances = _without_empty(chances, pools)
 	var slots: Array = []
-	for i in economy.shop_slots:
+	for i in economy.shop_slots + extra_slots:
 		var drawn := _draw_rarity(rng, chances)
 		var pool: Array = pools["common" if only_common else drawn]
 		if pool.is_empty():
@@ -204,7 +224,7 @@ static func reroll_shop(ctx: TickContext, towers: TowerData, economy: EconomyDat
 	var free_left: int = state.shop.free_rerolls - 1 if free else state.shop.free_rerolls
 	Gold.spend_gold(state, cost)
 	state.shop = new_shop(ctx.rng, economy, towers, chances_for_state(economy, state), false, free_left,
-			common_only(economy, state.wave))
+			common_only(economy, state.wave), slot_count(economy, state) - economy.shop_slots)
 	ctx.emit({"type": "shopChanged", "tick": state.tick, "reason": "reroll"})
 	return true
 

@@ -38,6 +38,8 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var scores := Targeting.create_target_scores(routes, enemies)
 	var schedules := WaveSchedule.build_wave_schedules(waves, ticks_per_second)
 	var systems: Array = [
+		# O índice espacial no contexto do tick (o dano da Maldição procura os vizinhos por ele).
+		Simulation.runs_while_frozen(func(ctx: TickContext) -> void: ctx.index = index),
 		Rewards.create_reward_clock_system(),
 		Commands.create_command_system(map, routes, enemies, towers, debug, schedules, economy, nexus,
 				rewards, classes, ticks_per_second),
@@ -45,9 +47,10 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		WaveSystems.create_wave_spawn_system(routes, enemies, schedules, waves.max_active_enemies),
 		Stress.create_stress_system(routes, enemies),
 		EnemySystems.create_movement_system(routes, enemies, ticks_per_second),
-		NexusSystems.create_nexus_contact_system(routes, enemies),
+		NexusSystems.create_nexus_contact_system(routes, enemies, classes),
 		NexusSystems.create_nexus_attack_system(map.nexus, enemies, nexus, ticks_per_second, index),
-		ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius, ticks_per_second, towers),
+		ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius, ticks_per_second, towers,
+				classes),
 		TowerSystems.create_tower_system(index, towers, scores, ticks_per_second, classes, routes),
 		Status.create_status_system(enemies) if towers.uses_statuses() else Callable(),
 		TrapSystems.create_trap_system(enemies, index) if towers.uses_traps() else Callable(),
