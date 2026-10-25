@@ -10,7 +10,8 @@ extends RefCounted
 ##   "shared": bool        — dano dividido pela Maldição (não se divide de novo)
 ##
 ## Amaldiçoado (`Enemy.curse`, com o índice espacial no contexto): parte do dano vai para os vizinhos e,
-## na morte, a Maldição pula (ver `Status.share_curse` e `Status.jump_curse`).
+## na morte, a Maldição pula (ver `Status.share_curse` e `Status.jump_curse`). Lento ou Atordoado, com o
+## bônus do Controlador (`TickContext.afflicted_damage_percent`): o dano bruto cresce antes da armadura.
 
 
 ## Sem opções (compartilhado, só leitura): evita criar um Dictionary vazio a cada chamada.
@@ -30,7 +31,10 @@ static func damage_enemy(ctx: TickContext, data: EnemyData, enemy: Enemy, raw_da
 	# Já morto no mesmo golpe (o dano dividido da Maldição pode matar quem estava na lista de uma área).
 	if not enemy.active:
 		return 0.0
-	var type :=enemy.type_data if enemy.type_data != null else data.get_type(enemy.type)
+	var type := enemy.type_data if enemy.type_data != null else data.get_type(enemy.type)
+	# Bônus do Controlador: inimigo Lento ou Atordoado recebe mais dano, de qualquer fonte.
+	if ctx.afflicted_damage_percent > 0.0 and (enemy.slow_ticks > 0 or enemy.stun_ticks > 0):
+		raw_damage *= 1.0 + ctx.afflicted_damage_percent / 100.0
 	var damage := raw_damage if options.get("ignoreArmor", false) \
 			else Armor.apply_armor(raw_damage, type.armor, data.armor_scale)
 	if track:

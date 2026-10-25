@@ -12,12 +12,13 @@ extends RefCounted
 ## ativação e disparo múltiplo).
 
 
-## O alvo normal da torre agora: o melhor pelo modo de mira, dentro do alcance.
+## O alvo normal da torre agora: o melhor pelo modo de mira, dentro do alcance (com o bônus do Atirador).
 static func find_tower_target(index: SpatialIndex, state: Object, tower: Tower,
 		type: TowerData.TowerType, scores: Dictionary) -> Enemy:
+	var reach := ClassBonuses.tower_range(ClassData.game_data(), state, type)
 	if type.target_mode == "first":
-		return index.find_first(state, float(tower.x), float(tower.y), type.range)
-	return index.find_best(state, float(tower.x), float(tower.y), type.range, scores[type.target_mode])
+		return index.find_first(state, float(tower.x), float(tower.y), reach)
+	return index.find_best(state, float(tower.x), float(tower.y), reach, scores[type.target_mode])
 
 
 ## Emite `towerFired` e cria o projétil da torre mirando `target`. O dano é o da estrela da

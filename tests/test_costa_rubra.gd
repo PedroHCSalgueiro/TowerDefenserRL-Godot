@@ -38,6 +38,7 @@ class Harness:
 		state.tick += 1
 		ctx = TickContext.new(state, Rng.new(state), [], [], EventBus.new())
 		ctx.index = index
+		ctx.classes = classes
 		engine.ctx = ctx
 
 	func spawn(type: String, distance: float, elite: bool = false) -> Enemy:
@@ -690,6 +691,132 @@ func test_regiao_8_loja_com_1_vaga_extra() -> void:
 	assert_eq(state.shop.slots.size(), 6)
 	Economy.end_wave(ctx, EconomyData.game_data(), TowerData.game_data())
 	assert_eq(state.shop.slots.size(), 6, "também na loja nova da onda")
+
+
+# ------------------------------------------------------------------ bônus das outras 6 classes
+
+func test_atirador_ganha_alcance_e_velocidade() -> void:
+	var h := _combo()
+	var lyra := h.towers.get_type("lyra")
+	assert_eq(ClassBonuses.tower_range(h.classes, h.state, lyra), 4.0)
+	h.set_level("shooter", 1)
+	assert_eq(ClassBonuses.tower_range(h.classes, h.state, lyra), 4.5, "+0,5 de alcance")
+	assert_eq(ClassBonuses.attack_speed_percent(h.classes, h.state, lyra, Tower.new(1, "lyra", Vector2i.ZERO)), 15.0)
+	assert_eq(ClassBonuses.tower_range(h.classes, h.state, h.towers.get_type("bart")), 3.0, "só Atirador")
+	h.set_level("shooter", 2)
+	assert_eq(ClassBonuses.tower_range(h.classes, h.state, lyra), 5.0, "+1 com 4")
+	# O alvo a 4,3 casas só entra no alcance com o bônus.
+	h.set_level("shooter", 0)
+	var tower := Tower.new(1, "lyra", Vector2i(10, 0))
+	h.spawn("common", 12.0).y = 4.3
+	var scores := Targeting.create_target_scores(h.routes, h.enemies)
+	assert_null(TowerSystems.find_tower_target(h.index, h.state, tower, lyra, scores))
+	h.set_level("shooter", 1)
+	h.next_tick()
+	assert_not_null(TowerSystems.find_tower_target(h.index, h.state, tower, lyra, scores))
+
+
+func test_artilheiro_explosoes_maiores() -> void:
+	var h := _combo()
+	h.set_level("artillerist", 1)
+	var e := _tough(h.spawn("common", 12.0))
+	h.fire(h.tower_at("bart", 12.0))
+	assert_eq(h.events_of("areaExploded")[0]["radius"], 1.25, "raio ×1,25")
+	h.next_tick()
+	h.set_level("artillerist", 2)
+	var hp := e.hp
+	h.fire(h.tower_at("bart", 12.0))
+	assert_eq(h.events_of("areaExploded")[0]["radius"], 1.5, "raio ×1,5")
+	assert_almost_eq(hp - e.hp, h.towers.get_type("bart").damage * 2.0 * 1.25, 1e-9, "+25% de dano")
+
+
+func test_mago_carrega_mais_rapido() -> void:
+	var h := _combo()
+	var zuri := h.towers.get_type("zuri")
+	h.set_level("mage", 1)
+	assert_eq(ClassBonuses.reduced_trigger_count(h.classes, h.state, zuri, 5), 4, "5 −20% = 4")
+	h.set_level("mage", 2)
+	assert_eq(ClassBonuses.reduced_trigger_count(h.classes, h.state, zuri, 5), 3, "5 −40% = 3")
+	assert_eq(ClassBonuses.reduced_trigger_count(h.classes, h.state, zuri, 2), 2, "mínimo 2")
+	assert_eq(ClassBonuses.reduced_trigger_count(h.classes, h.state, h.towers.get_type("bart"), 5), 5, "só Mago")
+
+
+func test_controlador_efeitos_duram_mais_e_afetados_levam_mais_dano() -> void:
+	var h := _combo()
+	h.set_level("controller", 1)
+	var e := _tough(h.spawn("common", 12.0))
+	h.fire(h.tower_at("morgana", 12.0))
+	assert_eq(e.slow_ticks, 75, "Lento da maré: 2 s +25%")
+	# O gelo da Isolde também dura mais.
+	var iced := _tough(h.spawn("common", 11.0))
+	var isolde := h.tower_at("isolde", 11.0)
+	TowerSystems.fire_tower_shot(h.ctx, isolde, h.towers.get_type("isolde"), iced, "normal", h.classes)
+	h.fly_projectiles()
+	assert_eq(iced.slow_ticks, 113, "3 s +25% = 3,75 s")
+	# O Lento do Aldric é de Guardião: não muda.
+	var guarded := _tough(h.spawn("common", 13.0))
+	h.next_tick()
+	h.fire(h.tower_at("aldric", 13.0))
+	assert_eq(guarded.slow_ticks, 90)
+	# Inimigo Lento ou Atordoado leva +10% (de qualquer fonte); o que não está, não.
+	h.ctx.afflicted_damage_percent = ClassBonuses.afflicted_damage_percent(h.classes, h.state)
+	assert_eq(h.ctx.afflicted_damage_percent, 10.0)
+	var calm := _tough(h.spawn("common", 20.0))
+	var hp_slow := guarded.hp
+	var hp_calm := calm.hp
+	Damage.damage_enemy(h.ctx, h.enemies, guarded, 100.0, 1)
+	Damage.damage_enemy(h.ctx, h.enemies, calm, 100.0, 1)
+	assert_almost_eq(hp_slow - guarded.hp, 110.0, 1e-9)
+	assert_eq(hp_calm - calm.hp, 100.0)
+
+
+func test_suporte_aura_com_diagonais_e_mais_forte() -> void:
+	GameSets.select("valcoroa_costarubra")
+	var sim := Simulation.create("suporte", GameSystems.create(_map))
+	var data := TowerData.game_data()
+	var tomas := Tower.new(1, "tomas", Vector2i(5, 5), 1)
+	var diagonal := Tower.new(2, "bart", Vector2i(6, 6), 1)
+	sim.state.towers.append(tomas)
+	sim.state.towers.append(diagonal)
+	assert_eq(Auras.attack_speed_percent(sim.state, data, diagonal), 0.0, "sem bônus: só ortogonais")
+	(sim.state.classes["support"] as ClassState.ClassStatus).level = 1
+	var base: float = data.get_type("tomas").aura["stars"][0]["attackSpeedPercent"]
+	assert_eq(Auras.attack_speed_percent(sim.state, data, diagonal), base, "Suporte 2: diagonal entra")
+	(sim.state.classes["support"] as ClassState.ClassStatus).level = 2
+	assert_almost_eq(Auras.attack_speed_percent(sim.state, data, diagonal), base * 1.5, 1e-9, "Suporte 4: +50%")
+
+
+func test_suporte_saque_conta_vizinha_na_diagonal() -> void:
+	var h := _combo()
+	h.set_level("support", 1)
+	var pena := h.tower_at("pena", 12.0, 1, 601)
+	var diagonal := Tower.new(602, "bart", Vector2i(pena.x + 1, pena.y + 1), 1)
+	h.state.towers.append(diagonal)
+	h.ctx.tick_events.append({"type": "enemyKilled", "tick": h.state.tick, "enemyId": 999, "enemyType": "common",
+			"wave": 1, "towerId": diagonal.id, "x": 0.0, "y": 0.0, "elite": false, "marked": false, "weight": 1,
+			"chainId": 0, "originTowerId": null})
+	h.engine.run(h.ctx)
+	assert_eq(h.state.pending_loot, 1)
+
+
+func test_invocador_invocacoes_duram_mais_e_batem_mais_forte() -> void:
+	var h := _combo()
+	h.set_level("summoner", 1)
+	h.spawn("common", 12.0)
+	var nerea := h.tower_at("nerea", 12.0)
+	h.fire(nerea)
+	var tentacle: Trap = h.state.traps[0]
+	assert_eq(tentacle.hold_ticks, 75, "2 s +25%")
+	var per_tick: float = h.towers.get_type("nerea").damage * h.effect(nerea)["damagePercent"] / 100.0 / 30.0
+	assert_almost_eq(tentacle.damage, per_tick * 1.25, 1e-12, "+25% de dano")
+	# A armadilha de urso e os estrepes da Mabel também.
+	var mabel := h.tower_at("mabel", 12.0)
+	h.fire(mabel)
+	var bear: Trap = h.state.traps.filter(func(t: Trap) -> bool: return t.kind == "bear")[0]
+	assert_eq(bear.hold_ticks, 150, "4 s +25%")
+	assert_true(TrapSystems.place_caltrop(h.ctx, h.routes, mabel, h.towers.get_type("mabel")))
+	var caltrop: Trap = h.state.traps.filter(func(t: Trap) -> bool: return t.kind == "caltrop")[0]
+	assert_almost_eq(caltrop.damage, h.towers.get_type("mabel").damage * 3.0 * 1.25, 1e-9)
 
 
 # ------------------------------------------------------------------ textos e carga no tooltip

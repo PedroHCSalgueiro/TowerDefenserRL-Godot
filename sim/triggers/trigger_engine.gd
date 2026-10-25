@@ -400,7 +400,8 @@ func _on_shot(tower_id: int, depth: int, tick_depth: int) -> void:
 func _in_range(armed: Armed, x: float, y: float) -> bool:
 	var dx := x - float(armed.tower.x)
 	var dy := y - float(armed.tower.y)
-	return dx * dx + dy * dy <= armed.type.range * armed.type.range
+	var reach := ClassBonuses.tower_range(classes, ctx.state, armed.type)
+	return dx * dx + dy * dy <= reach * reach
 
 
 ## Um inimigo morreu: "morre no alcance", "a cada N abates no alcance" e "vizinha abate".

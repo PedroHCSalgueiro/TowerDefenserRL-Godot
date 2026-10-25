@@ -83,6 +83,58 @@ static func _doubling(level: ClassData.ClassLevel, state: Object, tower: Tower, 
 	return 1.0
 
 
+## Atirador: alcance da torre agora (o dos dados mais o bônus da classe). Sem nenhum nível que dê alcance
+## nos dados, é sempre o dos dados.
+static func tower_range(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	if data == null or not data.has_range_bonus:
+		return type.range
+	var bonus := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			bonus += level.range_bonus
+	return type.range + bonus
+
+
+## Soma de um campo % dos níveis ativos das classes da torre, como multiplicador (+25% = ×1,25).
+static func _percent_multiplier(data: ClassData, state: Object, type: TowerData.TowerType, field: String) -> float:
+	if data == null:
+		return 1.0
+	var percent := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			percent += float(level.get(field))
+	return 1.0 + percent / 100.0
+
+
+## Controlador: multiplicador da duração dos efeitos de estado que a torre aplica.
+static func status_duration_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	return _percent_multiplier(data, state, type, "status_duration_percent")
+
+
+## Invocador: multiplicadores da duração e do dano das invocações da torre.
+static func summon_duration_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	return _percent_multiplier(data, state, type, "summon_duration_percent")
+
+
+static func summon_damage_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	return _percent_multiplier(data, state, type, "summon_damage_percent")
+
+
+## Suporte: multiplicador da força da aura da torre.
+static func aura_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	return _percent_multiplier(data, state, type, "aura_bonus_percent")
+
+
+## Controlador: % de dano a mais que um inimigo Lento ou Atordoado recebe (bônus da run inteira).
+static func afflicted_damage_percent(data: ClassData, state: Object) -> float:
+	var percent := 0.0
+	for level in _active_levels(data, state):
+		percent += level.afflicted_damage_percent
+	return percent
+
+
 ## Guardião: multiplicador da intensidade do Lento que a torre aplica (+20% = ×1,2).
 static func slow_multiplier(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
 	var mult := 1.0

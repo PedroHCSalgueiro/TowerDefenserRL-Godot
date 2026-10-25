@@ -95,18 +95,19 @@ func draw(state: Object, selected_cell: Variant, delta_ms: float) -> void:
 				gone.parrot.queue_free()
 			gone.queue_free()
 			_nodes.erase(id)
-	show_range(selected)
+	show_range(selected, state)
 	_update_beams(delta_ms)
 
 
-## Mostra o alcance da torre (ou esconde com null).
-func show_range(tower: Tower) -> void:
+## Mostra o alcance da torre (ou esconde com null); com `state`, o alcance de agora (bônus do Atirador).
+func show_range(tower: Tower, state: Object = null) -> void:
 	var visible_range := tower != null
 	_range_disc.visible = visible_range
 	_range_ring.visible = visible_range
 	if not visible_range:
 		return
-	var radius := _data.get_type(tower.type).range
+	var type := _data.get_type(tower.type)
+	var radius := ClassBonuses.tower_range(ClassData.game_data(), state, type) if state != null else type.range
 	var pos := Vector3(tower.x, 0.02, tower.y)
 	_range_disc.position = pos
 	_range_ring.position = pos + Vector3(0, 0.005, 0)

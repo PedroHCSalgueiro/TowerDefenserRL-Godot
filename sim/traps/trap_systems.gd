@@ -28,7 +28,8 @@ static func place_trap(ctx: TickContext, routes: Dictionary, tower: Tower, type:
 		return false
 	var route: Route = routes["ground"]
 	var point := MutablePoint.new()
-	var range_sq := type.range * type.range
+	var reach := ClassBonuses.tower_range(ctx.classes, state, type)
+	var range_sq := reach * reach
 	var tx := float(tower.x)
 	var ty := float(tower.y)
 	var distance := route.length
@@ -63,10 +64,12 @@ static func _near_trap(state: Object, x: float, y: float, radius: float) -> bool
 	return false
 
 
-## O ataque de uma torre cujo tiro é armadilha ("shot": {"kind": "trap"}): estrepes.
+## O ataque de uma torre cujo tiro é armadilha ("shot": {"kind": "trap"}): estrepes (o bônus do Invocador
+## aumenta o dano).
 static func place_caltrop(ctx: TickContext, routes: Dictionary, tower: Tower, type: TowerData.TowerType) -> bool:
 	var shot: Dictionary = type.shot
-	var damage := Stars.tower_damage(type, tower) * float(shot["damagePercent"]) / 100.0
+	var damage := Stars.tower_damage(type, tower) * float(shot["damagePercent"]) / 100.0 \
+			* ClassBonuses.summon_damage_multiplier(ctx.classes, ctx.state, type)
 	return place_trap(ctx, routes, tower, type, "caltrop", damage, 0, shot["radius"], int(shot["maxTraps"]))
 
 

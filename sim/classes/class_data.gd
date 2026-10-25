@@ -38,6 +38,17 @@ class ClassLevel:
 	var nexus_damage_reduction_percent := 0.0
 	## Caçador: % de dano a mais por marca no alvo, nos tiros dos Caçadores.
 	var mark_damage_percent := 0.0
+	## Atirador: casas a mais no alcance das torres da classe.
+	var range_bonus := 0.0
+	## Controlador: % a mais na duração dos efeitos de estado que as torres da classe aplicam.
+	var status_duration_percent := 0.0
+	## Controlador: % de dano a mais que inimigos Lentos ou Atordoados recebem (de qualquer fonte; vale para todos).
+	var afflicted_damage_percent := 0.0
+	## Invocador: % a mais na duração e no dano das invocações (armadilhas, tentáculo) das torres da classe.
+	var summon_duration_percent := 0.0
+	var summon_damage_percent := 0.0
+	## Suporte: % a mais na força da aura das torres da classe.
+	var aura_bonus_percent := 0.0
 	## Região (Costa Rubra): ouro a mais no teto dos juros; baú de ouro no fim de cada onda; vagas a mais na loja.
 	var interest_cap_bonus := 0
 	var wave_end_gold := 0
@@ -52,7 +63,9 @@ class TowerClass:
 const LEVEL_KEYS := ["count", "text", "areaRadiusMultiplier", "areaDamageMultiplier",
 		"triggerCountReductionPercent", "neighborhoodRadius", "killWeightMultiplier", "killWeightFrom",
 		"attackSpeedPercent", "damagePercent", "doubleWithNeighbors", "slowBonusPercent", "pushBonusCells",
-		"nexusDamageReductionPercent", "markDamagePercent", "interestCapBonus", "waveEndGold", "shopExtraSlots"]
+		"nexusDamageReductionPercent", "markDamagePercent", "interestCapBonus", "waveEndGold", "shopExtraSlots",
+		"rangeBonus", "statusDurationPercent", "afflictedDamagePercent", "summonDurationPercent", "summonDamagePercent",
+		"auraBonusPercent"]
 
 ## Mecânica: a contagem de um "a cada N" nunca cai abaixo disto.
 var min_trigger_count: int
@@ -62,6 +75,8 @@ var classes: Dictionary = {}  # id -> TowerClass
 ## Algum nível de alguma classe dá velocidade de ataque / dano (senão os cálculos são pulados).
 var has_attack_speed_bonus := false
 var has_damage_bonus := false
+## Algum nível dá alcance (Atirador)? Sem isso, o alcance é sempre o dos dados (a busca de alvo não paga nada).
+var has_range_bonus := false
 ## Ids das classes, na ordem do arquivo.
 var ids: Array[String] = []
 
@@ -120,6 +135,7 @@ static func load_data(raw: Variant) -> ClassData:
 		for level: ClassLevel in tower_class.levels:
 			data.has_attack_speed_bonus = data.has_attack_speed_bonus or level.attack_speed_percent > 0.0
 			data.has_damage_bonus = data.has_damage_bonus or level.damage_percent > 0.0
+			data.has_range_bonus = data.has_range_bonus or level.range_bonus > 0.0
 	return data
 
 
@@ -203,6 +219,16 @@ static func _parse_level(class_id: String, index: int, raw: Variant) -> ClassLev
 	level.nexus_damage_reduction_percent = _optional(where, raw, "nexusDamageReductionPercent", 0.0,
 			func(v: float) -> bool: return v >= 0.0 and v < 100.0, "de 0 a menos de 100")
 	level.mark_damage_percent = _optional(where, raw, "markDamagePercent", 0.0, non_negative, "≥ 0")
+	level.range_bonus = _optional(where, raw, "rangeBonus", 0.0, non_negative, "≥ 0")
+	level.status_duration_percent = _optional(where, raw, "statusDurationPercent", 0.0, non_negative, "≥ 0")
+	level.afflicted_damage_percent = _optional(where, raw, "afflictedDamagePercent", 0.0, non_negative, "≥ 0")
+	level.summon_duration_percent = _optional(where, raw, "summonDurationPercent", 0.0, non_negative, "≥ 0")
+	level.summon_damage_percent = _optional(where, raw, "summonDamagePercent", 0.0, non_negative, "≥ 0")
+	level.aura_bonus_percent = _optional(where, raw, "auraBonusPercent", 0.0, non_negative, "≥ 0")
+	for value in [level.range_bonus, level.status_duration_percent, level.afflicted_damage_percent,
+			level.summon_duration_percent, level.summon_damage_percent, level.aura_bonus_percent]:
+		if is_nan(value):
+			return null
 	var interest_cap := _optional(where, raw, "interestCapBonus", 0.0, whole, "inteiro ≥ 0")
 	var wave_end_gold := _optional(where, raw, "waveEndGold", 0.0, whole, "inteiro ≥ 0")
 	var shop_slots := _optional(where, raw, "shopExtraSlots", 0.0, whole, "inteiro ≥ 0")

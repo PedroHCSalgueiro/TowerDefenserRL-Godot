@@ -164,9 +164,11 @@ static func apply_on_hit(ctx: TickContext, towers: TowerData, index: SpatialInde
 		apply_mark(enemy, projectile.source_id, seconds_to_ticks(towers.statuses["mark"]["seconds"], ticks_per_second))
 	var slow: Dictionary = type.on_hit.get("slow", {})
 	if not slow.is_empty():
-		apply_slow(enemy, slow["percent"], slow["cap"], seconds_to_ticks(slow["seconds"], ticks_per_second))
+		# Bônus do Controlador: o Lento dura mais.
+		var seconds: float = slow["seconds"] * ClassBonuses.status_duration_multiplier(ctx.classes, ctx.state, type)
+		apply_slow(enemy, slow["percent"], slow["cap"], seconds_to_ticks(seconds, ticks_per_second))
 		if slow["bounces"] > 0:
-			_bounce_slow(ctx, index, enemy, slow, ticks_per_second)
+			_bounce_slow(ctx, index, enemy, slow, seconds, ticks_per_second)
 	var bleed: Dictionary = type.on_hit.get("bleed", {})
 	if not bleed.is_empty():
 		apply_bleed(enemy, (projectile.damage * bleed["percentPerSecond"] / 100.0) / ticks_per_second,
@@ -175,9 +177,9 @@ static func apply_on_hit(ctx: TickContext, towers: TowerData, index: SpatialInde
 
 ## O gelo ricocheteia para trás: a partir do inimigo acertado, salta até `bounces` vezes para o
 ## mais próximo (dentro de `bounceRadius`) que está atrás dele na rota, sem repetir, e soma Lento.
-static func _bounce_slow(ctx: TickContext, index: SpatialIndex, first: Enemy, slow: Dictionary,
+static func _bounce_slow(ctx: TickContext, index: SpatialIndex, first: Enemy, slow: Dictionary, seconds: float,
 		ticks_per_second: float) -> void:
-	var ticks := seconds_to_ticks(slow["seconds"], ticks_per_second)
+	var ticks := seconds_to_ticks(seconds, ticks_per_second)
 	var visited: Array[int] = [first.id]
 	var current := first
 	for i in int(slow["bounces"]):

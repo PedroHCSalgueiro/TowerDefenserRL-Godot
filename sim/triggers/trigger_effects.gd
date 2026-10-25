@@ -39,6 +39,16 @@ static func _percent_of(env: TriggerEngine, tower: Tower, type: TowerData.TowerT
 	return damage * region if region != 1.0 else damage
 
 
+## Alcance da torre agora (com o bônus do Atirador).
+static func _range(env: TriggerEngine, type: TowerData.TowerType) -> float:
+	return ClassBonuses.tower_range(env.classes, env.ctx.state, type)
+
+
+## Ticks de um efeito de estado que a torre aplica (com o bônus do Controlador na duração).
+static func _status_ticks(env: TriggerEngine, type: TowerData.TowerType, seconds: float) -> int:
+	return env.seconds_to_ticks(seconds * ClassBonuses.status_duration_multiplier(env.classes, env.ctx.state, type))
+
+
 static func _collect_sorted(env: TriggerEngine, x: float, y: float, radius: float) -> Array:
 	_hits.clear()
 	env.index.collect_in_range(env.ctx.state, x, y, radius, _hits)
@@ -59,7 +69,7 @@ static func _multi_shot(env: TriggerEngine, tower: Tower, type: TowerData.TowerT
 		for i in int(e["extraShots"]):
 			TowerSystems.fire_tower_shot(env.ctx, tower, type, target, "extra", env.classes, 100.0, chain)
 		return
-	var targets := env.index.find_best_n(state, float(tower.x), float(tower.y), type.range,
+	var targets := env.index.find_best_n(state, float(tower.x), float(tower.y), _range(env, type),
 			env.scores[type.target_mode], int(e["extraShots"]), _spread_targets)
 	if targets.is_empty():
 		return
@@ -216,7 +226,7 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 	# Alvo exatamente sobre a torre: a direção não importa, mas precisa ser fixa.
 	var ux := dx / length if length > 0.0 else 1.0
 	var uy := dy / length if length > 0.0 else 0.0
-	var reach: float = env.unlimited_line_length if e["unlimited"] else type.range
+	var reach: float = env.unlimited_line_length if e["unlimited"] else _range(env, type)
 	var half_width: float = e["halfWidth"]
 	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var in_line := _collect_sorted(env, tx, ty, reach + half_width).filter(func(enemy: Enemy) -> bool:
@@ -250,7 +260,7 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 ## abate de peso 1). Com `explodeRadius`, cada execução põe uma explosão na fila, no ponto da morte.
 static func _execute(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary,
 		entry: TriggerState.PendingTrigger) -> void:
-	var doomed := _collect_sorted(env, float(tower.x), float(tower.y), type.range).filter(
+	var doomed := _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)).filter(
 			func(enemy: Enemy) -> bool: return enemy.hp < (enemy.max_hp * e["hpPercent"]) / 100.0)
 	for enemy: Enemy in doomed:
 		if env.enemies.get_type(enemy.type).boss:
@@ -384,11 +394,11 @@ static func _empowered_shot(env: TriggerEngine, tower: Tower, type: TowerData.To
 ## Atordoa os `count` inimigos mais à frente (pelo modo "first") dentro do alcance. Devolve se atordoou alguém.
 static func _stun_front(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), type.range,
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type),
 			env.scores["first"], int(e["count"]), _spread_targets)
 	if targets.is_empty():
 		return false
-	var ticks := env.seconds_to_ticks(e["seconds"])
+	var ticks := _status_ticks(env, type, e["seconds"])
 	for enemy: Enemy in targets:
 		Status.apply_stun(enemy, ticks)
 	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun",
@@ -399,9 +409,9 @@ static func _stun_front(env: TriggerEngine, tower: Tower, type: TowerData.TowerT
 ## Atordoa os inimigos no alcance que já estão Lentos. Devolve se atordoou alguém.
 static func _stun_slowed(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var ticks := env.seconds_to_ticks(e["stunSeconds"])
+	var ticks := _status_ticks(env, type, e["stunSeconds"])
 	var count := 0
-	for enemy: Enemy in _collect_sorted(env, float(tower.x), float(tower.y), type.range):
+	for enemy: Enemy in _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)):
 		if enemy.slow_ticks > 0:
 			Status.apply_stun(enemy, ticks)
 			count += 1
@@ -412,12 +422,16 @@ static func _stun_slowed(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 
 
 ## Armadilha de urso no ponto livre do caminho mais perto do núcleo, dentro do alcance. Devolve se pôs.
+## O bônus do Invocador aumenta o dano e o tempo preso.
 static func _bear_trap(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var state := env.ctx.state
 	var per_second := float(env.seconds_to_ticks(1.0))
-	var damage_per_tick := _percent_of(env, tower, type, e["damagePercent"]) / per_second
+	var damage_per_tick := _percent_of(env, tower, type, e["damagePercent"]) / per_second \
+			* ClassBonuses.summon_damage_multiplier(env.classes, state, type)
+	var hold := env.seconds_to_ticks(e["holdSeconds"] * ClassBonuses.summon_duration_multiplier(env.classes, state, type))
 	var radius: float = type.shot["radius"] if type.shot["kind"] == "trap" else 0.5
-	return TrapSystems.place_trap(env.ctx, env.routes, tower, type, "bear", damage_per_tick,
-			env.seconds_to_ticks(e["holdSeconds"]), radius, int(e["maxTraps"]))
+	return TrapSystems.place_trap(env.ctx, env.routes, tower, type, "bear", damage_per_tick, hold, radius,
+			int(e["maxTraps"]))
 
 
 ## Raio de luz nos `count` inimigos mais à frente dentro do alcance (o raio do Sir Aldric), um por um (não
@@ -426,12 +440,12 @@ static func _bear_trap(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 ## alguém.
 static func _front_beam(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), type.range,
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type),
 			env.scores["first"], int(e["count"]), _spread_targets)
 	if targets.is_empty():
 		return false
 	var slow: float = e["slowPercent"] * ClassBonuses.slow_multiplier(env.classes, ctx.state, type)
-	var slow_ticks := env.seconds_to_ticks(e["slowSeconds"]) if slow > 0.0 else 0
+	var slow_ticks := _status_ticks(env, type, e["slowSeconds"]) if slow > 0.0 else 0
 	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var event := {
 		"type": "lightningStruck",
@@ -528,7 +542,7 @@ static func _right_behind(env: TriggerEngine, first: Enemy, gap: float) -> Enemy
 ## alguém.
 static func _anchor_push(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var first := env.index.find_first(ctx.state, float(tower.x), float(tower.y), type.range)
+	var first := env.index.find_first(ctx.state, float(tower.x), float(tower.y), _range(env, type))
 	if first == null:
 		return false
 	var grabbed: Array = [first]
@@ -551,7 +565,8 @@ static func _anchor_push(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 ## Emite `areaExploded` e `statusApplied`. Devolve se pegou alguém.
 static func _tide(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var caught := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), type.range))
+	var reach := _range(env, type)
+	var caught := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), reach))
 	if caught.is_empty():
 		return false
 	var event := {
@@ -560,14 +575,14 @@ static func _tide(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e
 		"towerId": tower.id,
 		"x": float(tower.x),
 		"y": float(tower.y),
-		"radius": type.range,
+		"radius": reach,
 		"trigger": true,
 		"ring": true,
 		"damage": 0.0,
 	}
 	ctx.emit(event)
 	var damage := _percent_of(env, tower, type, e["damagePercent"])
-	var ticks := env.seconds_to_ticks(e["slowSeconds"])
+	var ticks := _status_ticks(env, type, e["slowSeconds"])
 	var slowed := 0
 	for enemy: Enemy in caught:
 		var before := enemy.hp
@@ -589,7 +604,7 @@ static func _tentacle(env: TriggerEngine, tower: Tower, type: TowerData.TowerTyp
 	var ctx := env.ctx
 	var state := ctx.state
 	var radius: float = e["radius"]
-	var candidates := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), type.range))
+	var candidates := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)))
 	if candidates.is_empty():
 		return false
 	var best: Enemy = null
@@ -610,7 +625,7 @@ static func _tentacle(env: TriggerEngine, tower: Tower, type: TowerData.TowerTyp
 	var x := best.x
 	var y := best.y
 	var grabbed := _ground_only(env, _collect_sorted(env, x, y, radius))
-	var stun_ticks := env.seconds_to_ticks(e["stunSeconds"])
+	var stun_ticks := _status_ticks(env, type, e["stunSeconds"])
 	var elite_ticks := maxi(1, SimMath.js_round(float(stun_ticks) * e["eliteStunPercent"] / 100.0))
 	var stunned := 0
 	for enemy: Enemy in grabbed:
@@ -628,8 +643,10 @@ static func _tentacle(env: TriggerEngine, tower: Tower, type: TowerData.TowerTyp
 	trap.kind = "tentacle"
 	trap.x = x
 	trap.y = y
-	trap.damage = _percent_of(env, tower, type, e["damagePercent"]) / float(env.seconds_to_ticks(1.0))
-	trap.hold_ticks = env.seconds_to_ticks(e["damageSeconds"])
+	# Bônus do Invocador: o tentáculo bate mais forte e dura mais.
+	trap.damage = _percent_of(env, tower, type, e["damagePercent"]) / float(env.seconds_to_ticks(1.0)) \
+			* ClassBonuses.summon_damage_multiplier(env.classes, state, type)
+	trap.hold_ticks = env.seconds_to_ticks(e["damageSeconds"] * ClassBonuses.summon_duration_multiplier(env.classes, state, type))
 	trap.radius = radius
 	state.traps.append(trap)
 	ctx.emit({"type": "trapPlaced", "tick": state.tick, "towerId": tower.id, "trapId": trap.id,

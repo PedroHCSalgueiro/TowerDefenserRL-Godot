@@ -38,8 +38,12 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var scores := Targeting.create_target_scores(routes, enemies)
 	var schedules := WaveSchedule.build_wave_schedules(waves, ticks_per_second)
 	var systems: Array = [
-		# O índice espacial no contexto do tick (o dano da Maldição procura os vizinhos por ele).
-		Simulation.runs_while_frozen(func(ctx: TickContext) -> void: ctx.index = index),
+		# O índice espacial e as classes no contexto do tick (o dano da Maldição procura os vizinhos pelo índice;
+		# o bônus do Controlador e as durações dos estados leem as classes).
+		Simulation.runs_while_frozen(func(ctx: TickContext) -> void:
+			ctx.index = index
+			ctx.classes = classes
+			ctx.afflicted_damage_percent = ClassBonuses.afflicted_damage_percent(classes, ctx.state)),
 		Rewards.create_reward_clock_system(),
 		Commands.create_command_system(map, routes, enemies, towers, debug, schedules, economy, nexus,
 				rewards, classes, ticks_per_second),

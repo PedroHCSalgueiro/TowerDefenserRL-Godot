@@ -23,19 +23,67 @@
     },
     "shooter": {
       "name": "Atirador",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "Atiradores com +0,5 de alcance e +15% de velocidade de ataque",
+          "rangeBonus": 0.5,
+          "attackSpeedPercent": 15
+        },
+        {
+          "count": 4,
+          "text": "Atiradores com +1 de alcance e +30% de velocidade de ataque",
+          "rangeBonus": 1,
+          "attackSpeedPercent": 30
+        }
+      ]
     },
     "support": {
       "name": "Suporte",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "A vizinhança dos Suportes ganha as diagonais (aura e Saque em 8 vizinhos)",
+          "neighborhoodRadius": 1
+        },
+        {
+          "count": 4,
+          "text": "Como o nível 2; a aura dos Suportes fica 50% mais forte",
+          "neighborhoodRadius": 1,
+          "auraBonusPercent": 50
+        }
+      ]
     },
     "artillerist": {
       "name": "Artilheiro",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "Explosões dos Artilheiros com raio ×1,25",
+          "areaRadiusMultiplier": 1.25
+        },
+        {
+          "count": 4,
+          "text": "Explosões dos Artilheiros com raio ×1,5 e +25% de dano",
+          "areaRadiusMultiplier": 1.5,
+          "areaDamageMultiplier": 1.25
+        }
+      ]
     },
     "mage": {
       "name": "Mago",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "Habilidades dos Magos carregam mais rápido: contagem \"a cada N\" −20% (mínimo 2)",
+          "triggerCountReductionPercent": 20
+        },
+        {
+          "count": 4,
+          "text": "Contagem \"a cada N\" dos Magos −40% (mínimo 2)",
+          "triggerCountReductionPercent": 40
+        }
+      ]
     },
     "hunter": {
       "name": "Caçador",
@@ -54,11 +102,37 @@
     },
     "summoner": {
       "name": "Invocador",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "Invocações dos Invocadores duram +25% e causam +25% de dano",
+          "summonDurationPercent": 25,
+          "summonDamagePercent": 25
+        },
+        {
+          "count": 4,
+          "text": "Invocações dos Invocadores duram +50% e causam +50% de dano",
+          "summonDurationPercent": 50,
+          "summonDamagePercent": 50
+        }
+      ]
     },
     "controller": {
       "name": "Controlador",
-      "levels": []
+      "levels": [
+        {
+          "count": 2,
+          "text": "Efeitos dos Controladores duram +25%; inimigos Lentos ou Atordoados recebem +10% de dano",
+          "statusDurationPercent": 25,
+          "afflictedDamagePercent": 10
+        },
+        {
+          "count": 4,
+          "text": "Efeitos dos Controladores duram +50%; inimigos Lentos ou Atordoados recebem +20% de dano",
+          "statusDurationPercent": 50,
+          "afflictedDamagePercent": 20
+        }
+      ]
     }
   }
 }
