@@ -11,6 +11,16 @@
       "bossImmune": true
     }
   },
+  "summons": {
+    "skeleton": {
+      "speed": 1.5,
+      "seconds": 10,
+      "contactRadius": 0.5,
+      "blastRadius": 1,
+      "maxPerTower": 3,
+      "maxRegion": 4
+    }
+  },
   "triggers": {
     "neighborhood": 4,
     "activationCooldownSeconds": 1,

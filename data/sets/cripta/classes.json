@@ -1,0 +1,33 @@
+{
+  "classes": {
+    "cripta": {
+      "name": "Cripta Cinzenta",
+      "levels": [
+        {
+          "count": 3,
+          "text": "Cada abate é uma alma; a cada 10 almas da onda, +3% de dano para a Cripta (até +30%)",
+          "soulDamagePercent": 3,
+          "soulDamageMaxPercent": 30
+        },
+        {
+          "count": 5,
+          "text": "Como o nível 3; todo inimigo morto explode fraco (10% da vida dele, raio 1)",
+          "soulDamagePercent": 3,
+          "soulDamageMaxPercent": 30,
+          "deathBlastPercent": 10,
+          "deathBlastRadius": 1
+        },
+        {
+          "count": 8,
+          "text": "Como o nível 5; 10% dos inimigos mortos voltam como esqueleto aliado",
+          "soulDamagePercent": 3,
+          "soulDamageMaxPercent": 30,
+          "deathBlastPercent": 10,
+          "deathBlastRadius": 1,
+          "skeletonChancePercent": 10,
+          "skeletonDamagePercent": 25
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "texts": {
+    "towerSummaries": {
+      "morn": "Guardião: foice em área; quando um inimigo morre perto, explode.",
+      "nyx": "Atirador: flecha que atravessa um inimigo; depois de um abate, a próxima flecha marca o alvo.",
+      "acolito": "Suporte: cada abate das torres encostadas as deixa mais fortes até o fim da onda.",
+      "ossos": "Artilheiro: crânio em área, que cresce com as almas da onda.",
+      "vex": "Invocador: a cada tantos abates no alcance, ergue um esqueleto que explode na horda.",
+      "agatha": "Controlador: frasco em área; de tempos em tempos, uma nuvem de peste que deixa lento e envenena.",
+      "grim": "Caçador: executa inimigos com pouca vida.",
+      "lich": "Mago: a cada 20 abates da Cripta, um raio atinge o caminho inteiro."
+    }
+  }
+}

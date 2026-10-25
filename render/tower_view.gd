@@ -107,7 +107,7 @@ func show_range(tower: Tower, state: Object = null) -> void:
 	if not visible_range:
 		return
 	var type := _data.get_type(tower.type)
-	var radius := ClassBonuses.tower_range(ClassData.game_data(), state, type) if state != null else type.range
+	var radius := ClassBonuses.tower_range(ClassData.game_data(), state, type, tower) if state != null else type.range
 	var pos := Vector3(tower.x, 0.02, tower.y)
 	_range_disc.position = pos
 	_range_ring.position = pos + Vector3(0, 0.005, 0)

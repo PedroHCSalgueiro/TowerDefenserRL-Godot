@@ -1,0 +1,27 @@
+{
+  "classes": {
+    "panteao": {
+      "name": "Panteão",
+      "levels": [
+        {
+          "count": 3,
+          "text": "Heróis do Panteão ignoram 50% da armadura",
+          "armorPiercePercent": 50
+        },
+        {
+          "count": 5,
+          "text": "Heróis do Panteão ignoram toda a armadura e causam +15% de dano",
+          "armorPiercePercent": 100,
+          "damagePercent": 15
+        },
+        {
+          "count": 8,
+          "text": "Como o nível 5; uma vez por onda, um deus destrói o inimigo que ia acertar o núcleo",
+          "armorPiercePercent": 100,
+          "damagePercent": 15,
+          "nexusSavesPerWave": 1
+        }
+      ]
+    }
+  }
+}

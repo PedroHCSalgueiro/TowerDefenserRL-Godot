@@ -15,7 +15,7 @@ extends RefCounted
 ## O alvo normal da torre agora: o melhor pelo modo de mira, dentro do alcance (com o bônus do Atirador).
 static func find_tower_target(index: SpatialIndex, state: Object, tower: Tower,
 		type: TowerData.TowerType, scores: Dictionary) -> Enemy:
-	var reach := ClassBonuses.tower_range(ClassData.game_data(), state, type)
+	var reach := ClassBonuses.tower_range(ClassData.game_data(), state, type, tower)
 	if type.target_mode == "first":
 		return index.find_first(state, float(tower.x), float(tower.y), reach)
 	return index.find_best(state, float(tower.x), float(tower.y), reach, scores[type.target_mode])
@@ -36,6 +36,13 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 	var region_damage := ClassBonuses.damage_multiplier(classes, ctx.state, type, tower)
 	if region_damage != 1.0:
 		shot_damage *= region_damage
+	var buffs := TowerBuffs.damage_multiplier(ctx.state, ctx.towers if ctx.towers != null else TowerData.game_data(), tower, type)
+	if buffs != 1.0:
+		shot_damage *= buffs
+	# Golem de Ossos: a área cresce com as almas da onda.
+	if area and not type.soul_radius.is_empty() and "souls" in ctx.state:
+		radius_multiplier *= 1.0 + minf(type.soul_radius["maxPercent"],
+				type.soul_radius["percentPer10"] * floorf(float(ctx.state.souls) / 10.0)) / 100.0
 	ctx.emit({
 		"type": "towerFired",
 		"tick": ctx.state.tick,
@@ -51,6 +58,11 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 	if not tower.curse_next.is_empty() and shot != "extra":
 		curse = tower.curse_next
 		tower.curse_next = {}
+	# A marca armada (Nyx) vai no próximo ataque que não é tiro extra.
+	var force_mark := false
+	if tower.mark_next and shot != "extra":
+		force_mark = true
+		tower.mark_next = false
 	ProjectileSystems.fire_projectile(ctx, {
 		"sourceId": tower.id,
 		"x": float(tower.x),
@@ -61,6 +73,7 @@ static func fire_tower_shot(ctx: TickContext, tower: Tower, type: TowerData.Towe
 		"chain": chain,
 		"statusType": tower.type if not type.on_hit.is_empty() or type.marks else "",
 		"curse": curse,
+		"forceMark": force_mark,
 	}, target)
 
 

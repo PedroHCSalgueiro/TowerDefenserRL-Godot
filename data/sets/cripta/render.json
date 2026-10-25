@@ -1,0 +1,17 @@
+{
+  "towers": {
+    "classColors": {
+      "cripta": "#5d5a7a"
+    },
+    "effectColors": {
+      "morn": "#9e9e9e",
+      "nyx": "#b9a7ff",
+      "acolito": "#4b2e5a",
+      "ossos": "#e6e0c8",
+      "vex": "#3fbf8f",
+      "agatha": "#7cb342",
+      "grim": "#8b1e3f",
+      "lich": "#00bcd4"
+    }
+  }
+}

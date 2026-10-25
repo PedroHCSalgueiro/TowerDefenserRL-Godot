@@ -97,17 +97,23 @@ func test_save_16_antigo_abre_com_os_campos_novos_vazios() -> void:
 		sim.enqueue(c)
 	sim.enqueue({"type": "callWave"})
 	_run(sim, 200, {})
+	# As almas (versão 18) contam todo abate; um save 16 não as tem e volta com zero.
+	sim.state.souls = 0
 	var d := RunStateIO.to_dict(sim.state)
 	d["version"] = 16
-	d.erase("pendingLoot")
+	for key in ["pendingLoot", "souls", "echoCounter", "godSaveWave"]:
+		d.erase(key)
 	for e: Dictionary in d["enemies"]["slots"]:
-		e.erase("marks")
-		e.erase("curse")
+		for key in ["marks", "curse", "poisonDamage", "poisonTicks", "poisonSource"]:
+			e.erase(key)
 	for p: Dictionary in d["projectiles"]["slots"]:
 		p.erase("curse")
+		p.erase("forceMark")
 	for t: Dictionary in d["towers"]:
-		for key in ["doubleShot", "followupTicks", "curseNext", "lootCount"]:
+		for key in ["doubleShot", "followupTicks", "curseNext", "lootCount", "markNext", "waveBuffPercent"]:
 			t.erase(key)
+	for trap: Dictionary in d["traps"]:
+		trap.erase("params")
 	var old_text := JSON.stringify(SaveCodec.encode(d))
 	var restored := Simulation.restore(old_text, GameSystems.create(map), map)
 	assert_not_null(restored, "o save 16 ainda abre")

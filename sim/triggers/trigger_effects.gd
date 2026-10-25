@@ -36,12 +36,15 @@ const DISCHARGE_ACTIVATION := {
 static func _percent_of(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, percent: float) -> float:
 	var damage := (Stars.tower_damage(type, tower) * percent) / 100.0
 	var region := ClassBonuses.damage_multiplier(env.classes, env.ctx.state, type, tower)
-	return damage * region if region != 1.0 else damage
+	if region != 1.0:
+		damage *= region
+	var buffs := TowerBuffs.damage_multiplier(env.ctx.state, env.towers, tower, type)
+	return damage * buffs if buffs != 1.0 else damage
 
 
-## Alcance da torre agora (com o bônus do Atirador).
-static func _range(env: TriggerEngine, type: TowerData.TowerType) -> float:
-	return ClassBonuses.tower_range(env.classes, env.ctx.state, type)
+## Alcance da torre agora (com o bônus do Atirador e as auras de alcance das vizinhas).
+static func _range(env: TriggerEngine, type: TowerData.TowerType, tower: Tower) -> float:
+	return ClassBonuses.tower_range(env.classes, env.ctx.state, type, tower)
 
 
 ## Ticks de um efeito de estado que a torre aplica (com o bônus do Controlador na duração).
@@ -69,7 +72,7 @@ static func _multi_shot(env: TriggerEngine, tower: Tower, type: TowerData.TowerT
 		for i in int(e["extraShots"]):
 			TowerSystems.fire_tower_shot(env.ctx, tower, type, target, "extra", env.classes, 100.0, chain)
 		return
-	var targets := env.index.find_best_n(state, float(tower.x), float(tower.y), _range(env, type),
+	var targets := env.index.find_best_n(state, float(tower.x), float(tower.y), _range(env, type, tower),
 			env.scores[type.target_mode], int(e["extraShots"]), _spread_targets)
 	if targets.is_empty():
 		return
@@ -226,7 +229,7 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 	# Alvo exatamente sobre a torre: a direção não importa, mas precisa ser fixa.
 	var ux := dx / length if length > 0.0 else 1.0
 	var uy := dy / length if length > 0.0 else 0.0
-	var reach: float = env.unlimited_line_length if e["unlimited"] else _range(env, type)
+	var reach: float = env.unlimited_line_length if e["unlimited"] else _range(env, type, tower)
 	var half_width: float = e["halfWidth"]
 	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var in_line := _collect_sorted(env, tx, ty, reach + half_width).filter(func(enemy: Enemy) -> bool:
@@ -260,7 +263,7 @@ static func _pierce_line(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 ## abate de peso 1). Com `explodeRadius`, cada execução põe uma explosão na fila, no ponto da morte.
 static func _execute(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary,
 		entry: TriggerState.PendingTrigger) -> void:
-	var doomed := _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)).filter(
+	var doomed := _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type, tower)).filter(
 			func(enemy: Enemy) -> bool: return enemy.hp < (enemy.max_hp * e["hpPercent"]) / 100.0)
 	for enemy: Enemy in doomed:
 		if env.enemies.get_type(enemy.type).boss:
@@ -376,6 +379,25 @@ static func run_effect(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 			tower.curse_next = {"seconds": effect["seconds"], "percent": effect["sharePercent"],
 					"spread": effect["spread"], "radius": effect["radius"], "jumps": effect["jumps"]}
 			return false
+		"markNext":
+			tower.mark_next = true
+			return false
+		"sentinel":
+			return _sentinel(env, tower, type, effect)
+		"magnetPull":
+			return _magnet_pull(env, tower, type, effect)
+		"empowerKiller":
+			return _empower_killer(env, effect, entry)
+		"skeleton":
+			return _skeleton(env, tower, type, effect, entry)
+		"plagueCloud":
+			return _plague_cloud(env, tower, type, effect)
+		"pathBeam":
+			return _path_beam(env, tower, type, effect)
+		"crater":
+			return _crater(env, tower, type, effect)
+		"strikes":
+			return _strikes(env, tower, type, effect)
 	return false
 
 
@@ -394,11 +416,11 @@ static func _empowered_shot(env: TriggerEngine, tower: Tower, type: TowerData.To
 ## Atordoa os `count` inimigos mais à frente (pelo modo "first") dentro do alcance. Devolve se atordoou alguém.
 static func _stun_front(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type),
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type, tower),
 			env.scores["first"], int(e["count"]), _spread_targets)
 	if targets.is_empty():
 		return false
-	var ticks := _status_ticks(env, type, e["seconds"])
+	var ticks := _status_ticks(env, type, e["stunSeconds"])
 	for enemy: Enemy in targets:
 		Status.apply_stun(enemy, ticks)
 	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun",
@@ -411,7 +433,7 @@ static func _stun_slowed(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 	var ctx := env.ctx
 	var ticks := _status_ticks(env, type, e["stunSeconds"])
 	var count := 0
-	for enemy: Enemy in _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)):
+	for enemy: Enemy in _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type, tower)):
 		if enemy.slow_ticks > 0:
 			Status.apply_stun(enemy, ticks)
 			count += 1
@@ -440,7 +462,7 @@ static func _bear_trap(env: TriggerEngine, tower: Tower, type: TowerData.TowerTy
 ## alguém.
 static func _front_beam(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type),
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type, tower),
 			env.scores["first"], int(e["count"]), _spread_targets)
 	if targets.is_empty():
 		return false
@@ -542,7 +564,7 @@ static func _right_behind(env: TriggerEngine, first: Enemy, gap: float) -> Enemy
 ## alguém.
 static func _anchor_push(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var first := env.index.find_first(ctx.state, float(tower.x), float(tower.y), _range(env, type))
+	var first := env.index.find_first(ctx.state, float(tower.x), float(tower.y), _range(env, type, tower))
 	if first == null:
 		return false
 	var grabbed: Array = [first]
@@ -565,7 +587,7 @@ static func _anchor_push(env: TriggerEngine, tower: Tower, type: TowerData.Tower
 ## Emite `areaExploded` e `statusApplied`. Devolve se pegou alguém.
 static func _tide(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
 	var ctx := env.ctx
-	var reach := _range(env, type)
+	var reach := _range(env, type, tower)
 	var caught := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), reach))
 	if caught.is_empty():
 		return false
@@ -583,13 +605,15 @@ static func _tide(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e
 	ctx.emit(event)
 	var damage := _percent_of(env, tower, type, e["damagePercent"])
 	var ticks := _status_ticks(env, type, e["slowSeconds"])
+	# Guardião (Golem Caldeira solta a mesma onda de vapor): o bônus da classe fortalece o Lento.
+	var slow: float = e["slowPercent"] * ClassBonuses.slow_multiplier(env.classes, ctx.state, type)
 	var slowed := 0
 	for enemy: Enemy in caught:
 		var before := enemy.hp
 		Damage.damage_enemy(ctx, env.enemies, enemy, damage, tower.id)
 		event["damage"] += before - enemy.hp
 		if enemy.active:
-			Status.apply_slow(enemy, e["slowPercent"], e["slowCap"], ticks)
+			Status.apply_slow(enemy, slow, maxf(slow, e["slowCap"]), ticks)
 			slowed += 1
 	if slowed > 0:
 		ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "slow", "count": slowed})
@@ -604,24 +628,10 @@ static func _tentacle(env: TriggerEngine, tower: Tower, type: TowerData.TowerTyp
 	var ctx := env.ctx
 	var state := ctx.state
 	var radius: float = e["radius"]
-	var candidates := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type)))
+	var candidates := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type, tower)))
 	if candidates.is_empty():
 		return false
-	var best: Enemy = null
-	var best_count := 0
-	var best_left := INF
-	for enemy: Enemy in candidates:
-		var around := 0
-		for other: Enemy in candidates:
-			var dx := other.x - enemy.x
-			var dy := other.y - enemy.y
-			if dx * dx + dy * dy <= radius * radius:
-				around += 1
-		var left := enemy.route_length - enemy.distance
-		if best == null or around > best_count or (around == best_count and left < best_left):
-			best = enemy
-			best_count = around
-			best_left = left
+	var best := _densest(candidates, radius)
 	var x := best.x
 	var y := best.y
 	var grabbed := _ground_only(env, _collect_sorted(env, x, y, radius))
@@ -651,6 +661,235 @@ static func _tentacle(env: TriggerEngine, tower: Tower, type: TowerData.TowerTyp
 	state.traps.append(trap)
 	ctx.emit({"type": "trapPlaced", "tick": state.tick, "towerId": tower.id, "trapId": trap.id,
 			"kind": "tentacle", "x": x, "y": y})
+	return true
+
+
+## O inimigo de `candidates` (em ordem de id) com mais vizinhos da lista a até `radius` casas: o centro do
+## grupo maior. Empate: o mais à frente da fila; depois, o menor id.
+static func _densest(candidates: Array, radius: float) -> Enemy:
+	var best: Enemy = null
+	var best_count := 0
+	var best_left := INF
+	for enemy: Enemy in candidates:
+		var around := 0
+		for other: Enemy in candidates:
+			var dx := other.x - enemy.x
+			var dy := other.y - enemy.y
+			if dx * dx + dy * dy <= radius * radius:
+				around += 1
+		var left := enemy.route_length - enemy.distance
+		if best == null or around > best_count or (around == best_count and left < best_left):
+			best = enemy
+			best_count = around
+			best_left = left
+	return best
+
+
+## Uma casa vizinha (4 lados, nessa ordem: direita, baixo, esquerda, cima) onde caberia uma torre e que não
+## tem torre nem outra invocação parada. null se não houver (ou sem mapa).
+static func _free_neighbor(env: TriggerEngine, tower: Tower) -> Variant:
+	if env.map == null:
+		return null
+	var state := env.ctx.state
+	for d: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
+		var cell := Vector2i(tower.x, tower.y) + d
+		if not env.map.can_place_tower(cell):
+			continue
+		var taken := false
+		for t: Tower in state.towers:
+			taken = taken or (t.x == cell.x and t.y == cell.y)
+		for trap: Trap in state.traps:
+			taken = taken or (trap.kind == "sentinel" and roundi(trap.x) == cell.x and roundi(trap.y) == cell.y)
+		if not taken:
+			return cell
+	return null
+
+
+## Invocação que atira (torreta do Bolt, grifo da Kallia): numa casa vizinha livre ou em cima da torre
+## (`onTower`), até `maxSummons` vivas por torre. O bônus do Invocador aumenta dano e duração. Devolve se pôs.
+static func _sentinel(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var state := ctx.state
+	var alive := 0
+	for trap: Trap in state.traps:
+		if trap.kind == "sentinel" and trap.owner_id == tower.id:
+			alive += 1
+	if alive >= int(e["maxSummons"]):
+		return false
+	var cell := Vector2i(tower.x, tower.y)
+	if not e["onTower"]:
+		var free: Variant = _free_neighbor(env, tower)
+		if free != null:
+			cell = free
+	var trap := Trap.new()
+	trap.id = ctx.allocate_id()
+	trap.owner_id = tower.id
+	trap.kind = "sentinel"
+	trap.x = float(cell.x)
+	trap.y = float(cell.y)
+	trap.damage = _percent_of(env, tower, type, e["damagePercent"]) * ClassBonuses.summon_damage_multiplier(env.classes, state, type)
+	trap.hold_ticks = env.seconds_to_ticks(e["lifeSeconds"] * ClassBonuses.summon_duration_multiplier(env.classes, state, type))
+	trap.radius = 0.3
+	trap.params = {"range": e["range"], "interval": maxi(1, SimMath.js_round(float(env.seconds_to_ticks(1.0)) / e["shotsPerSecond"])),
+			"cooldown": 1, "speed": type.projectile_speed, "airMultiplier": e["airMultiplier"], "preferAir": e["preferAir"],
+			"flying": e["onTower"]}
+	state.traps.append(trap)
+	ctx.emit({"type": "trapPlaced", "tick": state.tick, "towerId": tower.id, "trapId": trap.id, "kind": "sentinel",
+			"x": trap.x, "y": trap.y})
+	return true
+
+
+## Pulso magnético (Dra. Engrena): puxa os terrestres no alcance para o ponto do caminho mais perto da torre
+## (chefão não se move, elite no máximo o teto do Empurrado) e Atordoa todos eles. Devolve se pegou alguém.
+static func _magnet_pull(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var caught := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type, tower)))
+	if caught.is_empty() or not env.routes.has("ground"):
+		return false
+	var center := TrapSystems.route_distance_near(env.routes["ground"], float(tower.x), float(tower.y))
+	var rules: Dictionary = env.towers.statuses["push"]
+	var ticks := _status_ticks(env, type, e["stunSeconds"])
+	var pushes: Array = []
+	for enemy: Enemy in caught:
+		var moved := Status.move_to(enemy, center, rules, env.routes, env.enemies)
+		pushes.append({"enemyId": enemy.id, "cells": moved, "elite": enemy.elite,
+				"boss": env.enemies.get_type(enemy.type).boss, "x": enemy.x, "y": enemy.y})
+		Status.apply_stun(enemy, ticks)
+	ctx.emit({"type": "enemiesPushed", "tick": ctx.state.tick, "towerId": tower.id, "pushes": pushes})
+	ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": tower.id, "status": "stun", "count": caught.size()})
+	return true
+
+
+## Acólito Sombrio: a vizinha que abateu (a origem da entrada) ganha +`percent`% de dano até o fim da onda,
+## até `maxPercent`%. Devolve se aumentou.
+static func _empower_killer(env: TriggerEngine, e: Dictionary, entry: TriggerState.PendingTrigger) -> bool:
+	for killer: Tower in env.ctx.state.towers:
+		if killer.id == entry.source_tower_id:
+			if killer.wave_buff_percent >= e["maxPercent"]:
+				return false
+			killer.wave_buff_percent = minf(e["maxPercent"], killer.wave_buff_percent + e["percent"])
+			env.ctx.emit({"type": "towerEmpowered", "tick": env.ctx.state.tick, "towerId": killer.id,
+					"percent": killer.wave_buff_percent})
+			return true
+	return false
+
+
+## Vex: ergue um esqueleto aliado no ponto do caminho do abate que disparou o gatilho (ou no mais perto da
+## torre). O bônus do Invocador aumenta o dano da explosão. Devolve se ergueu.
+static func _skeleton(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary,
+		entry: TriggerState.PendingTrigger) -> bool:
+	if not env.routes.has("ground") or env.towers.summons.is_empty():
+		return false
+	var route: Route = env.routes["ground"]
+	var x := entry.x if entry.has_point else float(tower.x)
+	var y := entry.y if entry.has_point else float(tower.y)
+	var damage := _percent_of(env, tower, type, e["damagePercent"]) \
+			* ClassBonuses.summon_damage_multiplier(env.classes, env.ctx.state, type)
+	TrapSystems.spawn_skeleton(env.ctx, env.routes, env.towers, TrapSystems.route_distance_near(route, x, y), damage,
+			tower.id, float(env.seconds_to_ticks(1.0)))
+	return true
+
+
+## Nuvem de peste (Agatha): no centro do grupo maior de terrestres no alcance, uma zona que deixa Lento e
+## Envenenado quem estiver nela. O bônus do Controlador estica a zona e os efeitos. Devolve se pôs.
+static func _plague_cloud(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var candidates := _ground_only(env, _collect_sorted(env, float(tower.x), float(tower.y), _range(env, type, tower)))
+	if candidates.is_empty():
+		return false
+	var best := _densest(candidates, e["radius"])
+	var trap := Trap.new()
+	trap.id = ctx.allocate_id()
+	trap.owner_id = tower.id
+	trap.kind = "plague"
+	trap.x = best.x
+	trap.y = best.y
+	trap.radius = e["radius"]
+	trap.hold_ticks = _status_ticks(env, type, e["cloudSeconds"])
+	trap.params = {"slow": e["slowPercent"], "slowCap": e["slowCap"], "effectTicks": _status_ticks(env, type, e["poisonSeconds"]),
+			"poison": _percent_of(env, tower, type, e["poisonPercent"]) / float(env.seconds_to_ticks(1.0))}
+	ctx.state.traps.append(trap)
+	ctx.emit({"type": "trapPlaced", "tick": ctx.state.tick, "towerId": tower.id, "trapId": trap.id, "kind": "plague",
+			"x": trap.x, "y": trap.y})
+	ctx.emit({"type": "areaExploded", "tick": ctx.state.tick, "towerId": tower.id, "x": trap.x, "y": trap.y,
+			"radius": trap.radius, "trigger": true, "ring": true, "damage": 0.0})
+	return true
+
+
+## Raio que atravessa o caminho inteiro (Lich Morvath): todo inimigo do mapa leva o dano, em ordem de id.
+## Emite `lightningStruck` com os primeiros pontos (só para o desenho). Devolve se acertou alguém.
+static func _path_beam(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var victims: Array = []
+	for enemy: Enemy in ctx.state.enemies.slots:
+		if enemy.active:
+			victims.append(enemy)
+	if victims.is_empty():
+		return false
+	EnemyOrder.sort_by_id(victims)
+	var damage := _percent_of(env, tower, type, e["damagePercent"])
+	var event := {"type": "lightningStruck", "tick": ctx.state.tick, "towerId": tower.id, "points": [], "damage": 0.0}
+	ctx.emit(event)
+	for enemy: Enemy in victims:
+		if event["points"].size() < 12:
+			event["points"].append({"x": enemy.x, "y": enemy.y})
+		var before := enemy.hp
+		Damage.damage_enemy(ctx, env.enemies, enemy, damage, tower.id)
+		event["damage"] += before - enemy.hp
+	return true
+
+
+## Rocha que deixa cratera (Ciclope): área no alvo normal e, no lugar, uma zona que deixa Lento por `seconds`.
+## Os bônus do Artilheiro aumentam raio e dano. Devolve se havia alvo.
+static func _crater(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var target := TowerSystems.find_tower_target(env.index, ctx.state, tower, type, env.scores)
+	if target == null:
+		return false
+	var radius: float = e["radius"] * ClassBonuses.area_radius_multiplier(env.classes, ctx.state, type)
+	var damage := _percent_of(env, tower, type, e["damagePercent"]) * ClassBonuses.area_damage_multiplier(env.classes, ctx.state, type)
+	var x := target.x
+	var y := target.y
+	var event := {"type": "areaExploded", "tick": ctx.state.tick, "towerId": tower.id, "x": x, "y": y, "radius": radius,
+			"trigger": true, "ring": true, "damage": 0.0}
+	ctx.emit(event)
+	for enemy: Enemy in _collect_sorted(env, x, y, radius):
+		var before := enemy.hp
+		Damage.damage_enemy(ctx, env.enemies, enemy, damage, tower.id)
+		event["damage"] += before - enemy.hp
+	var trap := Trap.new()
+	trap.id = ctx.allocate_id()
+	trap.owner_id = tower.id
+	trap.kind = "crater"
+	trap.x = x
+	trap.y = y
+	trap.radius = radius
+	trap.hold_ticks = env.seconds_to_ticks(e["seconds"])
+	trap.params = {"slow": e["slowPercent"], "slowCap": e["slowCap"], "effectTicks": env.seconds_to_ticks(1.0)}
+	ctx.state.traps.append(trap)
+	ctx.emit({"type": "trapPlaced", "tick": ctx.state.tick, "towerId": tower.id, "trapId": trap.id, "kind": "crater",
+			"x": x, "y": y})
+	return true
+
+
+## Raios do Tritão: nos `count` inimigos mais à frente no alcance, cada um com `damagePercent`% do dano;
+## inimigo Lento leva ×`slowedMultiplier`. Devolve se acertou alguém.
+static func _strikes(env: TriggerEngine, tower: Tower, type: TowerData.TowerType, e: Dictionary) -> bool:
+	var ctx := env.ctx
+	var targets := env.index.find_best_n(ctx.state, float(tower.x), float(tower.y), _range(env, type, tower),
+			env.scores["first"], int(e["count"]), _spread_targets)
+	if targets.is_empty():
+		return false
+	var struck: Array = targets.duplicate()
+	var damage := _percent_of(env, tower, type, e["damagePercent"])
+	var event := {"type": "lightningStruck", "tick": ctx.state.tick, "towerId": tower.id, "points": [], "damage": 0.0}
+	ctx.emit(event)
+	for enemy: Enemy in struck:
+		event["points"].append({"x": enemy.x, "y": enemy.y})
+		var before := enemy.hp
+		var hit: float = damage * (e["slowedMultiplier"] if enemy.slow_ticks > 0 else 1.0)
+		Damage.damage_enemy(ctx, env.enemies, enemy, hit, tower.id)
+		event["damage"] += before - enemy.hp
 	return true
 
 

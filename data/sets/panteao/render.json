@@ -1,0 +1,17 @@
+{
+  "towers": {
+    "classColors": {
+      "panteao": "#e6c75a"
+    },
+    "effectColors": {
+      "dorian": "#c0a062",
+      "iliria": "#9ccc65",
+      "amunet": "#ffd54f",
+      "ciclope": "#8d6e63",
+      "pitia": "#ce93d8",
+      "sigrun": "#90caf9",
+      "tritao": "#4fc3f7",
+      "kallia": "#ffb74d"
+    }
+  }
+}

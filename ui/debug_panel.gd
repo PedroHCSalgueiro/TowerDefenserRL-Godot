@@ -277,6 +277,7 @@ func _status_lines(state: RunState) -> Array[String]:
 	var bleed := 0
 	var marked := [0, 0]
 	var cursed := 0
+	var poisoned := 0
 	var slow_stunned := 0
 	for enemy: Enemy in state.enemies.slots:
 		if not enemy.active:
@@ -288,6 +289,7 @@ func _status_lines(state: RunState) -> Array[String]:
 		if not enemy.marks.is_empty():
 			marked[0 if enemy.marks.size() == 1 else 1] += 1
 		cursed += 0 if enemy.curse.is_empty() else 1
+		poisoned += 1 if enemy.poison_ticks > 0 else 0
 	var hunter: ClassState.ClassStatus = state.classes.get("hunter")
 	var push_text := "Empurrões: normal %dx (máx %s) · elite %dx (máx %s) · chefão %dx (máx %s)" % [
 			_pushes["normal"][0], TowerInfo.fmt(_pushes["normal"][1]), _pushes["elite"][0], TowerInfo.fmt(_pushes["elite"][1]),
@@ -297,7 +299,8 @@ func _status_lines(state: RunState) -> Array[String]:
 		"Marcado 1 marca %d · 2+ marcas %d · bônus Caçador %s  Amaldiçoado %d" % [marked[0], marked[1],
 				"ativo" if hunter != null and hunter.level > 0 else "inativo", cursed],
 		push_text,
-		"Ouro guardado para o fim da onda %d" % state.pending_loot,
+		"Ouro guardado para o fim da onda %d · Envenenado %d · Almas da onda %d · Invocações %d" % [state.pending_loot,
+				poisoned, state.souls, state.traps.size()],
 	]
 
 

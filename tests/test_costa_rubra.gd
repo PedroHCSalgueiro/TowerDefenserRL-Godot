@@ -9,75 +9,6 @@ const VALCOROA := ["aldric", "lyra", "tomas", "brom", "selene", "wulf", "mabel",
 var _map: SimMap
 
 
-## Um tick "de mentira" para chamar os efeitos de gatilho direto: estado da run, contexto, índice e o
-## motor (que só serve de `env` para `TriggerEffects`).
-class Harness:
-	extends RefCounted
-	var state: RunState
-	var ctx: TickContext
-	var engine: TriggerEngine
-	var routes: Dictionary
-	var index: SpatialIndex
-	var enemies: EnemyData
-	var towers: TowerData
-	var classes: ClassData
-
-	func _init(map: SimMap) -> void:
-		state = RunState.create("costa-rubra")
-		enemies = EnemyData.game_data()
-		towers = TowerData.game_data()
-		classes = ClassData.game_data()
-		routes = Route.build_routes(map)
-		index = SpatialIndex.new(1.0)
-		engine = TriggerEngine.new({"index": index, "enemies": enemies, "towers": towers, "classes": classes,
-				"scores": Targeting.create_target_scores(routes, enemies), "ticksPerSecond": 30.0, "routes": routes})
-		next_tick()
-
-	## Tick novo: o índice espacial é refeito na próxima consulta.
-	func next_tick() -> void:
-		state.tick += 1
-		ctx = TickContext.new(state, Rng.new(state), [], [], EventBus.new())
-		ctx.index = index
-		ctx.classes = classes
-		engine.ctx = ctx
-
-	func spawn(type: String, distance: float, elite: bool = false) -> Enemy:
-		return EnemySystems.spawn_enemy(ctx, routes, enemies, type, distance, 1.0, 1, elite)
-
-	## Torre posta à mão ao lado do ponto da rota a `distance` casas (o alcance dela cobre os vizinhos).
-	func tower_at(type: String, distance: float, star: int = 1, id: int = 0) -> Tower:
-		var p := MutablePoint.new()
-		(routes["ground"] as Route).sample_into(distance, p)
-		var tower := Tower.new(id if id > 0 else 9000 + state.towers.size(), type, Vector2i(roundi(p.x), roundi(p.y) + 1), star)
-		state.towers.append(tower)
-		return tower
-
-	func set_level(class_id: String, level: int) -> void:
-		(state.classes[class_id] as ClassState.ClassStatus).level = level
-
-	## O efeito do gatilho da torre, na estrela dela. Devolve o que `run_effect` devolve.
-	func fire(tower: Tower) -> bool:
-		var type := towers.get_type(tower.type)
-		var star := Stars.tower_star(type, tower)
-		return TriggerEffects.run_effect(engine, tower, type, star.effect, TriggerState.PendingTrigger.new(), false)
-
-	func effect(tower: Tower) -> Dictionary:
-		return Stars.tower_star(towers.get_type(tower.type), tower).effect
-
-	func events_of(type: String) -> Array:
-		return ctx.tick_events.filter(func(e: Dictionary) -> bool: return e["type"] == type)
-
-	## Roda o sistema de projéteis até não sobrar projétil no ar (no máximo `ticks`).
-	func fly_projectiles(ticks: int = 60) -> void:
-		var system := ProjectileSystems.create_projectile_system(enemies, index, towers.projectile_retarget_radius,
-				30.0, towers, classes)
-		for i in ticks:
-			if state.projectiles.active_count == 0:
-				return
-			next_tick()
-			system.call(ctx)
-
-
 func before_all() -> void:
 	GameSets.select("costarubra")
 	_map = SimMap.load_map(DataLoader.load_json("map.json"))
@@ -91,13 +22,13 @@ func after_all() -> void:
 	GameSets.select(GameSets.DEFAULT_ID)
 
 
-func _h() -> Harness:
-	return Harness.new(_map)
+func _h() -> HeroHarness:
+	return HeroHarness.new(_map)
 
 
-func _combo() -> Harness:
+func _combo() -> HeroHarness:
 	GameSets.select("valcoroa_costarubra")
-	return Harness.new(_map)
+	return HeroHarness.new(_map)
 
 
 # ------------------------------------------------------------------ conjuntos
@@ -190,7 +121,7 @@ func test_wulf_tambem_marca() -> void:
 	assert_false(towers.get_type("lyra").marks, "só Caçador marca")
 
 
-func _shot_damage(h: Harness, shooter: String, marks: int) -> float:
+func _shot_damage(h: HeroHarness, shooter: String, marks: int) -> float:
 	var enemy := h.spawn("common", 10.0)
 	enemy.hp = 10000.0
 	enemy.max_hp = 10000.0
@@ -530,7 +461,7 @@ func test_abate_avisa_se_o_inimigo_estava_marcado() -> void:
 
 # ------------------------------------------------------------------ Mama Zuri (Maldição)
 
-func _curse(h: Harness, e: Enemy, jumps: int = 3) -> void:
+func _curse(h: HeroHarness, e: Enemy, jumps: int = 3) -> void:
 	var zuri := h.tower_at("zuri", 12.0)
 	var fx := h.effect(zuri)
 	Status.apply_curse(e, {"percent": fx["sharePercent"], "spread": fx["spread"], "radius": fx["radius"]}, 180, jumps, zuri.id)

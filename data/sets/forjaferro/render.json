@@ -1,0 +1,17 @@
+{
+  "towers": {
+    "classColors": {
+      "forjaferro": "#c27c2c"
+    },
+    "effectColors": {
+      "bolt": "#d9a441",
+      "vapora": "#e8e8e8",
+      "caldeira": "#b5651d",
+      "tic": "#9fb3c8",
+      "greta": "#e0703c",
+      "volta": "#7fd7ff",
+      "engrena": "#8a5cd6",
+      "ferro": "#6c7a89"
+    }
+  }
+}

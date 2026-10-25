@@ -49,8 +49,11 @@ static func end_wave(ctx: TickContext, economy: EconomyData, towers: TowerData, 
 	Gold.earn_gold(state, early_bonus)
 	var loot: int = state.pending_loot
 	state.pending_loot = 0
+	# O que vale "até o fim da onda" recomeça: teto do Saque, bônus do Acólito e almas da Cripta.
 	for tower: Tower in state.towers:
 		tower.loot_count = 0
+		tower.wave_buff_percent = 0.0
+	state.souls = 0
 	Gold.earn_gold(state, loot)
 	var chest := ClassBonuses.wave_end_gold(ClassData.game_data(), state)
 	Gold.earn_gold(state, chest)

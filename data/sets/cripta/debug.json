@@ -1,0 +1,12 @@
+{
+  "chainScenario": {
+    "name": "Cadeia (Cripta)",
+    "towerTypes": ["acolito", "morn", "nyx", "vex"],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 da Cripta)",
+    "towerTypes": ["morn", "nyx", "acolito", "ossos", "vex", "agatha", "grim", "lich"],
+    "towerLayout": "clustered"
+  }
+}

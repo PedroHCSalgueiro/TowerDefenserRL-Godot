@@ -1,0 +1,166 @@
+{
+  "types": {
+    "morn": {
+      "name": "Morn, o Ceifador",
+      "rarity": "common",
+      "classes": ["guardian", "cripta"],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 2.5,
+      "projectileSpeed": 8,
+      "shot": { "kind": "area", "radius": 0.75 },
+      "targetMode": "first",
+      "trigger": {
+        "when": "enemyDiesInRange",
+        "do": "explosion",
+        "stars": [
+          { "radius": 1, "damagePercent": 100 },
+          { "radius": 1.3, "damagePercent": 130 },
+          { "radius": 1.3, "damagePercent": 130, "killWeight": 2 }
+        ]
+      }
+    },
+    "nyx": {
+      "name": "Nyx Espectral",
+      "rarity": "common",
+      "classes": ["shooter", "cripta"],
+      "damage": 7,
+      "shotsPerSecond": 1.3,
+      "range": 4,
+      "projectileSpeed": 10,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "onHit": { "pierce": { "targets": 1, "radius": 1 } },
+      "trigger": {
+        "when": "ownKill",
+        "do": "markNext",
+        "stars": [
+          {},
+          { "attackDamagePercent": 125 },
+          { "attackDamagePercent": 150 }
+        ]
+      }
+    },
+    "acolito": {
+      "name": "Acólito Sombrio",
+      "rarity": "common",
+      "classes": ["support", "cripta"],
+      "damage": 3,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "neighborKills",
+        "do": "empowerKiller",
+        "stars": [
+          { "percent": 5, "maxPercent": 50 },
+          { "percent": 7, "maxPercent": 70, "attackDamagePercent": 125 },
+          { "percent": 10, "maxPercent": 100, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "ossos": {
+      "name": "Golem de Ossos",
+      "rarity": "uncommon",
+      "classes": ["artillerist", "cripta"],
+      "damage": 8,
+      "shotsPerSecond": 0.7,
+      "range": 3,
+      "projectileSpeed": 5,
+      "shot": { "kind": "area", "radius": 1 },
+      "targetMode": "first",
+      "soulRadius": { "percentPer10": 10, "maxPercent": 50 },
+      "trigger": {
+        "when": "everyNShots",
+        "do": "empoweredShot",
+        "stars": [
+          { "shots": 4, "radiusMultiplier": 1.5, "damagePercent": 150 },
+          { "shots": 4, "radiusMultiplier": 1.5, "damagePercent": 200, "attackDamagePercent": 125 },
+          { "shots": 3, "radiusMultiplier": 1.75, "damagePercent": 200, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "vex": {
+      "name": "Vex, o Necromante",
+      "rarity": "uncommon",
+      "classes": ["summoner", "cripta"],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNKillsInRange",
+        "do": "skeleton",
+        "stars": [
+          { "kills": 5, "damagePercent": 300 },
+          { "kills": 4, "damagePercent": 350, "attackDamagePercent": 125 },
+          { "kills": 3, "damagePercent": 400, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "agatha": {
+      "name": "Agatha da Peste",
+      "rarity": "uncommon",
+      "classes": ["controller", "cripta"],
+      "damage": 5,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 7,
+      "shot": { "kind": "area", "radius": 0.75 },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "plagueCloud",
+        "stars": [
+          { "seconds": 8, "radius": 1.25, "cloudSeconds": 4, "slowPercent": 25, "slowCap": 50, "poisonPercent": 40, "poisonSeconds": 3 },
+          { "seconds": 7, "radius": 1.25, "cloudSeconds": 4, "slowPercent": 25, "slowCap": 50, "poisonPercent": 50, "poisonSeconds": 3, "attackDamagePercent": 125 },
+          { "seconds": 6, "radius": 1.5, "cloudSeconds": 4, "slowPercent": 30, "slowCap": 50, "poisonPercent": 60, "poisonSeconds": 3, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "grim": {
+      "name": "Grim, o Carrasco",
+      "rarity": "rare",
+      "classes": ["hunter", "cripta"],
+      "damage": 8,
+      "shotsPerSecond": 0.7,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "onFire",
+        "do": "execute",
+        "stars": [
+          { "hpPercent": 15, "killWeight": 2, "bossMaxHpPercent": 3 },
+          { "hpPercent": 25, "killWeight": 2, "bossMaxHpPercent": 5 },
+          { "hpPercent": 30, "killWeight": 2, "bossMaxHpPercent": 8, "explodeRadius": 1, "explodeDamagePercent": 100 }
+        ]
+      }
+    },
+    "lich": {
+      "name": "Lich Morvath",
+      "rarity": "rare",
+      "classes": ["mage", "cripta"],
+      "damage": 9,
+      "shotsPerSecond": 0.8,
+      "range": 3.5,
+      "projectileSpeed": 9,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNRegionKills",
+        "do": "pathBeam",
+        "stars": [
+          { "kills": 20, "region": "cripta", "damagePercent": 300 },
+          { "kills": 18, "region": "cripta", "damagePercent": 350, "attackDamagePercent": 125 },
+          { "kills": 15, "region": "cripta", "damagePercent": 400, "attackDamagePercent": 125 }
+        ]
+      }
+    }
+  }
+}

@@ -61,15 +61,71 @@ static func attack_speed_percent(data: ClassData, state: Object, type: TowerData
 
 
 ## Região: multiplicador do dano da torre (ataque normal e efeitos de gatilho), com o mesmo "dobra com vizinhos".
+## Cripta: +% a cada 10 almas da onda (`RunState.souls`), até o teto do nível.
 static func damage_multiplier(data: ClassData, state: Object, type: TowerData.TowerType, tower: Tower) -> float:
 	if not data.has_damage_bonus:
 		return 1.0
 	var mult := 1.0
 	for id in type.classes:
 		var level := active_level(data, state, id)
-		if level != null and level.damage_percent > 0.0:
+		if level == null:
+			continue
+		if level.damage_percent > 0.0:
 			mult *= 1.0 + (level.damage_percent * _doubling(level, state, tower, id)) / 100.0
+		if level.soul_damage_percent > 0.0 and "souls" in state:
+			var tens := floorf(float(state.souls) / 10.0)
+			mult *= 1.0 + minf(level.soul_damage_max_percent, level.soul_damage_percent * tens) / 100.0
 	return mult
+
+
+## Forjaferro: eco das habilidades da torre: {"every": int, "chance": float} (0 e 0 = sem eco). Com chance,
+## a contagem não vale.
+static func echo(data: ClassData, state: Object, type: TowerData.TowerType) -> Dictionary:
+	var every := 0
+	var chance := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			chance = maxf(chance, level.echo_chance_percent)
+			if level.echo_every > 0:
+				every = level.echo_every if every == 0 else mini(every, level.echo_every)
+	return {"every": every, "chance": chance}
+
+
+## Panteão: fração da armadura (0 a 1) que a torre ignora.
+static func armor_pierce(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
+	var percent := 0.0
+	for id in type.classes:
+		var level := active_level(data, state, id)
+		if level != null:
+			percent = maxf(percent, level.armor_pierce_percent)
+	return percent / 100.0
+
+
+## Cripta: explosão de quem morre, {"percent": % da vida máxima do morto, "radius": casas} (percent 0 = nenhuma).
+static func death_blast(data: ClassData, state: Object) -> Dictionary:
+	var out := {"percent": 0.0, "radius": 0.0}
+	for level in _active_levels(data, state):
+		if level.death_blast_percent > out["percent"]:
+			out = {"percent": level.death_blast_percent, "radius": level.death_blast_radius}
+	return out
+
+
+## Cripta: esqueleto aliado de quem morre, {"chance": %, "damage": % da vida máxima do morto} (chance 0 = nenhum).
+static func skeleton_rise(data: ClassData, state: Object) -> Dictionary:
+	var out := {"chance": 0.0, "damage": 0.0}
+	for level in _active_levels(data, state):
+		if level.skeleton_chance_percent > out["chance"]:
+			out = {"chance": level.skeleton_chance_percent, "damage": level.skeleton_damage_percent}
+	return out
+
+
+## Panteão: quantos inimigos um deus destrói antes do núcleo, por onda.
+static func nexus_saves(data: ClassData, state: Object) -> int:
+	var saves := 0
+	for level in _active_levels(data, state):
+		saves = maxi(saves, level.nexus_saves_per_wave)
+	return saves
 
 
 static func _doubling(level: ClassData.ClassLevel, state: Object, tower: Tower, class_id: String) -> float:
@@ -83,17 +139,20 @@ static func _doubling(level: ClassData.ClassLevel, state: Object, tower: Tower, 
 	return 1.0
 
 
-## Atirador: alcance da torre agora (o dos dados mais o bônus da classe). Sem nenhum nível que dê alcance
-## nos dados, é sempre o dos dados.
-static func tower_range(data: ClassData, state: Object, type: TowerData.TowerType) -> float:
-	if data == null or not data.has_range_bonus:
-		return type.range
-	var bonus := 0.0
-	for id in type.classes:
-		var level := active_level(data, state, id)
-		if level != null:
-			bonus += level.range_bonus
-	return type.range + bonus
+## Alcance da torre agora: o dos dados, mais o bônus do Atirador e, com `tower`, as auras de alcance das
+## vizinhas (Sacerdotisa Amunet). Sem bônus de alcance nos dados, é sempre o dos dados (não custa nada).
+static func tower_range(data: ClassData, state: Object, type: TowerData.TowerType, tower: Tower = null) -> float:
+	var reach := type.range
+	if data != null and data.has_range_bonus:
+		for id in type.classes:
+			var level := active_level(data, state, id)
+			if level != null:
+				reach += level.range_bonus
+	if tower != null and state != null and "towers" in state:
+		var towers := TowerData.game_data()
+		if towers.has_range_auras:
+			reach += Auras.range_bonus(state, towers, tower)
+	return reach
 
 
 ## Soma de um campo % dos níveis ativos das classes da torre, como multiplicador (+25% = ×1,25).

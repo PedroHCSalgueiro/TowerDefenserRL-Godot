@@ -1,0 +1,12 @@
+{
+  "chainScenario": {
+    "name": "Cadeia (Forjaferro)",
+    "towerTypes": ["tic", "caldeira", "ferro", "volta"],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 do Forjaferro)",
+    "towerTypes": ["bolt", "vapora", "caldeira", "tic", "greta", "volta", "engrena", "ferro"],
+    "towerLayout": "clustered"
+  }
+}

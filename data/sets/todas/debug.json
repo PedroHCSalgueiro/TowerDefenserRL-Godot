@@ -1,0 +1,18 @@
+{
+  "chainScenario": {
+    "name": "Combos entre regiões (Selene, Tic, Ferro, Caldeira, Tritão)",
+    "towerTypes": ["selene", "tic", "ferro", "caldeira", "tritao", "isolde"],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (40 heróis)",
+    "towerTypes": [
+      "aldric", "lyra", "tomas", "brom", "selene", "wulf", "mabel", "isolde",
+      "bart", "ruby", "anchor", "morgana", "pena", "kraus", "zuri", "nerea",
+      "bolt", "vapora", "caldeira", "tic", "greta", "volta", "engrena", "ferro",
+      "morn", "nyx", "acolito", "ossos", "vex", "agatha", "grim", "lich",
+      "dorian", "iliria", "amunet", "ciclope", "pitia", "sigrun", "tritao", "kallia"
+    ],
+    "towerLayout": "clustered"
+  }
+}

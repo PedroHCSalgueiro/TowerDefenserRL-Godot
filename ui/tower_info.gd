@@ -62,6 +62,8 @@ static func _when_text(when: Dictionary) -> String:
 			return "A cada %s s" % fmt(when["seconds"])
 		"ownKill":
 			return "Quando abate um inimigo Marcado" if when["markedOnly"] else "Quando abate um inimigo"
+		"everyNRegionKills":
+			return "A cada %s abates de heróis da região (os dele não contam)" % fmt(when["kills"])
 	return ""
 
 
@@ -128,7 +130,31 @@ static func _effect_text(effect: Dictionary) -> String:
 					fmt(effect["seconds"]), fmt(effect["sharePercent"]), fmt(effect["spread"]),
 					_plural(effect["jumps"], "salto", "saltos")]
 		"stunFront":
-			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["seconds"])]
+			return "atordoa %s mais à frente da fila por %s s" % [_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["stunSeconds"])]
+		"sentinel":
+			var where := "invoca um grifo sobre ela" if effect["onTower"] else "monta uma torreta numa casa vizinha livre"
+			var air := " (×%s em voadores, que ele mira primeiro)" % fmt(effect["airMultiplier"]) if effect["airMultiplier"] > 1.0 else ""
+			return "%s por %s s: %s tiros/s com %s%% do dano, alcance %s%s" % [where, fmt(effect["lifeSeconds"]),
+					fmt(effect["shotsPerSecond"]), fmt(effect["damagePercent"]), fmt(effect["range"]), air]
+		"magnetPull":
+			return "puxa os inimigos no alcance para o meio do caminho e os atordoa por %s s (chefão não é puxado, elite anda no máximo 1 casa)" % fmt(effect["stunSeconds"])
+		"markNext":
+			return "o próximo ataque deixa o alvo Marcado"
+		"empowerKiller":
+			return "a vizinha que abateu ganha +%s%% de dano até o fim da onda (até +%s%%)" % [fmt(effect["percent"]), fmt(effect["maxPercent"])]
+		"skeleton":
+			return "ergue um esqueleto aliado que anda contra a horda e explode no primeiro inimigo (%s%% do dano)" % fmt(effect["damagePercent"])
+		"plagueCloud":
+			return "solta uma nuvem de peste por %s s onde há mais inimigos: Lento (%s%%) e Envenenado (%s%% do dano por segundo)" % [
+					fmt(effect["cloudSeconds"]), fmt(effect["slowPercent"]), fmt(effect["poisonPercent"])]
+		"pathBeam":
+			return "solta um raio no caminho inteiro: todo inimigo do mapa leva %s%% do dano" % fmt(effect["damagePercent"])
+		"crater":
+			return "lança uma rocha (área de raio %s, %s%% do dano) que deixa uma cratera: Lento (%s%%) por %s s" % [
+					fmt(effect["radius"]), fmt(effect["damagePercent"]), fmt(effect["slowPercent"]), fmt(effect["seconds"])]
+		"strikes":
+			return "raios caem nos %s mais à frente (%s%% do dano; os Lentos levam ×%s)" % [
+					_plural(effect["count"], "inimigo", "inimigos"), fmt(effect["damagePercent"]), fmt(effect["slowedMultiplier"])]
 		"trap":
 			return "põe uma armadilha de urso no caminho (até %s; prende por %s s e causa %s%% do dano por segundo)" % [
 					fmt(effect["maxTraps"]), fmt(effect["holdSeconds"]), fmt(effect["damagePercent"])]
@@ -184,6 +210,8 @@ static func describe_tower(type: TowerData.TowerType, star: int, classes: ClassD
 		parts.append(RARITY_LABELS[type.rarity])
 	info.subtitle = " · ".join(parts)
 	var damage := (type.damage * (def.attack_damage_percent if def != null else 100.0)) / 100.0
+	if def == null and not type.passive.is_empty():
+		damage = (type.damage * float(type.passive["stars"][mini(s, type.passive["stars"].size()) - 1]["attackDamagePercent"])) / 100.0
 	var area := ", área de raio %s" % fmt(type.shot["radius"]) if type.shot["kind"] == "area" else ""
 	if type.attacks and type.shot["kind"] == "trap":
 		info.attack = "Estrepes no caminho: dano %s · %s/s · alcance %s · até %s no chão" % [
@@ -193,7 +221,25 @@ static func describe_tower(type: TowerData.TowerType, star: int, classes: ClassD
 		info.attack = "Dano %s · %s/s · alcance %s%s" % [fmt(damage), _plural(type.shots_per_second, "tiro", "tiros"), fmt(type.range), area]
 	else:
 		info.attack = "Não ataca por conta própria"
+	if type.on_hit.has("pierce"):
+		info.attack += " · atravessa %s" % _plural(type.on_hit["pierce"]["targets"], "inimigo", "inimigos")
 	info.summary = tower_summary(type_id) if type_id != "" else ""
 	if def != null:
 		info.trigger = "%s: %s." % [_when_text(def.when), _effect_text(def.effect)]
+	elif not type.passive.is_empty():
+		var p: Dictionary = type.passive["stars"][mini(s, type.passive["stars"].size()) - 1]
+		if type.passive["kind"] == "phalanx":
+			var class_name_text: String = classes.classes[p["class"]].name if classes.classes.has(p["class"]) else p["class"]
+			info.trigger = "Passiva (Falange): +%s%% de dano para cada %s encostado." % [fmt(p["percent"]), class_name_text]
+		else:
+			info.trigger = "Passiva (Julgamento): +%s%% de dano contra inimigos Marcados e chefões." % fmt(p["percent"])
+	elif not type.aura.is_empty():
+		var a: Dictionary = type.aura["stars"][mini(s, type.aura["stars"].size()) - 1]
+		var parts_aura: Array[String] = []
+		if a["rangeBonus"] > 0.0:
+			parts_aura.append("+%s de alcance" % fmt(a["rangeBonus"]))
+		if a["attackSpeedPercent"] > 0.0:
+			var region := " (+%s%% nos heróis da região)" % fmt(a["regionPercent"]) if a["regionPercent"] > 0.0 else ""
+			parts_aura.append("+%s%% de velocidade de ataque%s" % [fmt(a["attackSpeedPercent"]), region])
+		info.trigger = "Aura: as torres encostadas ganham %s." % " e ".join(parts_aura)
 	return info

@@ -5,10 +5,19 @@ extends RefCounted
 ## (porte de `stars.ts`).
 
 
-## Estrelas que o tipo tem em dados (1 se não tem gatilho).
+## Estrelas que o tipo tem em dados (1 se não tem gatilho, aura nem passiva).
 static func max_stars(type: TowerData.TowerType) -> int:
 	var from_trigger := type.trigger.stars.size() if type.trigger != null else 1
-	return maxi(from_trigger, type.aura["stars"].size() if not type.aura.is_empty() else 1)
+	var from_passive: int = type.passive["stars"].size() if not type.passive.is_empty() else 1
+	return maxi(maxi(from_trigger, from_passive), type.aura["stars"].size() if not type.aura.is_empty() else 1)
+
+
+## Os números da passiva na estrela da torre ({} = sem passiva).
+static func passive_star(type: TowerData.TowerType, tower: Tower) -> Dictionary:
+	if type.passive.is_empty():
+		return {}
+	var stars: Array = type.passive["stars"]
+	return stars[mini(clamp_star(type, tower.star), stars.size()) - 1]
 
 
 ## Estrela pedida, presa entre ★1 e a última que o tipo tem.
@@ -29,4 +38,8 @@ static func tower_damage(type: TowerData.TowerType, tower: Tower) -> float:
 	var star := tower_star(type, tower) if type.trigger != null else null
 	if star != null and star.attack_damage_percent != 100.0:
 		return (type.damage * star.attack_damage_percent) / 100.0
+	if star == null and not type.passive.is_empty():
+		var percent: float = passive_star(type, tower)["attackDamagePercent"]
+		if percent != 100.0:
+			return (type.damage * percent) / 100.0
 	return type.damage

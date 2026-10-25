@@ -49,6 +49,25 @@ class ClassLevel:
 	var summon_damage_percent := 0.0
 	## Suporte: % a mais na força da aura das torres da classe.
 	var aura_bonus_percent := 0.0
+	## Região (Forjaferro): a cada `echo_every` habilidades das torres da classe, a seguinte dispara 2 vezes;
+	## com `echo_chance_percent`, cada habilidade tem essa chance de disparar 2 vezes (no lugar da contagem).
+	var echo_every := 0
+	var echo_chance_percent := 0.0
+	## Região (Cripta Cinzenta): +`soul_damage_percent`% de dano a cada 10 almas da onda (até
+	## `soul_damage_max_percent`%), nas torres da classe.
+	var soul_damage_percent := 0.0
+	var soul_damage_max_percent := 0.0
+	## Região (Cripta): todo inimigo que morre explode (`death_blast_percent`% da vida máxima dele, raio
+	## `death_blast_radius`); `skeleton_chance_percent`% dos mortos voltam como esqueleto aliado, com
+	## `skeleton_damage_percent`% da vida máxima do morto na explosão. Valem para a run inteira.
+	var death_blast_percent := 0.0
+	var death_blast_radius := 0.0
+	var skeleton_chance_percent := 0.0
+	var skeleton_damage_percent := 0.0
+	## Região (Panteão): % da armadura que as torres da classe ignoram.
+	var armor_pierce_percent := 0.0
+	## Região (Panteão): inimigos que um deus destrói antes de acertar o núcleo, por onda (vale para a run).
+	var nexus_saves_per_wave := 0
 	## Região (Costa Rubra): ouro a mais no teto dos juros; baú de ouro no fim de cada onda; vagas a mais na loja.
 	var interest_cap_bonus := 0
 	var wave_end_gold := 0
@@ -65,7 +84,9 @@ const LEVEL_KEYS := ["count", "text", "areaRadiusMultiplier", "areaDamageMultipl
 		"attackSpeedPercent", "damagePercent", "doubleWithNeighbors", "slowBonusPercent", "pushBonusCells",
 		"nexusDamageReductionPercent", "markDamagePercent", "interestCapBonus", "waveEndGold", "shopExtraSlots",
 		"rangeBonus", "statusDurationPercent", "afflictedDamagePercent", "summonDurationPercent", "summonDamagePercent",
-		"auraBonusPercent"]
+		"auraBonusPercent", "echoEvery", "echoChancePercent", "soulDamagePercent", "soulDamageMaxPercent",
+		"deathBlastPercent", "deathBlastRadius", "skeletonChancePercent", "skeletonDamagePercent", "armorPiercePercent",
+		"nexusSavesPerWave"]
 
 ## Mecânica: a contagem de um "a cada N" nunca cai abaixo disto.
 var min_trigger_count: int
@@ -77,6 +98,8 @@ var has_attack_speed_bonus := false
 var has_damage_bonus := false
 ## Algum nível dá alcance (Atirador)? Sem isso, o alcance é sempre o dos dados (a busca de alvo não paga nada).
 var has_range_bonus := false
+## Algum nível fura armadura (Panteão)? Sem isso, o dano não procura a torre de origem.
+var has_armor_pierce := false
 ## Ids das classes, na ordem do arquivo.
 var ids: Array[String] = []
 
@@ -134,8 +157,9 @@ static func load_data(raw: Variant) -> ClassData:
 		data.ids.append(id)
 		for level: ClassLevel in tower_class.levels:
 			data.has_attack_speed_bonus = data.has_attack_speed_bonus or level.attack_speed_percent > 0.0
-			data.has_damage_bonus = data.has_damage_bonus or level.damage_percent > 0.0
+			data.has_damage_bonus = data.has_damage_bonus or level.damage_percent > 0.0 or level.soul_damage_percent > 0.0
 			data.has_range_bonus = data.has_range_bonus or level.range_bonus > 0.0
+			data.has_armor_pierce = data.has_armor_pierce or level.armor_pierce_percent > 0.0
 	return data
 
 
@@ -225,10 +249,26 @@ static func _parse_level(class_id: String, index: int, raw: Variant) -> ClassLev
 	level.summon_duration_percent = _optional(where, raw, "summonDurationPercent", 0.0, non_negative, "≥ 0")
 	level.summon_damage_percent = _optional(where, raw, "summonDamagePercent", 0.0, non_negative, "≥ 0")
 	level.aura_bonus_percent = _optional(where, raw, "auraBonusPercent", 0.0, non_negative, "≥ 0")
+	var echo_every := _optional(where, raw, "echoEvery", 0.0, whole, "inteiro ≥ 0")
+	var percent_0_100 := func(v: float) -> bool: return v >= 0.0 and v <= 100.0
+	level.echo_chance_percent = _optional(where, raw, "echoChancePercent", 0.0, percent_0_100, "de 0 a 100")
+	level.soul_damage_percent = _optional(where, raw, "soulDamagePercent", 0.0, non_negative, "≥ 0")
+	level.soul_damage_max_percent = _optional(where, raw, "soulDamageMaxPercent", 0.0, non_negative, "≥ 0")
+	level.death_blast_percent = _optional(where, raw, "deathBlastPercent", 0.0, non_negative, "≥ 0")
+	level.death_blast_radius = _optional(where, raw, "deathBlastRadius", 0.0, non_negative, "≥ 0")
+	level.skeleton_chance_percent = _optional(where, raw, "skeletonChancePercent", 0.0, percent_0_100, "de 0 a 100")
+	level.skeleton_damage_percent = _optional(where, raw, "skeletonDamagePercent", 0.0, non_negative, "≥ 0")
+	level.armor_pierce_percent = _optional(where, raw, "armorPiercePercent", 0.0, percent_0_100, "de 0 a 100")
+	var saves := _optional(where, raw, "nexusSavesPerWave", 0.0, whole, "inteiro ≥ 0")
 	for value in [level.range_bonus, level.status_duration_percent, level.afflicted_damage_percent,
-			level.summon_duration_percent, level.summon_damage_percent, level.aura_bonus_percent]:
+			level.summon_duration_percent, level.summon_damage_percent, level.aura_bonus_percent, echo_every,
+			level.echo_chance_percent, level.soul_damage_percent, level.soul_damage_max_percent, level.death_blast_percent,
+			level.death_blast_radius, level.skeleton_chance_percent, level.skeleton_damage_percent,
+			level.armor_pierce_percent, saves]:
 		if is_nan(value):
 			return null
+	level.echo_every = int(echo_every)
+	level.nexus_saves_per_wave = int(saves)
 	var interest_cap := _optional(where, raw, "interestCapBonus", 0.0, whole, "inteiro ≥ 0")
 	var wave_end_gold := _optional(where, raw, "waveEndGold", 0.0, whole, "inteiro ≥ 0")
 	var shop_slots := _optional(where, raw, "shopExtraSlots", 0.0, whole, "inteiro ≥ 0")

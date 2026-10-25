@@ -20,6 +20,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"slowPercent": e.slow_percent, "slowTicks": e.slow_ticks, "stunTicks": e.stun_ticks,
 			"bleedDamage": e.bleed_damage, "bleedTicks": e.bleed_ticks, "bleedSource": e.bleed_source,
 			"marks": _marks_to_list(e.marks), "curse": e.curse.duplicate(),
+			"poisonDamage": e.poison_damage, "poisonTicks": e.poison_ticks, "poisonSource": e.poison_source,
 		})
 	var projectiles := []
 	for p in state.projectiles.slots:
@@ -28,7 +29,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"originTowerId": p.origin_tower_id, "targetId": p.target_id, "targetSlot": p.target_slot,
 			"targetX": p.target_x, "targetY": p.target_y, "retargeted": p.retargeted, "damage": p.damage,
 			"areaRadius": p.area_radius, "statusType": p.status_type, "speed": p.speed, "x": p.x, "y": p.y, "prevX": p.prev_x, "prevY": p.prev_y,
-			"curse": p.curse.duplicate(),
+			"curse": p.curse.duplicate(), "forceMark": p.force_mark,
 		})
 	var towers := []
 	for t: Tower in state.towers:
@@ -38,12 +39,12 @@ static func to_dict(state: RunState) -> Dictionary:
 			"invested": t.invested,
 			"lastEffect": null if t.last_effect == null else {"effect": t.last_effect.effect, "seq": t.last_effect.seq},
 			"doubleShot": t.double_shot, "followupTicks": t.followup_ticks, "curseNext": t.curse_next.duplicate(),
-			"lootCount": t.loot_count,
+			"lootCount": t.loot_count, "markNext": t.mark_next, "waveBuffPercent": t.wave_buff_percent,
 		})
 	var traps := []
 	for trap: Trap in state.traps:
 		traps.append({"id": trap.id, "ownerId": trap.owner_id, "kind": trap.kind, "x": trap.x, "y": trap.y,
-				"damage": trap.damage, "holdTicks": trap.hold_ticks, "radius": trap.radius})
+				"damage": trap.damage, "holdTicks": trap.hold_ticks, "radius": trap.radius, "params": trap.params.duplicate()})
 	var queue := []
 	for q: TriggerState.PendingTrigger in state.triggers.queue:
 		queue.append({
@@ -90,6 +91,9 @@ static func to_dict(state: RunState) -> Dictionary:
 		"classes": classes,
 		"gold": state.gold,
 		"pendingLoot": state.pending_loot,
+		"souls": state.souls,
+		"echoCounter": state.echo_counter,
+		"godSaveWave": state.god_save_wave,
 		"reportedGold": state.reported_gold,
 		"wave": state.wave,
 		"waves": {"active": active_waves},
@@ -134,7 +138,8 @@ static func _has_all(d: Variant, keys: Array) -> bool:
 
 ## Restaura o estado. `map`: o mapa da run (as rotas dos inimigos são refeitas dele). Inválido:
 ## push_error e null. Saves de versões antigas que ainda abrem (`RunState.OLDEST_VERSION`) voltam com os
-## campos que não existiam vazios (o save 16 não tem marcas, Maldição, tiro duplo nem ouro guardado).
+## campos que não existiam vazios (o save 16 não tem marcas, Maldição, tiro duplo nem ouro guardado; o 17
+## não tem Envenenado, parâmetros das invocações, almas, eco nem o deus do núcleo).
 static func from_dict(d: Variant, map: SimMap) -> RunState:
 	if not (d is Dictionary):
 		return _fail("não é um objeto")
@@ -187,6 +192,9 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		for pair in e.get("marks", []):
 			enemy.marks[int(pair[0])] = int(pair[1])
 		enemy.curse = e.get("curse", {})
+		enemy.poison_damage = float(e.get("poisonDamage", 0.0))
+		enemy.poison_ticks = e.get("poisonTicks", 0)
+		enemy.poison_source = e.get("poisonSource")
 		if enemy.active:
 			# Caches de desempenho: refeitos da rota do tipo.
 			var type := enemy_data.get_type(enemy.type)
@@ -219,6 +227,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		proj.area_radius = float(p["areaRadius"])
 		proj.status_type = p["statusType"]
 		proj.curse = p.get("curse", {})
+		proj.force_mark = p.get("forceMark", false)
 		proj.speed = float(p["speed"])
 		proj.x = float(p["x"])
 		proj.y = float(p["y"])
@@ -245,6 +254,8 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		tower.followup_ticks = t.get("followupTicks", 0)
 		tower.curse_next = t.get("curseNext", {})
 		tower.loot_count = t.get("lootCount", 0)
+		tower.mark_next = t.get("markNext", false)
+		tower.wave_buff_percent = float(t.get("waveBuffPercent", 0.0))
 		state.towers.append(tower)
 
 	for t: Dictionary in d.get("traps", []):
@@ -257,6 +268,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		trap.damage = float(t["damage"])
 		trap.hold_ticks = t["holdTicks"]
 		trap.radius = float(t["radius"])
+		trap.params = t.get("params", {})
 		state.traps.append(trap)
 
 	var tr: Dictionary = d["triggers"]
@@ -298,6 +310,9 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 
 	state.gold = d["gold"]
 	state.pending_loot = d.get("pendingLoot", 0)
+	state.souls = d.get("souls", 0)
+	state.echo_counter = d.get("echoCounter", 0)
+	state.god_save_wave = d.get("godSaveWave", -1)
 	state.reported_gold = d["reportedGold"]
 	state.wave = d["wave"]
 	for w: Dictionary in d["waves"]["active"]:

@@ -31,6 +31,11 @@ static func _flag(p_name: String) -> Dictionary:
 	return {"name": p_name, "kind": "flag", "fallback": false}
 
 
+## Parâmetro de texto (um id, como o de uma região).
+static func _text(p_name: String) -> Dictionary:
+	return {"name": p_name, "kind": "text", "fallback": null}
+
+
 static var WHEN_PARAMS := {
 	## Completa N tiros (normais ou de ativação).
 	"everyNShots": [_count("shots")],
@@ -48,6 +53,8 @@ static var WHEN_PARAMS := {
 	"everyNSeconds": [_positive("seconds")],
 	## A própria torre abate um inimigo (abate duplo conta 1). `markedOnly`: só se ele estava Marcado.
 	"ownKill": [_flag("markedOnly")],
+	## Completa N abates de torres da região `region`, em qualquer lugar do mapa (Lich Morvath).
+	"everyNRegionKills": [_count("kills"), _text("region")],
 }
 
 ## Parâmetros de cada "o quê". Porcentagens de dano são do dano da torre.
@@ -75,8 +82,8 @@ static var DO_PARAMS := {
 			_positive("explodeRadius", null, 0), _positive("explodeDamagePercent", null, 0)],
 	## `powerPercent`: escala o dano do efeito copiado. `copies`: quantos efeitos copia.
 	"copyLast": [_positive("powerPercent", null, 100), _count("copies", 1)],
-	## Atordoa os `count` inimigos mais à frente da fila, no alcance, por `seconds`.
-	"stunFront": [_count("count"), _positive("seconds")],
+	## Atordoa os `count` inimigos mais à frente da fila, no alcance, por `stunSeconds` (Pítia).
+	"stunFront": [_count("count"), _positive("stunSeconds")],
 	## Tiro em área do alvo normal, com o raio ×`radiusMultiplier` e `damagePercent`% do dano.
 	"empoweredShot": [_positive("radiusMultiplier"), _positive("damagePercent")],
 	## Atordoa por `stunSeconds` os inimigos no alcance que já estão Lentos.
@@ -114,14 +121,46 @@ static var DO_PARAMS := {
 	## máximo `jumps` saltos).
 	"curseNext": [_positive("seconds"), _positive("sharePercent", 100), _count("spread"), _positive("radius"),
 			_count("jumps")],
+	## Invocação que atira (torreta do Bolt, grifo da Kallia): dura `lifeSeconds`, atira `shotsPerSecond` vezes por
+	## segundo em quem estiver a até `range` casas, com `damagePercent`% do dano da torre (×`airMultiplier` em
+	## voador; `preferAir`: mira voador primeiro). Fica numa casa vizinha livre da torre, ou em cima dela com
+	## `onTower`. No máximo `maxSummons` vivas por torre.
+	"sentinel": [_positive("lifeSeconds"), _positive("damagePercent"), _positive("shotsPerSecond"), _positive("range"),
+			_positive("airMultiplier", null, 1), _flag("preferAir"), _flag("onTower"), _count("maxSummons", 1)],
+	## Pulso magnético (Dra. Engrena): puxa os terrestres no alcance para o ponto do caminho mais perto da torre
+	## (regras do Empurrado: chefão não se move, elite no máximo o teto) e Atordoa todos por `stunSeconds`.
+	"magnetPull": [_positive("stunSeconds")],
+	## O próximo ataque marca o alvo (Nyx Espectral), mesmo a torre não sendo Caçadora.
+	"markNext": [],
+	## A vizinha que abateu ganha +`percent`% de dano até o fim da onda, até `maxPercent`% (Acólito Sombrio).
+	"empowerKiller": [_positive("percent"), _positive("maxPercent")],
+	## Ergue um esqueleto aliado no ponto do abate (Vex), com `damagePercent`% do dano da torre na explosão.
+	"skeleton": [_positive("damagePercent")],
+	## Nuvem de peste (Agatha): na casa do caminho com mais terrestres no alcance, uma zona de raio `radius`
+	## por `cloudSeconds` que deixa Lento e Envenenado (`poisonPercent`% do dano da torre por segundo).
+	"plagueCloud": [_positive("radius"), _positive("cloudSeconds"), _positive("slowPercent", 100), _positive("slowCap", 100),
+			_positive("poisonPercent"), _positive("poisonSeconds")],
+	## Raio que atravessa o caminho inteiro (Lich Morvath): `damagePercent`% do dano em todos os inimigos do mapa.
+	"pathBeam": [_positive("damagePercent")],
+	## Rocha que deixa cratera (Ciclope): área de raio `radius` com `damagePercent`% do dano no alvo normal e, no
+	## lugar, uma zona que deixa Lento por `seconds`.
+	"crater": [_positive("radius"), _positive("damagePercent"), _positive("slowPercent", 100), _positive("slowCap", 100),
+			_positive("seconds")],
+	## Raios em `count` inimigos mais à frente no alcance (Tritão), cada um com `damagePercent`% do dano;
+	## inimigo Lento leva ×`slowedMultiplier`.
+	"strikes": [_count("count"), _positive("damagePercent"), _positive("slowedMultiplier", null, 1)],
 }
 
 ## "O quê" que aplicam efeitos de estado: precisam do sistema de estados.
-const STATUS_EFFECTS := ["stunFront", "stunSlowed", "trap", "tide", "tentacle", "curseNext"]
+const STATUS_EFFECTS := ["stunFront", "stunSlowed", "trap", "tide", "tentacle", "curseNext", "magnetPull", "markNext",
+		"plagueCloud", "crater"]
+## "O quê" que põem invocações (`Trap`): precisam do sistema de armadilhas.
+const SUMMON_EFFECTS := ["trap", "tentacle", "sentinel", "skeleton", "plagueCloud", "crater"]
 ## "O quê" que só contam como visíveis na cadeia quando fazem alguma coisa (acertam alguém, guardam ouro):
 ## sem ninguém para atordoar, o gatilho não aparece na cadeia. Armar o próximo tiro não é visível.
 const LAZY_EFFECTS := ["stunFront", "stunSlowed", "trap", "tide", "tentacle", "curseNext", "bounceShot",
-		"anchorPush", "loot", "doubleShot"]
+		"anchorPush", "loot", "doubleShot", "sentinel", "magnetPull", "markNext", "empowerKiller", "skeleton",
+		"plagueCloud", "pathBeam", "crater", "strikes"]
 
 ## Parâmetro de estrela que vale para qualquer gatilho: multiplica o dano do ataque
 ## normal da torre (e, com ele, tudo que é % do dano dela).
@@ -165,6 +204,8 @@ static var EFFECT_KINDS: Array = DO_PARAMS.keys()
 static func _valid_param(spec: Dictionary, value: Variant) -> bool:
 	if spec["kind"] == "flag":
 		return typeof(value) == TYPE_BOOL
+	if spec["kind"] == "text":
+		return typeof(value) == TYPE_STRING and value != ""
 	if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:
 		return false
 	var f := float(value)
@@ -197,7 +238,9 @@ static func _pick(where: String, kind: String, specs: Array, raw: Dictionary) ->
 		var value: Variant = raw.get(p_name)
 		if not _valid_param(spec, value):
 			var rule := "verdadeiro ou falso"
-			if spec["kind"] == "count":
+			if spec["kind"] == "text":
+				rule = "um texto"
+			elif spec["kind"] == "count":
 				rule = "inteiro ≥ 1"
 			elif spec["kind"] == "positive":
 				rule = "> 0 e ≤ %s" % spec["max"] if spec.get("max") != null else "> 0"

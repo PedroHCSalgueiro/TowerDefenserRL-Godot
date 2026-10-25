@@ -16,6 +16,16 @@ var index: SpatialIndex = null
 ## postos pelo mesmo sistema; null e 0 fora da partida.
 var classes: ClassData = null
 var afflicted_damage_percent := 0.0
+## Bônus de região deste tick que o dano consulta (`Damage.damage_enemy`), postos pelo mesmo sistema:
+## Panteão: fração da armadura que cada torre ignora (id -> 0..1; vazio = nenhuma).
+var armor_pierce: Dictionary = {}
+## Cripta: explosão de quem morre ({"percent", "radius"}) e esqueleto aliado ({"chance", "damage"}).
+var death_blast: Dictionary = {}
+var skeleton_rise: Dictionary = {}
+## O que o esqueleto da região precisa para nascer: rotas, dados das torres e ticks por segundo.
+var routes: Dictionary = {}
+var towers: TowerData = null
+var ticks_per_second := 30.0
 
 var _bus: EventBus
 

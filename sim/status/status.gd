@@ -2,7 +2,8 @@ class_name Status
 extends RefCounted
 ## Efeitos de estado dos inimigos (Notion, "Efeitos de estado"): **Lento** (anda mais devagar,
 ## empilha até um teto), **Atordoado** (para por um instante), **Sangramento** (perde vida aos
-## poucos, sem armadura), **Marcado** (uma marca por Caçador; só os Caçadores tiram proveito),
+## poucos, sem armadura), **Envenenado** (igual, num campo separado), **Marcado** (uma marca por Caçador; só os
+## Caçadores tiram proveito),
 ## **Empurrado** (volta casas no caminho) e **Amaldiçoado** (divide o dano que recebe com os vizinhos e
 ## pula para eles ao morrer). Os campos ficam no `Enemy` (ticks que faltam); o movimento lê Lento e
 ## Atordoado, e o sistema de estados (`create_status_system`) conta o tempo e aplica o Sangramento.
@@ -28,6 +29,9 @@ static func clear(enemy: Enemy) -> void:
 	enemy.bleed_damage = 0.0
 	enemy.bleed_ticks = 0
 	enemy.bleed_source = null
+	enemy.poison_damage = 0.0
+	enemy.poison_ticks = 0
+	enemy.poison_source = null
 	if not enemy.marks.is_empty():
 		enemy.marks.clear()
 	if not enemy.curse.is_empty():
@@ -51,6 +55,33 @@ static func apply_bleed(enemy: Enemy, damage_per_tick: float, ticks: int, source
 		enemy.bleed_damage = damage_per_tick
 		enemy.bleed_source = source_id
 	enemy.bleed_ticks = maxi(enemy.bleed_ticks, ticks)
+
+
+## Envenenado: como o Sangramento (fica o mais forte e a duração renova), num campo separado.
+static func apply_poison(enemy: Enemy, damage_per_tick: float, ticks: int, source_id: Variant) -> void:
+	if enemy.poison_ticks == 0 or damage_per_tick >= enemy.poison_damage:
+		enemy.poison_damage = damage_per_tick
+		enemy.poison_source = source_id
+	enemy.poison_ticks = maxi(enemy.poison_ticks, ticks)
+
+
+## Move o inimigo para `target` casas da rota (para a frente ou para trás), com as regras do Empurrado: o
+## chefão não se move e o elite anda no máximo `eliteMaxCells`. Devolve quantas casas ele andou.
+static func move_to(enemy: Enemy, target: float, rules: Dictionary, routes: Dictionary, data: EnemyData) -> float:
+	if not enemy.active:
+		return 0.0
+	var type := enemy.type_data if enemy.type_data != null else data.get_type(enemy.type)
+	if type.boss and rules.get("bossImmune", true):
+		return 0.0
+	var delta := target - enemy.distance
+	if enemy.elite:
+		var cap := float(rules.get("eliteMaxCells", absf(delta)))
+		delta = clampf(delta, -cap, cap)
+	var route: Route = enemy.route if enemy.route != null else routes[type.movement]
+	enemy.distance = clampf(enemy.distance + delta, 0.0, route.length)
+	route.sample_into(enemy.distance, enemy)
+	enemy.seg = route.find_segment(enemy.distance)
+	return absf(delta)
 
 
 ## Marca do Caçador `tower_id` por `ticks`: acertar de novo renova (cada Caçador tem a sua marca).
@@ -157,6 +188,9 @@ static func apply_on_hit(ctx: TickContext, towers: TowerData, index: SpatialInde
 				int(projectile.curse["jumps"]), projectile.source_id)
 		ctx.emit({"type": "statusApplied", "tick": ctx.state.tick, "towerId": projectile.source_id,
 				"status": "curse", "count": 1})
+	# A flecha da Nyx depois de um abate marca o alvo, mesmo ela não sendo Caçadora.
+	if projectile.force_mark and not towers.statuses["mark"].is_empty():
+		apply_mark(enemy, projectile.source_id, seconds_to_ticks(towers.statuses["mark"]["seconds"], ticks_per_second))
 	var type: TowerData.TowerType = towers.types.get(projectile.status_type)
 	if type == null:
 		return
@@ -230,3 +264,11 @@ static func create_status_system(enemies: EnemyData) -> Callable:
 					enemy.bleed_damage = 0.0
 					enemy.bleed_source = null
 				Damage.damage_enemy(ctx, enemies, enemy, damage, source, bleed_options)
+			if enemy.poison_ticks > 0 and enemy.active:
+				enemy.poison_ticks -= 1
+				var poison := enemy.poison_damage
+				var poisoner: Variant = enemy.poison_source
+				if enemy.poison_ticks == 0:
+					enemy.poison_damage = 0.0
+					enemy.poison_source = null
+				Damage.damage_enemy(ctx, enemies, enemy, poison, poisoner, bleed_options)

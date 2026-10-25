@@ -28,6 +28,11 @@ var stun_ticks := 0
 var bleed_damage := 0.0
 var bleed_ticks := 0
 var bleed_source: Variant = null
+## Envenenado (nuvem de peste da Agatha): `poison_damage` por tick (sem armadura) por `poison_ticks`, creditado à
+## torre `poison_source`. Separado do Sangramento: os dois podem valer ao mesmo tempo.
+var poison_damage := 0.0
+var poison_ticks := 0
+var poison_source: Variant = null
 ## Marcado (Caçadores): id da torre -> ticks que faltam, uma marca por Caçador, na ordem em que foram postas.
 var marks: Dictionary = {}
 ## Amaldiçoado (Mama Zuri): vazio = não; senão {"ticks", "duration", "percent", "spread", "radius",

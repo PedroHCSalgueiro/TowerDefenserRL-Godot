@@ -56,6 +56,63 @@
         "Os 8 do Reino de Valcoroa",
         "Os 8 da Costa Rubra"
       ]
+    },
+    {
+      "id": "forjaferro",
+      "name": "Forjaferro",
+      "description": "Steampunk: pressão e sobrecarga. Habilidades que disparam duas vezes e torres que ativam as vizinhas.",
+      "layers": ["heroes", "forjaferro"],
+      "roster": [
+        "Bolt, o Mecânico",
+        "Vapora",
+        "Golem Caldeira",
+        "Tic, o Relojoeiro",
+        "Greta Morteirista",
+        "Volta, a Eletricista",
+        "Dra. Engrena",
+        "Ferro Balisteiro"
+      ]
+    },
+    {
+      "id": "cripta",
+      "name": "Cripta Cinzenta",
+      "description": "Fantasia sombria: morte e almas. Cada abate fortalece a cripta; os mortos explodem e voltam como esqueletos.",
+      "layers": ["heroes", "cripta"],
+      "roster": [
+        "Morn, o Ceifador",
+        "Nyx Espectral",
+        "Acólito Sombrio",
+        "Golem de Ossos",
+        "Vex, o Necromante",
+        "Agatha da Peste",
+        "Grim, o Carrasco",
+        "Lich Morvath"
+      ]
+    },
+    {
+      "id": "panteao",
+      "name": "Panteão",
+      "description": "Mitologia: poder divino contra os fortes. Ignora armadura e, completo, um deus protege o núcleo.",
+      "layers": ["heroes", "panteao"],
+      "roster": [
+        "Hoplita Dorian",
+        "Ilíria, a Arqueira",
+        "Sacerdotisa Amunet",
+        "Ciclope Forjador",
+        "Pítia, o Oráculo",
+        "Sigrun, a Valquíria",
+        "Tritão das Tempestades",
+        "Kallia, Domadora de Grifos"
+      ]
+    },
+    {
+      "id": "todas",
+      "name": "Todas as regiões",
+      "description": "Os 40 heróis das 5 regiões juntos: cinco de cada classe, todos os bônus de classe alcançáveis.",
+      "layers": ["heroes", "valcoroa", "costarubra", "forjaferro", "cripta", "panteao", "todas"],
+      "roster": [
+        "Reino de Valcoroa, Costa Rubra, Forjaferro, Cripta Cinzenta e Panteão"
+      ]
     }
   ]
 }

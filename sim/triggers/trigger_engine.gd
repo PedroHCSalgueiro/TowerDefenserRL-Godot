@@ -58,6 +58,8 @@ var classes: ClassData
 var scores: Dictionary
 ## Rotas do mapa por tipo de movimento (as armadilhas escolhem o ponto na rota terrestre).
 var routes: Dictionary
+## O mapa (a torreta do Bolt procura uma casa vizinha livre); null nos testes sem mapa.
+var map: SimMap = null
 ## Trava de ativação do tick (a dos dados ou a do bônus "Fluxo arcano").
 var activation_cooldown_ticks: int
 var unlimited_line_length: float
@@ -97,6 +99,7 @@ func _init(deps: Dictionary) -> void:
 	classes = deps["classes"] if deps.get("classes") != null else ClassData.game_data()
 	scores = deps["scores"]
 	routes = deps.get("routes", {})
+	map = deps.get("map")
 	_rules = towers.triggers
 	_ticks_per_second = deps["ticksPerSecond"]
 	activation_cooldown_ticks = _cooldown_ticks_for(_rules.activation_cooldown_seconds)
@@ -296,7 +299,7 @@ func _prepare(tick_ctx: TickContext) -> void:
 		var base_count := 0
 		if when["kind"] == "everyNShots":
 			base_count = when["shots"]
-		elif when["kind"] == "everyNKillsInRange":
+		elif when["kind"] == "everyNKillsInRange" or when["kind"] == "everyNRegionKills":
 			base_count = when["kills"]
 		var armed := Armed.new()
 		armed.tower = tower
@@ -309,7 +312,7 @@ func _prepare(tick_ctx: TickContext) -> void:
 		_armed.append(armed)
 		_armed_by_id[tower.id] = armed
 		if when["kind"] == "enemyDiesInRange" or when["kind"] == "everyNKillsInRange" or when["kind"] == "neighborKills" \
-				or when["kind"] == "ownKill":
+				or when["kind"] == "ownKill" or when["kind"] == "everyNRegionKills":
 			_kill_listeners.append(armed)
 
 
@@ -400,7 +403,7 @@ func _on_shot(tower_id: int, depth: int, tick_depth: int) -> void:
 func _in_range(armed: Armed, x: float, y: float) -> bool:
 	var dx := x - float(armed.tower.x)
 	var dy := y - float(armed.tower.y)
-	var reach := ClassBonuses.tower_range(classes, ctx.state, armed.type)
+	var reach := ClassBonuses.tower_range(classes, ctx.state, armed.type, armed.tower)
 	return dx * dx + dy * dy <= reach * reach
 
 
@@ -431,6 +434,16 @@ func _on_kill(event: Dictionary, depth: int, tick_depth: int) -> void:
 					_enqueue(armed, killer.id, weight, depth, tick_depth, true, event["x"], event["y"])
 			"ownKill":
 				if killer == armed.tower and (not when["markedOnly"] or event.get("marked", false)):
+					_enqueue(armed, killer.id, 1.0, depth, tick_depth, true, event["x"], event["y"])
+			"everyNRegionKills":
+				# Os abates do próprio tipo (o raio do Lich) não contam: sem isso, um raio que limpa o mapa
+				# carregaria o raio seguinte sozinho.
+				if killer_type == null or killer_type == armed.type or not killer_type.classes.has(when["region"]):
+					continue
+				var counting := armed.tower
+				counting.trigger_counter += 1.0
+				while counting.trigger_counter >= armed.count:
+					counting.trigger_counter -= armed.count
 					_enqueue(armed, killer.id, 1.0, depth, tick_depth, true, event["x"], event["y"])
 
 
@@ -482,6 +495,28 @@ func _execute(entry: TriggerState.PendingTrigger) -> void:
 		_state.next_seq += 1
 		if lazy:
 			_count_visible(event, entry)
+		_echo(armed, entry, own)
+
+
+## Eco do Forjaferro (bônus de região): com a contagem, a habilidade depois de `every` habilidades da região
+## dispara de novo; com a chance, cada habilidade sorteia (RNG da run). O eco roda como cópia (o raio em cadeia
+## sai na hora) e conta na cadeia. Emite `abilityEchoed`.
+func _echo(armed: Armed, entry: TriggerState.PendingTrigger, effect: Dictionary) -> void:
+	var echo := ClassBonuses.echo(classes, ctx.state, armed.type)
+	if echo["every"] == 0 and echo["chance"] == 0.0:
+		return
+	var state = ctx.state
+	if echo["chance"] > 0.0:
+		if ctx.rng.next_float() * 100.0 >= echo["chance"]:
+			return
+	else:
+		state.echo_counter += 1
+		if state.echo_counter <= echo["every"]:
+			return
+		state.echo_counter = 0
+	ctx.emit({"type": "abilityEchoed", "tick": state.tick, "towerId": armed.tower.id, "effect": effect["kind"]})
+	_fired(armed, entry, effect["kind"], true, null)
+	TriggerEffects.run_effect(self, armed.tower, armed.type, effect, entry, true)
 
 
 ## Registra um gatilho executado: evento e contadores. Devolve o evento, que pode virar visível

@@ -42,6 +42,10 @@ var followup_ticks := 0
 var curse_next: Dictionary = {}
 ## Ouro guardado por esta torre desde o fim da última onda (teto do Saque).
 var loot_count := 0
+## O próximo ataque marca o alvo (Nyx Espectral, depois de um abate).
+var mark_next := false
+## % de dano a mais até o fim da onda (Acólito Sombrio: cada abate perto dele soma).
+var wave_buff_percent := 0.0
 
 
 func _init(p_id: int = 0, p_type: String = "", cell: Vector2i = Vector2i.ZERO, p_star: int = 1) -> void:

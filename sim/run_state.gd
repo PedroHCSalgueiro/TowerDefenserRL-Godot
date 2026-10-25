@@ -6,9 +6,10 @@ extends RngHolder
 ## Convenções: propriedades em snake_case; comandos e eventos são Dictionaries com as chaves do
 ## Phaser (camelCase). `status`: "playing" | "lost" | "won".
 
-## 17: Costa Rubra (marcas, Maldição, tiro duplo, ouro guardado para o fim da onda). Um save 16 ainda
-## abre (os campos novos começam vazios; ver `RunStateIO.from_dict`).
-const VERSION := 17
+## 17: Costa Rubra (marcas, Maldição, tiro duplo, ouro guardado para o fim da onda). 18: Forjaferro, Cripta
+## Cinzenta e Panteão (Envenenado, invocações com parâmetros, almas, eco, deus do núcleo). Saves 16 e 17 ainda
+## abrem (os campos novos começam vazios; ver `RunStateIO.from_dict`).
+const VERSION := 18
 ## Versões de save que ainda abrem.
 const OLDEST_VERSION := 16
 
@@ -52,6 +53,12 @@ var gold: int
 ## Ouro guardado para o fim da onda (Saque do Capitão Pena e Recompensa do Kraus): entra no ouro quando
 ## a próxima onda fechar.
 var pending_loot := 0
+## Almas desde o fim da última onda (Cripta Cinzenta): cada inimigo morto é uma alma.
+var souls := 0
+## Eco do Forjaferro: habilidades contadas desde o último eco.
+var echo_counter := 0
+## Panteão: `wave` em que o deus já salvou o núcleo (-1 = ainda não salvou); um por onda.
+var god_save_wave := -1
 ## Último saldo informado em `goldChanged` (para emitir no máximo um por tick).
 var reported_gold: int
 ## Ondas encerradas até agora (a primeira a fechar é a 1).

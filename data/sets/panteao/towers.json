@@ -1,0 +1,164 @@
+{
+  "types": {
+    "dorian": {
+      "name": "Hoplita Dorian",
+      "rarity": "common",
+      "classes": ["guardian", "panteao"],
+      "damage": 10,
+      "shotsPerSecond": 1,
+      "range": 2.5,
+      "projectileSpeed": 8,
+      "shot": { "kind": "area", "radius": 0.75 },
+      "targetMode": "first",
+      "trigger": null,
+      "passive": {
+        "kind": "phalanx",
+        "stars": [
+          { "percent": 10, "class": "guardian" },
+          { "percent": 15, "class": "guardian", "attackDamagePercent": 125 },
+          { "percent": 20, "class": "guardian", "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "iliria": {
+      "name": "Ilíria, a Arqueira",
+      "rarity": "common",
+      "classes": ["shooter", "panteao"],
+      "damage": 6,
+      "shotsPerSecond": 1.4,
+      "range": 4,
+      "projectileSpeed": 10,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "multiShot",
+        "stars": [
+          { "shots": 4, "extraShots": 3, "spread": true },
+          { "shots": 4, "extraShots": 3, "spread": true, "attackDamagePercent": 125 },
+          { "shots": 3, "extraShots": 4, "spread": true, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "amunet": {
+      "name": "Sacerdotisa Amunet",
+      "rarity": "common",
+      "classes": ["support", "panteao"],
+      "damage": 3,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": null,
+      "aura": {
+        "region": "panteao",
+        "stars": [
+          { "rangeBonus": 1 },
+          { "rangeBonus": 1, "attackSpeedPercent": 10 },
+          { "rangeBonus": 1.5, "attackSpeedPercent": 15 }
+        ]
+      }
+    },
+    "ciclope": {
+      "name": "Ciclope Forjador",
+      "rarity": "uncommon",
+      "classes": ["artillerist", "panteao"],
+      "damage": 9,
+      "shotsPerSecond": 0.7,
+      "range": 3,
+      "projectileSpeed": 5,
+      "shot": { "kind": "area", "radius": 1 },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "crater",
+        "stars": [
+          { "shots": 4, "radius": 1.25, "damagePercent": 150, "slowPercent": 30, "slowCap": 50, "seconds": 4 },
+          { "shots": 4, "radius": 1.25, "damagePercent": 200, "slowPercent": 30, "slowCap": 50, "seconds": 4, "attackDamagePercent": 125 },
+          { "shots": 3, "radius": 1.5, "damagePercent": 200, "slowPercent": 40, "slowCap": 50, "seconds": 5, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "pitia": {
+      "name": "Pítia, o Oráculo",
+      "rarity": "uncommon",
+      "classes": ["controller", "panteao"],
+      "damage": 7,
+      "shotsPerSecond": 1,
+      "range": 3.5,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "stunFront",
+        "stars": [
+          { "seconds": 8, "count": 3, "stunSeconds": 1.5 },
+          { "seconds": 7, "count": 3, "stunSeconds": 1.5, "attackDamagePercent": 125 },
+          { "seconds": 6, "count": 4, "stunSeconds": 1.75, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "sigrun": {
+      "name": "Sigrun, a Valquíria",
+      "rarity": "uncommon",
+      "classes": ["hunter", "panteao"],
+      "damage": 12,
+      "shotsPerSecond": 0.6,
+      "range": 3.5,
+      "projectileSpeed": 10,
+      "shot": { "kind": "single" },
+      "targetMode": "strongest",
+      "trigger": null,
+      "passive": {
+        "kind": "judgment",
+        "stars": [
+          { "percent": 100 },
+          { "percent": 125, "attackDamagePercent": 125 },
+          { "percent": 150, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "tritao": {
+      "name": "Tritão das Tempestades",
+      "rarity": "rare",
+      "classes": ["mage", "panteao"],
+      "damage": 10,
+      "shotsPerSecond": 0.8,
+      "range": 3.5,
+      "projectileSpeed": 9,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "strikes",
+        "stars": [
+          { "shots": 5, "count": 5, "damagePercent": 150, "slowedMultiplier": 2 },
+          { "shots": 4, "count": 5, "damagePercent": 175, "slowedMultiplier": 2, "attackDamagePercent": 125 },
+          { "shots": 4, "count": 6, "damagePercent": 200, "slowedMultiplier": 2, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "kallia": {
+      "name": "Kallia, Domadora de Grifos",
+      "rarity": "rare",
+      "classes": ["summoner", "panteao"],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "sentinel",
+        "stars": [
+          { "seconds": 12, "lifeSeconds": 10, "damagePercent": 100, "shotsPerSecond": 1.5, "range": 4, "airMultiplier": 3, "preferAir": true, "onTower": true },
+          { "seconds": 11, "lifeSeconds": 10, "damagePercent": 125, "shotsPerSecond": 1.5, "range": 4, "airMultiplier": 3, "preferAir": true, "onTower": true, "attackDamagePercent": 125 },
+          { "seconds": 10, "lifeSeconds": 12, "damagePercent": 150, "shotsPerSecond": 2, "range": 4.5, "airMultiplier": 3, "preferAir": true, "onTower": true, "attackDamagePercent": 125 }
+        ]
+      }
+    }
+  }
+}

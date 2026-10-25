@@ -7,7 +7,7 @@ extends RefCounted
 ## vida do núcleo zerar, a run termina (`runLost` é emitido uma vez). O chefão que chega é derrota
 ## imediata, qualquer que seja a vida: o núcleo vai a 0. Com o núcleo invulnerável (debug), o
 ## inimigo (chefão inclusive) sai do mapa sem causar dano. O bônus do Guardião (nível 4) reduz o dano
-## de quem chega (não salva do chefão).
+## de quem chega (não salva do chefão). O do Panteão (nível 8) destrói o primeiro que chega em cada onda.
 static func create_nexus_contact_system(routes: Dictionary, data: EnemyData, classes: ClassData = null) -> Callable:
 	if classes == null:
 		classes = ClassData.game_data()
@@ -24,6 +24,14 @@ static func create_nexus_contact_system(routes: Dictionary, data: EnemyData, cla
 				continue
 			var type := data.get_type(enemy.type)
 			var invulnerable: bool = state.debug.nexus_invulnerable
+			# Panteão (nível 8): uma vez por onda, um deus destrói quem ia acertar o núcleo (chefão inclusive).
+			if not invulnerable and "god_save_wave" in state and state.god_save_wave != state.wave \
+					and ClassBonuses.nexus_saves(classes, state) > 0:
+				state.god_save_wave = state.wave
+				ctx.emit({"type": "godSaved", "tick": state.tick, "enemyId": enemy.id, "enemyType": enemy.type,
+						"x": enemy.x, "y": enemy.y})
+				Damage.damage_enemy(ctx, data, enemy, enemy.hp, null, {"ignoreArmor": true})
+				continue
 			var damage := 0.0
 			if not invulnerable:
 				damage = state.nexus.hp if type.boss else data.enemy_nexus_damage(type, enemy.elite)

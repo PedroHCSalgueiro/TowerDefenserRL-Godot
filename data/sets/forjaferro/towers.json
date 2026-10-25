@@ -1,0 +1,164 @@
+{
+  "types": {
+    "bolt": {
+      "name": "Bolt, o Mecânico",
+      "rarity": "common",
+      "classes": ["summoner", "forjaferro"],
+      "damage": 7,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "sentinel",
+        "stars": [
+          { "seconds": 12, "lifeSeconds": 10, "damagePercent": 80, "shotsPerSecond": 1.5, "range": 2.5 },
+          { "seconds": 11, "lifeSeconds": 10, "damagePercent": 100, "shotsPerSecond": 1.5, "range": 2.5, "attackDamagePercent": 125 },
+          { "seconds": 10, "lifeSeconds": 12, "damagePercent": 120, "shotsPerSecond": 2, "range": 3, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "vapora": {
+      "name": "Vapora",
+      "rarity": "common",
+      "classes": ["shooter", "forjaferro"],
+      "damage": 9,
+      "shotsPerSecond": 0.6,
+      "range": 5,
+      "projectileSpeed": 12,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "empoweredShot",
+        "stars": [
+          { "shots": 3, "radiusMultiplier": 1, "damagePercent": 100 },
+          { "shots": 3, "radiusMultiplier": 1, "damagePercent": 150, "attackDamagePercent": 125 },
+          { "shots": 2, "radiusMultiplier": 1, "damagePercent": 150, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "caldeira": {
+      "name": "Golem Caldeira",
+      "rarity": "common",
+      "classes": ["guardian", "forjaferro"],
+      "damage": 9,
+      "shotsPerSecond": 0.8,
+      "range": 2.5,
+      "projectileSpeed": 6,
+      "shot": { "kind": "area", "radius": 1 },
+      "targetMode": "first",
+      "trigger": {
+        "when": "onActivated",
+        "do": "tide",
+        "stars": [
+          { "damagePercent": 100, "slowPercent": 30, "slowCap": 50, "slowSeconds": 2 },
+          { "damagePercent": 125, "slowPercent": 30, "slowCap": 50, "slowSeconds": 2.5, "attackDamagePercent": 125 },
+          { "damagePercent": 150, "slowPercent": 40, "slowCap": 50, "slowSeconds": 3, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "tic": {
+      "name": "Tic, o Relojoeiro",
+      "rarity": "uncommon",
+      "classes": ["support", "forjaferro"],
+      "damage": 6,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNKillsInRange",
+        "do": "activateNeighbors",
+        "stars": [
+          { "kills": 10 },
+          { "kills": 8, "activatedDamagePercent": 150 },
+          { "kills": 5, "activatedDamagePercent": 200, "selfToo": true }
+        ]
+      }
+    },
+    "greta": {
+      "name": "Greta Morteirista",
+      "rarity": "uncommon",
+      "classes": ["artillerist", "forjaferro"],
+      "damage": 8,
+      "shotsPerSecond": 0.8,
+      "range": 3,
+      "projectileSpeed": 5,
+      "shot": { "kind": "area", "radius": 1 },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNShots",
+        "do": "multiShot",
+        "stars": [
+          { "shots": 5, "extraShots": 2 },
+          { "shots": 4, "extraShots": 2, "attackDamagePercent": 125 },
+          { "shots": 4, "extraShots": 3, "attackDamagePercent": 125, "spread": true }
+        ]
+      }
+    },
+    "volta": {
+      "name": "Volta, a Eletricista",
+      "rarity": "uncommon",
+      "classes": ["mage", "forjaferro"],
+      "damage": 10,
+      "shotsPerSecond": 0.5,
+      "range": 3.5,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "neighborKills",
+        "do": "chargeLightning",
+        "stars": [
+          { "charges": 3, "targets": 4, "jumpRadius": 2, "damagePercent": 100 },
+          { "charges": 3, "targets": 6, "jumpRadius": 2, "damagePercent": 130 },
+          { "charges": 2, "targets": 6, "jumpRadius": 2, "damagePercent": 130, "activateOnDischarge": true }
+        ]
+      }
+    },
+    "engrena": {
+      "name": "Dra. Engrena",
+      "rarity": "rare",
+      "classes": ["controller", "forjaferro"],
+      "damage": 8,
+      "shotsPerSecond": 1,
+      "range": 3,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "everyNSeconds",
+        "do": "magnetPull",
+        "stars": [
+          { "seconds": 8, "stunSeconds": 1 },
+          { "seconds": 7, "stunSeconds": 1.25, "attackDamagePercent": 125 },
+          { "seconds": 6, "stunSeconds": 1.5, "attackDamagePercent": 125 }
+        ]
+      }
+    },
+    "ferro": {
+      "name": "Ferro Balisteiro",
+      "rarity": "rare",
+      "classes": ["hunter", "forjaferro"],
+      "damage": 6,
+      "shotsPerSecond": 0.6,
+      "range": 4,
+      "projectileSpeed": 8,
+      "shot": { "kind": "single" },
+      "targetMode": "first",
+      "trigger": {
+        "when": "onActivated",
+        "do": "pierceLine",
+        "stars": [
+          { "halfWidth": 0.5, "damagePercent": 400 },
+          { "halfWidth": 0.6, "damagePercent": 600 },
+          { "halfWidth": 0.6, "damagePercent": 800, "unlimited": true }
+        ]
+      }
+    }
+  }
+}

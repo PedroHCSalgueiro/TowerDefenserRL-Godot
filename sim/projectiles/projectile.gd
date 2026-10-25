@@ -26,6 +26,8 @@ var damage := 0.0
 var status_type := ""
 ## Maldição que o tiro carrega (Mama Zuri), com os números de `Tower.curse_next`; {} = nenhuma.
 var curse: Dictionary = {}
+## O tiro marca o alvo mesmo sem a torre ser Caçadora (a flecha da Nyx depois de um abate).
+var force_mark := false
 ## Raio do tiro em área, em casas; 0 = tiro único.
 var area_radius := 0.0
 ## Velocidade em casas por segundo.

@@ -41,6 +41,13 @@ class TowerType:
 	var aura: Dictionary = {}
 	## Todo acerto dos tiros da torre deixa o alvo Marcado (a torre é da classe que marca: o Caçador).
 	var marks := false
+	## Passiva com números por estrela (vazio = nenhuma): {"kind": "phalanx" | "judgment", "stars": [...]}.
+	## "phalanx" (Hoplita Dorian): +`percent`% de dano por vizinha ortogonal da classe `class`.
+	## "judgment" (Sigrun): +`percent`% de dano contra inimigo Marcado ou chefão.
+	## Cada estrela pode trazer `attackDamagePercent`, como os gatilhos.
+	var passive: Dictionary = {}
+	## Área que cresce com as almas da onda (Golem de Ossos): {"percentPer10": float, "maxPercent": float}.
+	var soul_radius: Dictionary = {}
 
 ## Raio, em casas, em que o projétil procura um alvo novo quando o dele some.
 var projectile_retarget_radius: float
@@ -49,6 +56,11 @@ var triggers: TriggerData.TriggerRules
 ## "mark": {"class": id, "seconds": float} — a classe cujos tiros marcam e a duração da marca ({} = sem marca);
 ## "push": {"eliteMaxCells": float, "bossImmune": bool} — o Empurrado no elite e no chefão.
 var statuses: Dictionary = {"mark": {}, "push": {"eliteMaxCells": 1.0, "bossImmune": true}}
+## Movimento das invocações que andam (bloco opcional `summons` de `towers.json`):
+## "skeleton": {"speed", "seconds", "contactRadius", "blastRadius"}.
+var summons: Dictionary = {}
+## Alguma aura dá alcance (Sacerdotisa Amunet)? Sem isso, o alcance não olha as vizinhas.
+var has_range_auras := false
 ## id -> TowerType, na ordem do JSON.
 var types: Dictionary = {}
 
@@ -78,7 +90,7 @@ func uses_traps() -> bool:
 			return true
 		if type.trigger != null:
 			for star in type.trigger.stars:
-				if star.effect["kind"] == "trap" or star.effect["kind"] == "tentacle":
+				if TriggerData.SUMMON_EFFECTS.has(star.effect["kind"]):
 					return true
 	return false
 
@@ -133,6 +145,23 @@ static func load_data(raw: Variant, classes: ClassData = null) -> TowerData:
 			return null
 		type.marks = mark_class != "" and type.classes.has(mark_class)
 		data.types[id] = type
+		if not type.aura.is_empty():
+			for star: Dictionary in type.aura["stars"]:
+				data.has_range_auras = data.has_range_auras or star["rangeBonus"] > 0.0
+	var summons: Variant = raw.get("summons", {})
+	if not (summons is Dictionary):
+		push_error('Dados de torres inválidos: "summons" não é um objeto')
+		return null
+	if summons.has("skeleton"):
+		var s: Variant = summons["skeleton"]
+		if not (s is Dictionary) or not _is_positive(s.get("speed")) or not _is_positive(s.get("seconds")) \
+				or not _is_positive(s.get("contactRadius")) or not _is_positive(s.get("blastRadius")) \
+				or not _is_positive(s.get("maxPerTower")) or not _is_positive(s.get("maxRegion")):
+			push_error('Dados de torres inválidos: "summons.skeleton" precisa de speed, seconds, contactRadius, blastRadius, maxPerTower e maxRegion positivos')
+			return null
+		data.summons["skeleton"] = {"speed": float(s["speed"]), "seconds": float(s["seconds"]),
+				"contactRadius": float(s["contactRadius"]), "blastRadius": float(s["blastRadius"]),
+				"maxPerTower": int(s["maxPerTower"]), "maxRegion": int(s["maxRegion"])}
 	data.triggers = TriggerData.parse_trigger_rules(raw.get("triggers"))
 	if data.triggers == null:
 		return null
@@ -162,7 +191,8 @@ static func _parse_statuses(raw: Variant, classes: ClassData) -> Variant:
 	return out
 
 
-## `onHit` opcional: slow {percent, cap, seconds, bounces?, bounceRadius?} e bleed {percentPerSecond, seconds}.
+## `onHit` opcional: slow {percent, cap, seconds, bounces?, bounceRadius?}, bleed {percentPerSecond, seconds} e
+## pierce {targets, radius}.
 ## Devolve o Dictionary normalizado ({} sem efeitos) ou null (push_error).
 static func _parse_on_hit(id: String, raw: Variant) -> Variant:
 	if raw == null:
@@ -192,12 +222,18 @@ static func _parse_on_hit(id: String, raw: Variant) -> Variant:
 				if not (_is_positive(spec.get("percentPerSecond")) and _is_positive(spec.get("seconds"))):
 					return bad.call("bleed precisa de percentPerSecond e seconds positivos")
 				out["bleed"] = {"percentPerSecond": float(spec["percentPerSecond"]), "seconds": float(spec["seconds"])}
+			"pierce":
+				# O tiro atravessa: depois do alvo, acerta até `targets` inimigos logo atrás dele (até `radius` casas).
+				if not (_is_positive(spec.get("targets")) and _is_positive(spec.get("radius"))):
+					return bad.call("pierce precisa de targets e radius positivos")
+				out["pierce"] = {"targets": int(spec["targets"]), "radius": float(spec["radius"])}
 			_:
 				return bad.call("efeito desconhecido: %s" % key)
 	return out
 
 
-## `aura` opcional: {"region": id, "stars": [{"attackSpeedPercent", "regionPercent"}, ...]}.
+## `aura` opcional: {"region": id, "stars": [{"attackSpeedPercent"?, "regionPercent"?, "rangeBonus"?}, ...]}:
+## cada estrela dá velocidade de ataque e/ou alcance (em casas) às vizinhas.
 static func _parse_aura(id: String, raw: Variant) -> Variant:
 	if raw == null:
 		return {}
@@ -207,13 +243,35 @@ static func _parse_aura(id: String, raw: Variant) -> Variant:
 		return null
 	var stars: Array = []
 	for star in raw["stars"]:
-		if not (star is Dictionary) or not _is_positive(star.get("attackSpeedPercent")) \
-				or (star.has("regionPercent") and not _is_positive(star["regionPercent"])):
+		var valid: bool = star is Dictionary and (_is_positive(star.get("attackSpeedPercent")) or _is_positive(star.get("rangeBonus")))
+		for key in ["attackSpeedPercent", "regionPercent", "rangeBonus"]:
+			valid = valid and (not star.has(key) or _is_positive(star[key]))
+		if not valid:
 			push_error('Torre inválida: "%s" tem estrela de aura inválida' % id)
 			return null
-		stars.append({"attackSpeedPercent": float(star["attackSpeedPercent"]),
-				"regionPercent": float(star.get("regionPercent", 0.0))})
+		stars.append({"attackSpeedPercent": float(star.get("attackSpeedPercent", 0.0)),
+				"regionPercent": float(star.get("regionPercent", 0.0)), "rangeBonus": float(star.get("rangeBonus", 0.0))})
 	return {"region": raw["region"], "stars": stars}
+
+
+## `passive` opcional: {"kind": "phalanx" | "judgment", "stars": [{"percent", "class"?, "attackDamagePercent"?}]}.
+static func _parse_passive(id: String, raw: Variant, classes: ClassData) -> Variant:
+	if raw == null:
+		return {}
+	if not (raw is Dictionary) or not ["phalanx", "judgment"].has(raw.get("kind")) or not (raw.get("stars") is Array) \
+			or raw["stars"].is_empty() or raw["stars"].size() > TriggerData.MAX_STARS:
+		push_error('Torre inválida: "%s" tem "passive" inválida (kind phalanx ou judgment e de 1 a %d stars)' % [id, TriggerData.MAX_STARS])
+		return null
+	var stars: Array = []
+	for star in raw["stars"]:
+		if not (star is Dictionary) or not _is_positive(star.get("percent")) \
+				or (star.has("attackDamagePercent") and not _is_positive(star["attackDamagePercent"])) \
+				or (raw["kind"] == "phalanx" and (typeof(star.get("class")) != TYPE_STRING or not classes.classes.has(star["class"]))):
+			push_error('Torre inválida: "%s" tem estrela de passiva inválida' % id)
+			return null
+		stars.append({"percent": float(star["percent"]), "class": star.get("class", ""),
+				"attackDamagePercent": float(star.get("attackDamagePercent", 100.0))})
+	return {"kind": raw["kind"], "stars": stars}
 
 
 static func _parse_shot(id: String, raw: Variant) -> Dictionary:
@@ -290,6 +348,13 @@ static func _parse_type(id: String, raw: Variant, classes: ClassData) -> TowerTy
 	var aura: Variant = _parse_aura(id, raw.get("aura"))
 	if aura == null:
 		return null
+	var passive: Variant = _parse_passive(id, raw.get("passive"), classes)
+	if passive == null:
+		return null
+	var soul: Variant = raw.get("soulRadius", {})
+	if not (soul is Dictionary) or (not soul.is_empty() and not (_is_positive(soul.get("percentPer10")) and _is_positive(soul.get("maxPercent")))):
+		push_error('Torre inválida: "%s" tem "soulRadius" inválido (percentPer10 e maxPercent positivos)' % id)
+		return null
 	var type := TowerType.new()
 	type.name = raw["name"]
 	type.rarity = rarity
@@ -304,6 +369,9 @@ static func _parse_type(id: String, raw: Variant, classes: ClassData) -> TowerTy
 	type.trigger = parsed["def"]
 	type.on_hit = on_hit
 	type.aura = aura
+	type.passive = passive
+	if not soul.is_empty():
+		type.soul_radius = {"percentPer10": float(soul["percentPer10"]), "maxPercent": float(soul["maxPercent"])}
 	return type
 
 

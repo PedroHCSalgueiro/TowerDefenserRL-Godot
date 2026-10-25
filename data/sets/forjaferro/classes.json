@@ -1,0 +1,24 @@
+{
+  "classes": {
+    "forjaferro": {
+      "name": "Forjaferro",
+      "levels": [
+        {
+          "count": 3,
+          "text": "A cada 3 habilidades da região, a seguinte dispara 2 vezes",
+          "echoEvery": 3
+        },
+        {
+          "count": 5,
+          "text": "A cada 2 habilidades da região, a seguinte dispara 2 vezes",
+          "echoEvery": 2
+        },
+        {
+          "count": 8,
+          "text": "Toda habilidade da região tem 50% de chance de disparar 2 vezes",
+          "echoChancePercent": 50
+        }
+      ]
+    }
+  }
+}

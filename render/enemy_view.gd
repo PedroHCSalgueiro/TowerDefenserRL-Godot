@@ -11,6 +11,7 @@ const SLOW_TINT := Color("#8fd3ff")
 const BLEED_TINT := Color("#ff2d2d")
 const MARK_TINT := Color("#ff9f1c")
 const CURSE_TINT := Color("#a24bd9")
+const POISON_TINT := Color("#7cb342")
 
 const BAR_SHADER := """
 shader_type spatial;
@@ -125,13 +126,15 @@ func draw(state: Object, alpha: float) -> void:
 			y += flying
 		var c: Color = _colors.get(enemy.type, Color.MAGENTA)
 		# Efeitos de estado tingem o inimigo: atordoado amarelo, lento azul-gelo, sangrando vermelho,
-		# marcado laranja (mais forte com 2 marcas ou mais) e amaldiçoado roxo.
+		# envenenado verde, marcado laranja (mais forte com 2 marcas ou mais) e amaldiçoado roxo.
 		if enemy.stun_ticks > 0:
 			c = c.lerp(STUN_TINT, 0.65)
 		elif enemy.slow_ticks > 0:
 			c = c.lerp(SLOW_TINT, 0.6)
 		if enemy.bleed_ticks > 0:
 			c = c.lerp(BLEED_TINT, 0.45)
+		if enemy.poison_ticks > 0:
+			c = c.lerp(POISON_TINT, 0.5)
 		if not enemy.marks.is_empty():
 			c = c.lerp(MARK_TINT, 0.35 if enemy.marks.size() == 1 else 0.6)
 		if not enemy.curse.is_empty():

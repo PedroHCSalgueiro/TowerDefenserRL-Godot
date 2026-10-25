@@ -197,6 +197,8 @@ static func create_wave_progress_system(enemies: EnemyData, schedules: Array[Wav
 			if event["type"] != "enemyKilled":
 				continue
 			state.stats.kills += 1
+			# Cada morte é uma alma (Cripta Cinzenta); as almas zeram no fim da onda.
+			state.souls += 1
 			if event["wave"] == 0 or not enemies.get_type(event["enemyType"]).boss:
 				continue
 			for w in active:

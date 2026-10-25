@@ -1,0 +1,14 @@
+{
+  "texts": {
+    "towerSummaries": {
+      "dorian": "Guardião: lança em área; mais forte com Guardiões encostados (Falange).",
+      "iliria": "Atirador: flechas de longo alcance; de tempos em tempos, uma rajada em leque.",
+      "amunet": "Suporte: dá alcance às torres encostadas.",
+      "ciclope": "Artilheiro: rocha em área; de tempos em tempos, deixa uma cratera que deixa lento.",
+      "pitia": "Controlador: de tempos em tempos, atordoa os primeiros da fila.",
+      "sigrun": "Caçadora: lança no inimigo mais forte; o dobro de dano em marcados e chefões.",
+      "tritao": "Mago: de tempos em tempos, raios caem em 5 inimigos; os lentos levam o dobro.",
+      "kallia": "Invocadora: de tempos em tempos, invoca um grifo que caça voadores."
+    }
+  }
+}

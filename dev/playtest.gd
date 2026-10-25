@@ -165,6 +165,7 @@ func _play(seed_text: String, policy: String, interval: int) -> Dictionary:
 	m["nexusLevel"] = state.nexus.level
 	m["nexusHpFinal"] = state.nexus.hp
 	m["longestChain"] = state.stats.longest_chain
+	m["droppedTriggers"] = state.triggers.dropped_total
 	m["damageByType"] = by_type
 	m["finalTowers"] = final_towers
 	m["totalDamage"] = by_type.values().reduce(func(a: float, b: float) -> float: return a + b, 0.0)

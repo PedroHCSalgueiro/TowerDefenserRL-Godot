@@ -36,6 +36,7 @@ static func fire_projectile(ctx: TickContext, params: Dictionary, target: Enemy)
 	projectile.damage = params["damage"]
 	projectile.status_type = params.get("statusType", "")
 	projectile.curse = params.get("curse", NO_CURSE)
+	projectile.force_mark = params.get("forceMark", false)
 	projectile.area_radius = params["areaRadius"]
 	projectile.speed = params["speed"]
 	projectile.x = params["x"]
@@ -79,16 +80,44 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 	var mark := ChainMark.new(0, null)
 	var damage_options := {"chain": mark}
 
-	# Dano do tiro neste alvo: com o bônus do Caçador contra as marcas que ele já tem.
+	# Dano do tiro neste alvo: com o bônus do Caçador contra as marcas que ele já tem e o Julgamento (Sigrun:
+	# +% contra Marcado ou chefão).
 	var damage_on := func(state: Object, projectile: Projectile, enemy: Enemy) -> float:
-		if projectile.status_type == "" or enemy.marks.is_empty():
+		if projectile.status_type == "":
 			return projectile.damage
 		var type: TowerData.TowerType = towers.types.get(projectile.status_type)
-		if type == null or not type.marks:
+		if type == null:
 			return projectile.damage
-		return projectile.damage * ClassBonuses.mark_damage_multiplier(classes, state, type, enemy.marks.size())
+		var damage := projectile.damage
+		if type.marks and not enemy.marks.is_empty():
+			damage *= ClassBonuses.mark_damage_multiplier(classes, state, type, enemy.marks.size())
+		if not type.passive.is_empty() and type.passive["kind"] == "judgment" \
+				and (not enemy.marks.is_empty() or enemies.get_type(enemy.type).boss):
+			var owner: Tower = null
+			for t: Tower in state.towers:
+				if t.id == projectile.source_id:
+					owner = t
+					break
+			var star: Dictionary = Stars.passive_star(type, owner) if owner != null else type.passive["stars"][0]
+			damage *= 1.0 + float(star["percent"]) / 100.0
+		return damage
 	var has_effects := func(projectile: Projectile) -> bool:
-		return projectile.status_type != "" or not projectile.curse.is_empty()
+		return projectile.status_type != "" or not projectile.curse.is_empty() or projectile.force_mark
+	var pierce_hits: Array = []
+	# O tiro que atravessa (Nyx): depois do alvo, acerta os inimigos logo atrás dele, mais perto primeiro.
+	var pierce := func(ctx: TickContext, projectile: Projectile, first: Enemy, x: float, y: float, distance: float) -> void:
+		var type: TowerData.TowerType = towers.types.get(projectile.status_type)
+		if type == null or not type.on_hit.has("pierce"):
+			return
+		var spec: Dictionary = type.on_hit["pierce"]
+		pierce_hits.clear()
+		index.collect_in_range(ctx.state, x, y, spec["radius"], pierce_hits)
+		var behind: Array = pierce_hits.filter(func(e: Enemy) -> bool: return e != first and e.distance <= distance)
+		behind.sort_custom(func(a: Enemy, b: Enemy) -> bool:
+			return a.distance > b.distance or (a.distance == b.distance and a.id < b.id))
+		for enemy: Enemy in behind.slice(0, int(spec["targets"])):
+			Damage.damage_enemy(ctx, enemies, enemy, damage_on.call(ctx.state, projectile, enemy), projectile.source_id,
+					damage_options)
 
 	# Dano em área: todos no raio do ponto de impacto, em ordem de id.
 	var explode := func(ctx: TickContext, projectile: Projectile, x: float, y: float) -> void:
@@ -146,9 +175,13 @@ static func create_projectile_system(enemies: EnemyData, index: SpatialIndex,
 				if projectile.area_radius > 0.0:
 					explode.call(ctx, projectile, target.x, target.y)
 				elif has_effects.call(projectile):
+					var hit_x := target.x
+					var hit_y := target.y
+					var hit_distance := target.distance
 					Damage.damage_enemy(ctx, enemies, target, damage_on.call(state, projectile, target),
 							projectile.source_id, damage_options)
 					Status.apply_on_hit(ctx, towers, index, target, projectile, ticks_per_second)
+					pierce.call(ctx, projectile, target, hit_x, hit_y, hit_distance)
 				else:
 					Damage.damage_enemy(ctx, enemies, target, projectile.damage, projectile.source_id, damage_options)
 			else:

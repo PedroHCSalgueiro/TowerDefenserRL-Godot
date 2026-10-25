@@ -1,14 +1,15 @@
 class_name MainMenu
 extends Control
-## Tela inicial: o jogador escolhe o conjunto de torres da run (Padrão, uma região — Reino de Valcoroa,
-## Costa Rubra — ou as duas juntas; ver `GameSets`) e, se quiser, a semente. "Jogar" carrega a cena do jogo.
+## Tela inicial: o jogador escolhe o conjunto de torres da run (Padrão, uma das cinco regiões, Valcoroa + Costa
+## Rubra ou todas as regiões; ver `GameSets`) e, se quiser, a semente. "Jogar" carrega a cena do jogo.
 ##
 ## Linha de comando (depois de `--`): `--set=valcoroa` escolhe o conjunto, `--seed=abc` a semente e
 ## `--play` pula a tela e já abre o jogo (para capturas de tela e testes manuais).
 
 const GAME_SCENE := "res://scenes/game.tscn"
-## Largura de cada cartão de conjunto (quatro lado a lado cabem em 1280 px).
+## Largura de cada cartão de conjunto e quantos por fileira (quatro lado a lado cabem em 1280 px).
 const CARD_WIDTH := 290
+const CARDS_PER_ROW := 4
 const SETTINGS_PATH := "user://menu.cfg"
 
 var _sets: Array = []
@@ -87,13 +88,18 @@ func _build(seed_text: String) -> void:
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(subtitle)
 
-	var row := UiKit.hbox(18)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_child(row)
+	# Os conjuntos em fileiras de `CARDS_PER_ROW` (oito cabem em duas fileiras na tela de 1280 × 720).
+	var grid := GridContainer.new()
+	grid.columns = mini(CARDS_PER_ROW, _sets.size())
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 14)
+	var grid_row := CenterContainer.new()
+	grid_row.add_child(grid)
+	column.add_child(grid_row)
 	for i in _sets.size():
 		var card := _make_card(i)
 		_cards.append(card)
-		row.add_child(card)
+		grid.add_child(card)
 
 	var seed_row := UiKit.hbox(8)
 	seed_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -132,16 +138,18 @@ func _make_card(index: int) -> PanelContainer:
 			_select(index)
 			if event.double_click:
 				_start(_seed_edit.text))
-	var box := UiKit.vbox(8)
+	var box := UiKit.vbox(5)
 	card.add_child(box)
-	box.add_child(UiKit.label(str(info["name"]), 24, UiKit.TEXT, true))
-	var description := UiKit.label(str(info.get("description", "")), 14, UiKit.MUTED)
+	box.add_child(UiKit.label("%d. %s" % [index + 1, info["name"]], 19, UiKit.TEXT, true))
+	var description := UiKit.label(str(info.get("description", "")), 12, UiKit.MUTED)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.custom_minimum_size = Vector2(CARD_WIDTH - 36, 0)
 	box.add_child(description)
-	box.add_child(UiKit.label("Torres", 13, UiKit.GOLD, true))
-	for tower_name in info.get("roster", []):
-		box.add_child(UiKit.label("• " + str(tower_name), 14, Color("#cfcfcf")))
+	# Os heróis numa linha só, quebrada no cartão (oito listas inteiras não caberiam na tela).
+	var roster := UiKit.label(" · ".join(info.get("roster", []).map(func(n: Variant) -> String: return str(n))), 12, Color("#cfcfcf"))
+	roster.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	roster.custom_minimum_size = Vector2(CARD_WIDTH - 36, 0)
+	box.add_child(roster)
 	return card
 
 

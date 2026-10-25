@@ -43,7 +43,17 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		Simulation.runs_while_frozen(func(ctx: TickContext) -> void:
 			ctx.index = index
 			ctx.classes = classes
-			ctx.afflicted_damage_percent = ClassBonuses.afflicted_damage_percent(classes, ctx.state)),
+			ctx.routes = routes
+			ctx.towers = towers
+			ctx.ticks_per_second = ticks_per_second
+			ctx.afflicted_damage_percent = ClassBonuses.afflicted_damage_percent(classes, ctx.state)
+			ctx.death_blast = ClassBonuses.death_blast(classes, ctx.state)
+			ctx.skeleton_rise = ClassBonuses.skeleton_rise(classes, ctx.state)
+			if classes.has_armor_pierce:
+				for tower: Tower in ctx.state.towers:
+					var pierce := ClassBonuses.armor_pierce(classes, ctx.state, towers.get_type(tower.type))
+					if pierce > 0.0:
+						ctx.armor_pierce[tower.id] = pierce),
 		Rewards.create_reward_clock_system(),
 		Commands.create_command_system(map, routes, enemies, towers, debug, schedules, economy, nexus,
 				rewards, classes, ticks_per_second),
@@ -57,10 +67,10 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 				classes),
 		TowerSystems.create_tower_system(index, towers, scores, ticks_per_second, classes, routes),
 		Status.create_status_system(enemies) if towers.uses_statuses() else Callable(),
-		TrapSystems.create_trap_system(enemies, index) if towers.uses_traps() else Callable(),
+		TrapSystems.create_trap_system(enemies, index, routes, ticks_per_second) if towers.uses_traps() else Callable(),
 		TriggerEngine.create_trigger_system({
 			"index": index, "enemies": enemies, "towers": towers, "classes": classes,
-			"scores": scores, "ticksPerSecond": ticks_per_second, "routes": routes,
+			"scores": scores, "ticksPerSecond": ticks_per_second, "routes": routes, "map": map,
 		}),
 		Economy.create_gold_system(enemies, economy),
 		WaveSystems.create_wave_progress_system(enemies, schedules, economy, towers),

@@ -1,0 +1,14 @@
+{
+  "texts": {
+    "towerSummaries": {
+      "bolt": "Invocador: chave inglesa; de tempos em tempos, monta uma torreta numa casa vizinha.",
+      "vapora": "Atirador: rifle de vapor de longo alcance; a cada 3 tiros, um tiro superaquecido.",
+      "caldeira": "Guardião: golpe em área; quando uma vizinha o ativa, solta vapor que deixa lento.",
+      "tic": "Suporte: a cada tantos abates no alcance, faz as torres encostadas atirarem.",
+      "greta": "Artilheiro: morteiro em área; de tempos em tempos, tiros extras.",
+      "volta": "Mago: carrega com os abates das encostadas e solta um raio em cadeia.",
+      "engrena": "Controlador: de tempos em tempos, puxa os inimigos para o centro e atordoa.",
+      "ferro": "Caçador: quando uma vizinha o ativa, dispara um virote que atravessa a fila."
+    }
+  }
+}

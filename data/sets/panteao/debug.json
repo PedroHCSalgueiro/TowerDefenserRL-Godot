@@ -1,0 +1,12 @@
+{
+  "chainScenario": {
+    "name": "Cadeia (Panteão)",
+    "towerTypes": ["amunet", "dorian", "sigrun", "tritao"],
+    "towerLayout": "clustered"
+  },
+  "fullScenario": {
+    "name": "Cadeia (8 do Panteão)",
+    "towerTypes": ["dorian", "iliria", "amunet", "ciclope", "pitia", "sigrun", "tritao", "kallia"],
+    "towerLayout": "clustered"
+  }
+}
