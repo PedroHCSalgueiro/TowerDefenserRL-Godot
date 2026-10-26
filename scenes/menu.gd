@@ -77,7 +77,7 @@ func _build(seed_text: String) -> void:
 	var center := CenterContainer.new()
 	UiKit.full_rect(center)
 	add_child(center)
-	var column := UiKit.vbox(18)
+	var column := UiKit.vbox(10)
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	center.add_child(column)
 

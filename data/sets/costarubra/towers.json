@@ -7,7 +7,7 @@
         "artillerist",
         "costarubra"
       ],
-      "damage": 12,
+      "damage": 16,
       "shotsPerSecond": 0.8,
       "range": 3,
       "projectileSpeed": 6,
@@ -55,7 +55,7 @@
         "shooter",
         "costarubra"
       ],
-      "damage": 7,
+      "damage": 14,
       "shotsPerSecond": 1.4,
       "range": 3.5,
       "projectileSpeed": 10,
@@ -88,8 +88,8 @@
         "guardian",
         "costarubra"
       ],
-      "damage": 12,
-      "shotsPerSecond": 0.5,
+      "damage": 26,
+      "shotsPerSecond": 0.75,
       "range": 3,
       "projectileSpeed": 6,
       "shot": {
@@ -127,7 +127,7 @@
         "controller",
         "costarubra"
       ],
-      "damage": 5,
+      "damage": 10,
       "shotsPerSecond": 1.2,
       "range": 3,
       "projectileSpeed": 8,
@@ -172,7 +172,7 @@
         "support",
         "costarubra"
       ],
-      "damage": 4,
+      "damage": 6,
       "shotsPerSecond": 1,
       "range": 3,
       "projectileSpeed": 9,
@@ -208,8 +208,8 @@
         "hunter",
         "costarubra"
       ],
-      "damage": 15,
-      "shotsPerSecond": 0.6,
+      "damage": 28,
+      "shotsPerSecond": 0.85,
       "range": 3.5,
       "projectileSpeed": 9,
       "shot": {
@@ -244,8 +244,8 @@
         "mage",
         "costarubra"
       ],
-      "damage": 6,
-      "shotsPerSecond": 1,
+      "damage": 15,
+      "shotsPerSecond": 1.25,
       "range": 3,
       "projectileSpeed": 9,
       "shot": {
@@ -292,8 +292,8 @@
         "summoner",
         "costarubra"
       ],
-      "damage": 6,
-      "shotsPerSecond": 0.8,
+      "damage": 15,
+      "shotsPerSecond": 1,
       "range": 3,
       "projectileSpeed": 8,
       "shot": {

@@ -36,7 +36,8 @@ citadas, apresente um plano e só então implemente.
 - `data/`: todos os números do jogo, em JSON (copiados do repo Phaser, mesma estrutura).
   Conjuntos da tela inicial em `data/sets/sets.json`: cada um lista camadas (`layers`) de `data/sets/`
   mescladas em ordem sobre `data/` — `heroes` (regras comuns dos heróis: 8 classes, economia, ondas),
-  `valcoroa`, `costarubra` e `valcoroa_costarubra` (só o cenário de debug dos 16).
+  uma pasta por região (`valcoroa`, `costarubra`, `forjaferro`, `cripta`, `panteao`) e as das combinações
+  (`valcoroa_costarubra`, `todas`: só os cenários de debug).
 - `tests/`: testes da simulação.
 - `assets/`, `scenes/`, `blender/` (com `.gdignore`): arte.
 
@@ -76,5 +77,8 @@ O MCP do Godot procura em `C:\Program Files\Godot\Godot.exe`; definir `GODOT_PAT
 - Rodar jogo: `$g --path .`
 - Testes (GUT 9.7.1): `$g --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
 - Export: `$g --headless --export-release "Windows" build/windows/game.exe` e `"Web"` (presets a criar)
+- Agente testador (bots em todos os conjuntos + bancada dos heróis + relatório de balanço; ver
+  `.claude/agents/testador.md`): `powershell -NoProfile -File tools/playtest/agent.ps1 -Out <pasta>`
+  → `<pasta>/relatorio.md`. Rode depois de mexer em heróis, classes, economia ou ondas.
 
 Texturas extraídas do `sir-aldric.glb` na importação ficam fora do git (ver `.gitignore`).

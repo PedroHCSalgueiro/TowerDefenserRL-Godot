@@ -286,10 +286,13 @@ func test_regiao_cripta_almas_explosao_e_esqueleto() -> void:
 	h.set_level("cripta", 1)
 	var morn_type := h.towers.get_type("morn")
 	var morn := h.tower_at("morn", 12.0)
+	var level: ClassData.ClassLevel = h.classes.classes["cripta"].levels[0]
 	h.state.souls = 40
-	assert_almost_eq(ClassBonuses.damage_multiplier(h.classes, h.state, morn_type, morn), 1.12, 1e-12, "40 almas: +12%")
-	h.state.souls = 500
-	assert_almost_eq(ClassBonuses.damage_multiplier(h.classes, h.state, morn_type, morn), 1.3, 1e-12, "teto de +30%")
+	assert_almost_eq(ClassBonuses.damage_multiplier(h.classes, h.state, morn_type, morn),
+			1.0 + 4.0 * level.soul_damage_percent / 100.0, 1e-12, "40 almas: 4 vezes o bônus")
+	h.state.souls = 5000
+	assert_almost_eq(ClassBonuses.damage_multiplier(h.classes, h.state, morn_type, morn),
+			1.0 + level.soul_damage_max_percent / 100.0, 1e-12, "com o teto")
 	# Nível 5: quem morre explode (10% da vida dele) e quem morre da explosão não explode de novo.
 	h.set_level("cripta", 2)
 	h.ctx.death_blast = ClassBonuses.death_blast(h.classes, h.state)
