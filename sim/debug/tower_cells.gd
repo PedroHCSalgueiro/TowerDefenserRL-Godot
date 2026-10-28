@@ -53,7 +53,8 @@ static func pick_tower_cells(map: SimMap, occupied: Dictionary, count: int, layo
 		for dy in range(-1, 2):
 			for dx in range(-1, 2):
 				var n := Vector2i(cell.x + dx, cell.y + dy)
-				if not map.is_path(n):
+				# Só o caminho principal conta (as entradas das salas do mapa que cresce ficam de fora).
+				if not map.is_path(n) or not path_index.has(map.index_of(n)):
 					continue
 				order = minf(order, float(path_index[map.index_of(n)]))
 		if order != INF:

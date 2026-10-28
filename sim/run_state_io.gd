@@ -13,7 +13,7 @@ extends RefCounted
 static func to_dict(state: RunState) -> Dictionary:
 	var enemies := []
 	for e in state.enemies.slots:
-		enemies.append({
+		var enemy := {
 			"slot": e.slot, "active": e.active, "id": e.id, "type": e.type, "wave": e.wave, "elite": e.elite,
 			"hp": e.hp, "maxHp": e.max_hp, "distance": e.distance,
 			"x": e.x, "y": e.y, "prevX": e.prev_x, "prevY": e.prev_y,
@@ -21,7 +21,11 @@ static func to_dict(state: RunState) -> Dictionary:
 			"bleedDamage": e.bleed_damage, "bleedTicks": e.bleed_ticks, "bleedSource": e.bleed_source,
 			"marks": _marks_to_list(e.marks), "curse": e.curse.duplicate(),
 			"poisonDamage": e.poison_damage, "poisonTicks": e.poison_ticks, "poisonSource": e.poison_source,
-		})
+		}
+		# Só no mapa que cresce (o save do mapa sem salas não muda).
+		if e.entrance != 0:
+			enemy["entrance"] = e.entrance
+		enemies.append(enemy)
 	var projectiles := []
 	for p in state.projectiles.slots:
 		projectiles.append({
@@ -71,6 +75,22 @@ static func to_dict(state: RunState) -> Dictionary:
 	if state.rewards.screen != null:
 		var s: RewardsState.RewardScreen = state.rewards.screen
 		screen = {"wave": s.wave, "options": s.options.duplicate(true), "rerolls": s.rerolls, "ticksLeft": s.ticks_left}
+	var out := _base_dict(state, enemies, projectiles, towers, traps, queue, last, chains, classes, active_waves,
+			taken, screen)
+	# Mapa que cresce: só entra no save depois que algo aconteceu (o save do mapa sem salas não muda).
+	if state.expansion != null and not state.expansion.is_untouched(state.seed_text):
+		var ex: ExpansionState = state.expansion
+		var ex_screen: Variant = null
+		if ex.screen != null:
+			ex_screen = {"wave": ex.screen.wave, "options": ex.screen.options.duplicate(), "ticksLeft": ex.screen.ticks_left}
+		out["expansion"] = {"rngState": ex.rng_state, "opened": ex.opened.duplicate(), "screen": ex_screen,
+				"pending": ex.pending}
+	return out
+
+
+static func _base_dict(state: RunState, enemies: Array, projectiles: Array, towers: Array, traps: Array,
+		queue: Array, last: Variant, chains: Variant, classes: Dictionary, active_waves: Array, taken: Array,
+		screen: Variant) -> Dictionary:
 	return {
 		"version": state.version,
 		"seed": state.seed_text,
@@ -166,6 +186,23 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 	state.nexus.attack_cooldown_ticks = nx["attackCooldownTicks"]
 	state.nexus.level = nx["level"]
 
+	# Mapa que cresce: as salas abertas voltam ao mapa antes das rotas dos inimigos (as entradas novas).
+	state.expansion = ExpansionState.create(state.seed_text)
+	if d.has("expansion"):
+		var ex: Dictionary = d["expansion"]
+		state.expansion.rng_state = ex["rngState"]
+		for id in ex["opened"]:
+			state.expansion.opened.append(str(id))
+		state.expansion.pending = ex["pending"]
+		if ex["screen"] != null:
+			var ex_screen := ExpansionState.ExpansionScreen.new()
+			ex_screen.wave = ex["screen"]["wave"]
+			ex_screen.options = ex["screen"]["options"]
+			ex_screen.ticks_left = ex["screen"]["ticksLeft"]
+			state.expansion.screen = ex_screen
+	var expansion_data := ExpansionData.for_map(map)
+	if expansion_data != null:
+		Expansion.sync(map, null, expansion_data, state.expansion.opened)
 	var routes := Route.build_routes(map)
 	var enemy_data := EnemyData.game_data()
 	state.enemies = EnemyPool.new()
@@ -195,13 +232,17 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		enemy.poison_damage = float(e.get("poisonDamage", 0.0))
 		enemy.poison_ticks = e.get("poisonTicks", 0)
 		enemy.poison_source = e.get("poisonSource")
+		enemy.entrance = int(e.get("entrance", 0))
 		if enemy.active:
-			# Caches de desempenho: refeitos da rota do tipo.
+			# Caches de desempenho: refeitos da rota do tipo (na entrada do inimigo).
 			var type := enemy_data.get_type(enemy.type)
 			if type == null:
 				return _fail("inimigo de tipo desconhecido: %s" % enemy.type)
+			var route_key := Route.key_for(type.movement, enemy.entrance)
+			if not routes.has(route_key):
+				return _fail("inimigo numa entrada que o mapa não tem: %d" % enemy.entrance)
 			enemy.type_data = type
-			enemy.route = routes[type.movement]
+			enemy.route = routes[route_key]
 			enemy.route_length = enemy.route.length
 			enemy.seg = enemy.route.find_segment(enemy.distance)
 			enemy.step = -1.0

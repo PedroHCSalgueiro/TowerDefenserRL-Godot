@@ -12,9 +12,13 @@ const DIR := "res://tests/golden/"
 
 ## Opções de `GameSystems.create` com a economia que o Phaser tinha quando os golden files foram gerados
 ## (ouro só no fim da onda, 15 + 1 × onda). A economia do jogo mudou (ouro por abate, T-ouro-por-abate);
-## a paridade dos demais sistemas continua provada com esta.
+## a paridade dos demais sistemas continua provada com esta. O mesmo vale para as ondas: `waves_phaser.json`
+## é o `data/waves.json` de antes das hordas apertadas do início da run (quantidades e espaçamento novos).
 static func phaser_options() -> Dictionary:
-	return {"economy": EconomyData.load_data(load_json("economy_phaser.json"))}
+	return {
+		"economy": EconomyData.load_data(load_json("economy_phaser.json")),
+		"waves": WaveData.load_data(load_json("waves_phaser.json"), EnemyData.game_data()),
+	}
 
 
 static func load_json(file_name: String) -> Variant:

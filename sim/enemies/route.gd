@@ -110,10 +110,28 @@ func sample_cursor(distance: float, out: MutablePoint, seg: int) -> int:
 	return lo
 
 
-## Rotas de um mapa: {"ground": Route, "air": Route}.
+## Rotas de um mapa: {"ground": Route, "air": Route}, mais as das entradas abertas por salas
+## ("ground:1", "air:1", ...; ver `key_for`).
 static func build_routes(map: SimMap) -> Dictionary:
 	var air_points: Array[Vector2i] = [map.entrance, map.nexus]
-	return {
+	var routes := {
 		"ground": Route.new(map.path_cells),
 		"air": Route.new(air_points),
 	}
+	add_entrance_routes(map, routes)
+	return routes
+
+
+## Põe em `routes` as rotas das entradas do mapa que ainda não estão lá (sala aberta no meio da run).
+static func add_entrance_routes(map: SimMap, routes: Dictionary) -> void:
+	for index in range(1, map.entrance_count()):
+		if routes.has(key_for("ground", index)):
+			continue
+		var air_points: Array[Vector2i] = [map.entrance_cell(index), map.nexus]
+		routes[key_for("ground", index)] = Route.new(map.entrance_path(index))
+		routes[key_for("air", index)] = Route.new(air_points)
+
+
+## Chave da rota de um movimento ("ground" ou "air") na entrada `entrance` (0 = a principal).
+static func key_for(movement: String, entrance: int) -> String:
+	return movement if entrance == 0 else "%s:%d" % [movement, entrance]

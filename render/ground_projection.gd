@@ -43,8 +43,16 @@ static func ground_from_view(px: Vector2) -> Vector2:
 
 ## Retângulo do mapa na vista (pixels): a caixa dos quatro cantos do chão do mapa.
 static func map_view_bounds(width: int, height: int) -> Rect2:
-	var corners := [view_px(-0.5, -0.5), view_px(width - 0.5, -0.5), view_px(width - 0.5, height - 0.5),
-			view_px(-0.5, height - 0.5)]
+	return cells_view_bounds(Rect2i(0, 0, width, height))
+
+
+## Retângulo de um bloco de casas na vista (pixels): a área aberta do mapa que cresce.
+static func cells_view_bounds(cells: Rect2i) -> Rect2:
+	var x0 := float(cells.position.x) - 0.5
+	var y0 := float(cells.position.y) - 0.5
+	var x1 := float(cells.end.x) - 0.5
+	var y1 := float(cells.end.y) - 0.5
+	var corners := [view_px(x0, y0), view_px(x1, y0), view_px(x1, y1), view_px(x0, y1)]
 	var min_p: Vector2 = corners[0]
 	var max_p: Vector2 = corners[0]
 	for c: Vector2 in corners:

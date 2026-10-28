@@ -14,13 +14,14 @@ extends RefCounted
 ##   debugSpawnTowers{count,towerTypes,layout,star?}  debugClear  debugSetStress{stress}
 ##   debugSetNexusInvulnerable{value}  debugSkipToWave{wave}  debugAddGold{amount}
 ##   debugSetInfiniteGold{value}  debugOpenReward
+## As do mapa que cresce (`chooseExpansion{index}`, `debugOpenExpansion`) são aplicadas por `Expansion`.
 
 ## Comandos de debug (trapaças): qualquer um que chegue à fila liga `cheated`, mesmo se a simulação
 ## o recusar (T17).
 const CHEAT_COMMAND_TYPES := [
 	"spawnEnemy", "placeTower", "endWave", "debugSpawnEnemies", "debugSpawnTowers", "debugClear",
 	"debugSetStress", "debugSetNexusInvulnerable", "debugSkipToWave", "debugAddGold",
-	"debugSetInfiniteGold", "debugOpenReward",
+	"debugSetInfiniteGold", "debugOpenReward", "debugOpenExpansion",
 ]
 
 ## Ações aceitas com a tela de recompensa aberta (T24): escolher, rerolar as cartas e as trapaças
@@ -28,6 +29,11 @@ const CHEAT_COMMAND_TYPES := [
 const REWARD_SCREEN_COMMAND_TYPES := [
 	"chooseReward", "rerollRewards", "debugOpenReward", "debugAddGold", "debugSetInfiniteGold",
 	"debugSetNexusInvulnerable",
+]
+
+## Ações aceitas com a escolha da parede aberta: só a escolha e as trapaças que não mexem no mapa.
+const EXPANSION_SCREEN_COMMAND_TYPES := [
+	"chooseExpansion", "debugAddGold", "debugSetInfiniteGold", "debugSetNexusInvulnerable",
 ]
 
 
@@ -49,6 +55,9 @@ static func create_command_system(map: SimMap, routes: Dictionary, enemies: Enem
 			if CHEAT_COMMAND_TYPES.has(type):
 				state.cheated = true
 			if state.rewards.screen != null and not REWARD_SCREEN_COMMAND_TYPES.has(type):
+				continue
+			var expansion: Variant = state.get("expansion")
+			if expansion != null and expansion.screen != null and not EXPANSION_SCREEN_COMMAND_TYPES.has(type):
 				continue
 			match type:
 				"spawnEnemy":

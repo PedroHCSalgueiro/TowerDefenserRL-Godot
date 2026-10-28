@@ -38,6 +38,8 @@ var marks: Dictionary = {}
 ## Amaldiçoado (Mama Zuri): vazio = não; senão {"ticks", "duration", "percent", "spread", "radius",
 ## "jumps", "source"} (ver `Status.apply_curse`).
 var curse: Dictionary = {}
+## Entrada por onde entrou (0 = a principal; as outras vêm das salas do mapa que cresce).
+var entrance := 0
 
 # Cache de desempenho (derivado; não faz parte do estado da simulação): preenchido no spawn.
 ## Dados do tipo, rota, comprimento da rota, segmento atual da rota e distância por tick.

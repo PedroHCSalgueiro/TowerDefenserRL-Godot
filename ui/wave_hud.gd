@@ -30,14 +30,17 @@ var _key := ""
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiKit.full_rect(self)
-	_panel = UiKit.panel(UiKit.BG, UiKit.BORDER, 8, Vector2(12, 6))
-	var row := UiKit.hbox(12)
-	_label = UiKit.label("", 16, UiKit.TEXT, true)
-	_detail = UiKit.label("", 13, Color("#aaaaaa"))
+	_panel = UiKit.game_panel(12, Vector2(16, 8))
+	var row := UiKit.hbox(14)
+	_label = UiKit.label("", 22, UiKit.GOLD, true)
+	_detail = UiKit.label("", 13, Color("#b4b8bc"))
 	_detail.custom_minimum_size = Vector2(120, 0)
+	_detail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_pending = UiKit.label("", 13, UiKit.GREEN, true)
+	_pending.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var call_group := UiKit.vbox(3)
-	_call = UiKit.button("Chamar onda (Espaço)", func() -> void: call_pressed.emit())
+	_call = UiKit.primary_button("Chamar onda (Espaço)", func() -> void: call_pressed.emit())
 	call_group.add_child(_call)
 	_window_box = UiKit.vbox(2)
 	_window_text = UiKit.label("", 11, UiKit.GREEN)
@@ -74,12 +77,12 @@ func _init() -> void:
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_panel)
 
-	_upcoming_panel = UiKit.panel(Color(0.0784, 0.0824, 0.0902, 0.85), UiKit.BORDER, 6, Vector2(10, 3))
+	_upcoming_panel = UiKit.panel(Color(0.075, 0.08, 0.1, 0.85), UiKit.FRAME.darkened(0.3), 8, Vector2(12, 3))
 	_upcoming_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_upcoming_row = UiKit.hbox(8)
 	_upcoming_panel.add_child(_upcoming_row)
 	_upcoming_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 8)
-	_upcoming_panel.position.y = 78
+	_upcoming_panel.position.y = 84
 	_upcoming_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_upcoming_panel)
 

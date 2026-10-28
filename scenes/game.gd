@@ -38,6 +38,7 @@ var tooltip: TowerTooltip
 var hints: HintLabels
 var tutorial: TutorialCard
 var reward_screen: RewardScreenUi
+var expansion_screen: ExpansionScreenUi
 var help: HelpScreen
 var end_screen: EndScreen
 var tower_drag: TowerDragController
@@ -48,6 +49,8 @@ var _hovered_tower_id := -1
 var _args := {}
 var _elapsed := 0.0
 var _demo_step := 0.0
+## Salas oferecidas na última vez que a câmera foi enquadrada.
+var _offered_key := ""
 
 
 func _ready() -> void:
@@ -55,7 +58,9 @@ func _ready() -> void:
 	_parse_args()
 	if _args.has("set"):
 		GameSets.select(_args["set"])
-	map = SimMap.load_map(DataLoader.load_json("map.json"))
+	# Mapa que cresce ligado (`data/expansion.json`): o mapa das salas, com só o começo aberto.
+	var expansion := ExpansionData.game_data()
+	map = expansion.build_map() if expansion.enabled else SimMap.load_map(DataLoader.load_json("map.json"))
 	var chosen_seed := forced_seed if forced_seed != "" else pending_seed
 	pending_seed = ""
 	seed_text = _args.get("seed", chosen_seed if chosen_seed != "" else _random_seed())
@@ -134,6 +139,8 @@ func _build_world() -> void:
 	add_child(camera_ctl)
 	camera_ctl.setup(camera, map, _camera_blocked, _holding_tower, _cancel_hand)
 	camera_ctl.right_clicked.connect(func() -> void: shop.cancel())
+	if ExpansionData.for_map(map) != null:
+		camera_ctl.set_map_cells(grid.view_cells())
 
 
 func _build_ui() -> void:
@@ -170,6 +177,10 @@ func _build_ui() -> void:
 	reward_screen = RewardScreenUi.new()
 	root.add_child(reward_screen)
 	reward_screen.setup(_state, _enqueue_checked, func() -> bool: return runner.paused,
+			float(EngineData.config()["ticksPerSecond"]))
+	expansion_screen = ExpansionScreenUi.new()
+	root.add_child(expansion_screen)
+	expansion_screen.setup(_state, _enqueue_checked, func() -> bool: return runner.paused,
 			float(EngineData.config()["ticksPerSecond"]))
 	help = HelpScreen.new()
 	root.add_child(help)
@@ -212,9 +223,9 @@ func _state() -> RunState:
 	return runner.sim.state
 
 
-## Jogo pausado (P) ou tela de recompensa aberta: as ações do jogador são ignoradas.
+## Jogo pausado (P), tela de recompensa ou escolha da parede abertas: as ações do jogador são ignoradas.
 func _blocked() -> bool:
-	return runner.paused or _state().rewards.screen_open()
+	return runner.paused or _state().rewards.screen_open() or _state().expansion.screen_open()
 
 
 func _camera_blocked() -> bool:
@@ -297,6 +308,9 @@ func _input(event: InputEvent) -> void:
 		if reward_screen.handle_key(key):
 			get_viewport().set_input_as_handled()
 			return
+		if expansion_screen.handle_key(key):
+			get_viewport().set_input_as_handled()
+			return
 		if _handle_game_key(key):
 			get_viewport().set_input_as_handled()
 
@@ -363,9 +377,11 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	var events := runner.update(delta_ms)
 	var state := _state()
-	var frozen := runner.paused or state.rewards.screen_open()
+	var choosing := state.rewards.screen_open() or state.expansion.screen_open()
+	var frozen := runner.paused or choosing
 	var frame_delta := 0.0 if frozen else delta_ms
-	var alpha := 1.0 if state.rewards.screen_open() else runner.alpha
+	var alpha := 1.0 if choosing else runner.alpha
+	_update_expansion(delta)
 
 	var mouse := get_viewport().get_mouse_position()
 	var over_ui := get_viewport().gui_get_hovered_control() != null and not _dragging_from_ui()
@@ -412,6 +428,24 @@ func _process(delta: float) -> void:
 			"link": "semente %s" % state.seed_text,
 		}))
 	_run_dev_tools(delta)
+
+
+## Mapa que cresce: a escolha da parede (salas oferecidas acesas no mapa, a da opção sob o mouse mais
+## forte) e o chão novo quando a sala abre; a câmera passa a enquadrar a área aberta (e as salas oferecidas).
+func _update_expansion(delta: float) -> void:
+	expansion_screen.update_screen()
+	var data := ExpansionData.for_map(map)
+	if data == null:
+		return
+	var offered: Array = []
+	for id: String in expansion_screen.option_rooms():
+		offered.append(data.get_room(id))
+	grid.show_candidates(offered, expansion_screen.hovered_option)
+	var changed := grid.refresh(delta)
+	var offered_key := ",".join(expansion_screen.option_rooms())
+	if changed or offered_key != _offered_key:
+		_offered_key = offered_key
+		camera_ctl.set_map_cells(grid.view_cells(offered))
 
 
 ## Arrastando a partir da interface (slot da loja): a casa sob o mouse vale mesmo fora do painel.
@@ -528,12 +562,14 @@ func _demo_setup() -> void:
 	runner.clock.set_speed(3.0)
 
 
-## `--open=reward|help|end|debug`: abre uma tela logo no começo (para capturas de tela).
+## `--open=reward|expansion|help|end|debug`: abre uma tela logo no começo (para capturas de tela).
 func _open_for_dev() -> void:
 	match String(_args.get("open", "")):
 		"reward":
 			runner.sim.enqueue({"type": "debugAddGold", "amount": 100})
 			runner.sim.enqueue({"type": "debugOpenReward"})
+		"expansion":
+			runner.sim.enqueue({"type": "debugOpenExpansion"})
 		"help":
 			help.open()
 		"end":

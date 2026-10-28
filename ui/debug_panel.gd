@@ -146,6 +146,7 @@ func _build() -> void:
 	var wave_row := UiKit.hbox(4)
 	wave_row.add_child(_small_button("Encerrar onda", func() -> void: _send({"type": "endWave"})))
 	wave_row.add_child(_small_button("Abrir recompensa", func() -> void: _send({"type": "debugOpenReward"})))
+	wave_row.add_child(_small_button("Derrubar parede", func() -> void: _send({"type": "debugOpenExpansion"})))
 	box.add_child(wave_row)
 	var skip_row := UiKit.hbox(4)
 	_skip_wave = _spin(1, 99, 10)

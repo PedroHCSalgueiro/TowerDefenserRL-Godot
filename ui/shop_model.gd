@@ -25,6 +25,14 @@ class SlotModel:
 	func is_empty() -> bool:
 		return tower_type == ""
 
+	## Etiqueta de raridade da carta: a comum é cinza e não leva texto ("").
+	func rarity_tag() -> String:
+		return "" if rarity == "common" else rarity_label
+
+	## Primeira letra do nome (medalhão da carta sem retrato).
+	func initial() -> String:
+		return name.substr(0, 1).to_upper()
+
 var gold := 0
 ## Juros que entram no fim da próxima onda, com o ouro de agora.
 var interest := 0

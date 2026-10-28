@@ -52,6 +52,7 @@ static func select(id: String) -> bool:
 	EnemyData.reset_cache()
 	NexusData.reset_cache()
 	WaveData.reset_cache()
+	ExpansionData.reset_cache()
 	return true
 
 

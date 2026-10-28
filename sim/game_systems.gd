@@ -21,7 +21,8 @@ extends RefCounted
 
 
 ## `options` (Dictionary, todas opcionais; o padrão são os dados do jogo): enemies, nexus, towers,
-## classes, debug, economy, waves, rewards (os objetos *Data) e ticksPerSecond (float).
+## classes, debug, economy, waves, rewards, expansion (os objetos *Data) e ticksPerSecond (float).
+## O mapa que cresce (`Expansion`) só entra se `map` for o mapa das salas.
 static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var enemies: EnemyData = options.get("enemies", EnemyData.game_data())
 	var nexus: NexusData = options.get("nexus", NexusData.game_data())
@@ -31,6 +32,7 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var economy: EconomyData = options.get("economy", EconomyData.game_data())
 	var waves: WaveData = options.get("waves", WaveData.game_data())
 	var rewards: RewardData = options.get("rewards", RewardData.game_data())
+	var expansion := ExpansionData.for_map(map, options.get("expansion", ExpansionData.game_data()))
 	var engine := EngineData.config()
 	var ticks_per_second: float = options.get("ticksPerSecond", float(engine["ticksPerSecond"]))
 	var routes := Route.build_routes(map)
@@ -55,10 +57,13 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 					if pierce > 0.0:
 						ctx.armor_pierce[tower.id] = pierce),
 		Rewards.create_reward_clock_system(),
+		Expansion.create_clock_system() if expansion != null else Callable(),
 		Commands.create_command_system(map, routes, enemies, towers, debug, schedules, economy, nexus,
 				rewards, classes, ticks_per_second),
+		Expansion.create_command_system(map, routes, expansion) if expansion != null else Callable(),
 		Rewards.create_reward_timeout_system(rewards),
-		WaveSystems.create_wave_spawn_system(routes, enemies, schedules, waves.max_active_enemies),
+		Expansion.create_timeout_system(map, routes, expansion) if expansion != null else Callable(),
+		WaveSystems.create_wave_spawn_system(routes, enemies, schedules, waves.max_active_enemies, map),
 		Stress.create_stress_system(routes, enemies),
 		EnemySystems.create_movement_system(routes, enemies, ticks_per_second),
 		NexusSystems.create_nexus_contact_system(routes, enemies, classes),
@@ -75,6 +80,7 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		Economy.create_gold_system(enemies, economy),
 		WaveSystems.create_wave_progress_system(enemies, schedules, economy, towers),
 		Rewards.create_reward_open_system(rewards, economy, classes, ticks_per_second),
+		Expansion.create_open_system(map, expansion, schedules, enemies, ticks_per_second) if expansion != null else Callable(),
 		ClassSystems.create_class_system(towers, classes),
 	]
 	return systems.filter(func(system: Callable) -> bool: return system.is_valid())

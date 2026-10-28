@@ -6,10 +6,12 @@ extends RefCounted
 ## Coloca um inimigo do tipo pedido a `distance` casas do início da sua rota
 ## (0 = na entrada) e emite `enemySpawned`. `hp_multiplier` multiplica a vida
 ## dos dados (o multiplicador da onda); `wave` é a onda dona do inimigo (0 = sem onda).
-## O elite tem ainda a vida multiplicada por `EnemyData.elite_hp_multiplier`.
+## O elite tem ainda a vida multiplicada por `EnemyData.elite_hp_multiplier`. `entrance`: por qual
+## entrada do mapa ele entra (0 = a principal; ver `Route.key_for`).
 ## Tipo desconhecido: push_error e devolve null.
 static func spawn_enemy(ctx: TickContext, routes: Dictionary, data: EnemyData, enemy_type: String,
-		distance: float = 0.0, hp_multiplier: float = 1.0, wave: int = 0, elite: bool = false) -> Enemy:
+		distance: float = 0.0, hp_multiplier: float = 1.0, wave: int = 0, elite: bool = false,
+		entrance: int = 0) -> Enemy:
 	var type := data.get_type(enemy_type)
 	if type == null:
 		return null
@@ -21,8 +23,9 @@ static func spawn_enemy(ctx: TickContext, routes: Dictionary, data: EnemyData, e
 	enemy.hp = type.hp * hp_multiplier * (data.elite_hp_multiplier if elite else 1.0)
 	enemy.max_hp = enemy.hp
 	enemy.distance = distance
-	var route: Route = routes[type.movement]
+	var route: Route = routes[Route.key_for(type.movement, entrance)]
 	route.sample_into(distance, enemy)
+	enemy.entrance = entrance
 	enemy.type_data = type
 	enemy.route = route
 	enemy.route_length = route.length

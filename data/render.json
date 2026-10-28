@@ -30,6 +30,15 @@
     "entranceColor": "#4f7cac",
     "nexusColor": "#b54848"
   },
+  "expansion": {
+    "optionColors": ["#f0c040", "#5fc8e8", "#c07ef0"],
+    "alpha": 0.32,
+    "hoverAlpha": 0.75,
+    "pulseSeconds": 1.2,
+    "entranceColor": "#e05a48",
+    "riseSeconds": 0.5,
+    "riseDepth": 0.9
+  },
   "hover": {
     "buildableColor": "#9be39b",
     "blockedColor": "#e39b9b",

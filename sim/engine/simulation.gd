@@ -45,9 +45,13 @@ static func runs_while_frozen(system: Callable) -> Callable:
 
 ## Tela de recompensa aberta (T24): o tick fica congelado. O número do tick não
 ## anda (os nascimentos das ondas empilhadas e as travas de ativação não
-## "atrasam") e só rodam os sistemas marcados com `runs_while_frozen`.
+## "atrasam") e só rodam os sistemas marcados com `runs_while_frozen`. A escolha da parede do mapa
+## que cresce (`Expansion`) congela do mesmo jeito.
 static func is_frozen(run_state: Object) -> bool:
-	return run_state.rewards.screen != null
+	if run_state.rewards.screen != null:
+		return true
+	var expansion: Variant = run_state.get("expansion")
+	return expansion != null and expansion.screen != null
 
 
 func enqueue(command: Dictionary) -> void:

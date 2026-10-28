@@ -9,6 +9,8 @@ const TEXT := Color("#dddddd")
 const MUTED := Color("#9a9a9a")
 const GOLD := Color("#ffd75e")
 const GREEN := Color("#9be37a")
+## Friso de bronze dos painéis de HUD.
+const FRAME := Color("#7a6232")
 const BUTTON_BG := Color("#33363a")
 const BUTTON_BORDER := Color("#4a4d50")
 const BUTTON_HOVER := Color("#44484d")
@@ -40,6 +42,22 @@ static func style(bg: Color = BG, border: Color = BORDER, radius: int = 8, borde
 	s.content_margin_top = padding.y
 	s.content_margin_bottom = padding.y
 	return s
+
+
+## Painel de HUD com cara de jogo: fundo escuro, friso de bronze e sombra.
+static func game_style(radius: int = 12, padding: Vector2 = Vector2(12, 8)) -> StyleBoxFlat:
+	var s := style(Color(0.075, 0.08, 0.1, 0.94), FRAME, radius, 2, padding)
+	s.shadow_color = Color(0.0, 0.0, 0.0, 0.5)
+	s.shadow_size = 8
+	s.shadow_offset = Vector2(0.0, 3.0)
+	s.anti_aliasing = true
+	return s
+
+
+static func game_panel(radius: int = 12, padding: Vector2 = Vector2(12, 8)) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", game_style(radius, padding))
+	return p
 
 
 ## PanelContainer com o estilo padrão dos painéis.
@@ -80,14 +98,52 @@ static func button(text: String, on_pressed: Callable) -> Button:
 	b.add_theme_font_size_override("font_size", FONT)
 	b.add_theme_color_override("font_color", Color("#eeeeee"))
 	b.add_theme_color_override("font_disabled_color", Color(0.93, 0.93, 0.93, 0.4))
-	b.add_theme_stylebox_override("normal", style(BUTTON_BG, BUTTON_BORDER, 4, 1, Vector2(10, 5)))
-	b.add_theme_stylebox_override("hover", style(BUTTON_HOVER, BUTTON_BORDER, 4, 1, Vector2(10, 5)))
-	b.add_theme_stylebox_override("pressed", style(BUTTON_HOVER, BUTTON_BORDER, 4, 1, Vector2(10, 5)))
-	b.add_theme_stylebox_override("disabled", style(Color(BUTTON_BG, 0.5), BUTTON_BORDER, 4, 1, Vector2(10, 5)))
+	b.add_theme_stylebox_override("normal", _button_style(BUTTON_BG, BUTTON_BORDER))
+	b.add_theme_stylebox_override("hover", _button_style(BUTTON_HOVER, FRAME.lightened(0.25)))
+	b.add_theme_stylebox_override("pressed", _button_style(BUTTON_BG.darkened(0.2), FRAME, true))
+	b.add_theme_stylebox_override("disabled", _button_style(Color(BUTTON_BG, 0.5), BUTTON_BORDER))
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	if on_pressed.is_valid():
 		b.pressed.connect(on_pressed)
 	return b
+
+
+## Botão de destaque (chamar onda): verde, com a mesma sombra de baixo dos demais.
+static func primary_button(text: String, on_pressed: Callable) -> Button:
+	var b := button(text, on_pressed)
+	b.add_theme_font_override("font", bold_font())
+	b.add_theme_stylebox_override("normal", _button_style(Color("#2f6a34"), Color("#7fd06b")))
+	b.add_theme_stylebox_override("hover", _button_style(Color("#3b8040"), Color("#a6ec92")))
+	b.add_theme_stylebox_override("pressed", _button_style(Color("#265a2a"), Color("#7fd06b"), true))
+	b.add_theme_stylebox_override("disabled", _button_style(Color("#2f6a34", 0.35), Color("#7fd06b", 0.35)))
+	return b
+
+
+## Botão grande dourado (rerolar), no estilo do "Fim do turno" dos jogos de cartas.
+static func accent_button(text: String, on_pressed: Callable) -> Button:
+	var b := button(text, on_pressed)
+	b.custom_minimum_size = Vector2(150, 44)
+	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	b.add_theme_font_override("font", bold_font())
+	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_color_override("font_color", Color("#3a2406"))
+	b.add_theme_color_override("font_hover_color", Color("#2a1a04"))
+	b.add_theme_color_override("font_disabled_color", Color("#3a2406", 0.45))
+	b.add_theme_stylebox_override("normal", _button_style(Color("#f0b13c"), Color("#fff0a8")))
+	b.add_theme_stylebox_override("hover", _button_style(Color("#ffc95a"), Color("#fff6c8")))
+	b.add_theme_stylebox_override("pressed", _button_style(Color("#d99a2c"), Color("#fff0a8"), true))
+	b.add_theme_stylebox_override("disabled", _button_style(Color("#f0b13c", 0.4), Color("#fff0a8", 0.4)))
+	return b
+
+
+## Botão com a borda de baixo mais grossa (relevo); apertado, afunda.
+static func _button_style(bg: Color, border: Color, sunk: bool = false) -> StyleBoxFlat:
+	var s := style(bg, border, 6, 1, Vector2(10, 5))
+	s.border_width_bottom = 1 if sunk else 3
+	s.content_margin_top = 6.0 if sunk else 5.0
+	s.content_margin_bottom = 4.0 if sunk else 5.0
+	s.anti_aliasing = true
+	return s
 
 
 static func hbox(separation: int = 8) -> HBoxContainer:

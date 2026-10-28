@@ -41,6 +41,13 @@ func setup(camera: Camera3D, map: SimMap, blocked: Callable, holding_tower: Call
 	_apply()
 
 
+## A área aberta do mapa mudou (mapa que cresce): os limites passam a ser essas casas e a vista volta ao
+## padrão com animação (a câmera se afasta para a sala nova caber).
+func set_map_cells(cells: Rect2i) -> void:
+	model.set_bounds(GroundProjection.cells_view_bounds(cells))
+	model.reset()
+
+
 func _on_resize() -> void:
 	model.set_viewport(get_viewport().get_visible_rect().size)
 	_applied_view = null

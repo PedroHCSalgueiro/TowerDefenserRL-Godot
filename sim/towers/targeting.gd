@@ -24,6 +24,9 @@ static func create_target_scores(routes: Dictionary, enemies: EnemyData) -> Dict
 	for id: String in enemies.types:
 		route_length[id] = (routes[enemies.types[id].movement] as Route).length
 	var remaining := func(enemy: Enemy, _from_x: float, _from_y: float) -> float:
+		# Cada inimigo na rota da sua entrada (mapa que cresce); o comprimento vem do cache do spawn.
+		if enemy.route != null:
+			return enemy.route_length - enemy.distance
 		if not route_length.has(enemy.type):
 			push_error('Tipo de inimigo desconhecido: "%s"' % enemy.type)
 			return INF

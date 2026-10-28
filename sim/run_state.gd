@@ -69,6 +69,8 @@ var stats := WaveState.RunStats.new()
 var shop: Shop.ShopState
 ## Recompensas de escolha (T24): bônus escolhidos, tela aberta, fila e RNG das cartas.
 var rewards: RewardsState
+## Mapa que cresce: salas abertas, escolha da parede e RNG das paredes.
+var expansion: ExpansionState
 var debug := DebugState.new()
 ## Armadilhas no chão do caminho (Engenheira Mabel).
 var traps: Array[Trap] = []
@@ -95,6 +97,7 @@ static func create(seed_text_value: String, economy_data: EconomyData = null) ->
 	state.gold = economy.starting_gold
 	state.reported_gold = economy.starting_gold
 	state.rewards = RewardsState.create(seed_text_value)
+	state.expansion = ExpansionState.create(seed_text_value)
 	state.shop = Shop.new_shop(Rng.new(state), economy, TowerData.game_data(), Shop.initial_chances(economy), true, 0,
 			Shop.common_only(economy, 0))
 	return state

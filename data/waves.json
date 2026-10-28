@@ -3,67 +3,67 @@
   "waves": [
     {
       "hpMultiplier": 0.7,
-      "spawnSeconds": 2.5,
+      "spawnSeconds": 0.5,
       "enemies": [
         {
           "type": "common",
-          "count": 6
+          "count": 12
         }
       ]
     },
     {
       "hpMultiplier": 0.78,
-      "spawnSeconds": 1.8,
+      "spawnSeconds": 0.4,
       "enemies": [
         {
           "type": "common",
-          "count": 6
+          "count": 18
         }
       ]
     },
     {
       "hpMultiplier": 0.86,
-      "spawnSeconds": 1.8,
+      "spawnSeconds": 0.35,
       "enemies": [
         {
           "type": "common",
-          "count": 7
+          "count": 21
         }
       ]
     },
     {
       "hpMultiplier": 0.96,
-      "spawnSeconds": 1.8,
+      "spawnSeconds": 0.3,
       "enemies": [
         {
           "type": "common",
-          "count": 2
+          "count": 6
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 3
+        },
+        {
+          "type": "common",
+          "count": 9
+        },
+        {
+          "type": "fast",
+          "count": 3
         },
         {
           "type": "common",
           "count": 3
-        },
-        {
-          "type": "fast",
-          "count": 1
-        },
-        {
-          "type": "common",
-          "count": 1
         }
       ]
     },
     {
       "hpMultiplier": 1.06,
-      "spawnSeconds": 1.8,
+      "spawnSeconds": 0.3,
       "enemies": [
         {
           "type": "common",
-          "count": 1
+          "count": 5
         },
         {
           "type": "common",
@@ -72,11 +72,11 @@
         },
         {
           "type": "common",
-          "count": 1
+          "count": 5
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 5
         },
         {
           "type": "fast",
@@ -85,137 +85,137 @@
         },
         {
           "type": "common",
-          "count": 1
+          "count": 5
         }
       ]
     },
     {
       "hpMultiplier": 1.18,
-      "spawnSeconds": 1.83,
+      "spawnSeconds": 0.3,
       "enemies": [
         {
           "type": "common",
-          "count": 2
+          "count": 5
         },
         {
           "type": "fast",
-          "count": 1
-        },
-        {
-          "type": "common",
           "count": 3
         },
         {
+          "type": "common",
+          "count": 8
+        },
+        {
           "type": "fast",
-          "count": 1
+          "count": 3
         },
         {
           "type": "common",
-          "count": 2
+          "count": 5
         }
       ]
     },
     {
       "hpMultiplier": 1.31,
-      "spawnSeconds": 1.72,
+      "spawnSeconds": 0.3,
       "enemies": [
         {
           "type": "common",
-          "count": 2
+          "count": 5
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 3
         },
+        {
+          "type": "common",
+          "count": 10
+        },
+        {
+          "type": "fast",
+          "count": 3
+        },
+        {
+          "type": "common",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "hpMultiplier": 1.45,
+      "spawnSeconds": 0.35,
+      "enemies": [
         {
           "type": "common",
           "count": 4
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 2
+        },
+        {
+          "type": "armored",
+          "count": 2
+        },
+        {
+          "type": "common",
+          "count": 6
+        },
+        {
+          "type": "fast",
+          "count": 2
+        },
+        {
+          "type": "armored",
+          "count": 2
         },
         {
           "type": "common",
           "count": 2
-        }
-      ]
-    },
-    {
-      "hpMultiplier": 1.45,
-      "spawnSeconds": 1.62,
-      "enemies": [
-        {
-          "type": "common",
-          "count": 2
-        },
-        {
-          "type": "fast",
-          "count": 1
-        },
-        {
-          "type": "armored",
-          "count": 1
-        },
-        {
-          "type": "common",
-          "count": 3
-        },
-        {
-          "type": "fast",
-          "count": 1
-        },
-        {
-          "type": "armored",
-          "count": 1
-        },
-        {
-          "type": "common",
-          "count": 1
         }
       ]
     },
     {
       "hpMultiplier": 1.61,
-      "spawnSeconds": 1.52,
+      "spawnSeconds": 0.4,
       "enemies": [
         {
           "type": "common",
-          "count": 2
+          "count": 4
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 2
         },
         {
           "type": "armored",
-          "count": 1
+          "count": 2
         },
         {
           "type": "common",
-          "count": 3
+          "count": 6
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 2
         },
         {
           "type": "armored",
-          "count": 1
+          "count": 2
         },
         {
           "type": "common",
-          "count": 2
+          "count": 4
         }
       ]
     },
     {
       "hpMultiplier": 1.79,
-      "spawnSeconds": 1.43,
+      "spawnSeconds": 0.6,
       "enemies": [
         {
           "type": "common",
-          "count": 2
+          "count": 3
         },
         {
           "type": "common",
@@ -224,11 +224,11 @@
         },
         {
           "type": "fast",
-          "count": 1
+          "count": 2
         },
         {
           "type": "armored",
-          "count": 1
+          "count": 2
         },
         {
           "type": "fast",
@@ -237,7 +237,7 @@
         },
         {
           "type": "common",
-          "count": 2
+          "count": 3
         },
         {
           "type": "armored",

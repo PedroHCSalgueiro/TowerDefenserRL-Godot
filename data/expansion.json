@@ -1,0 +1,39 @@
+{
+  "enabled": true,
+  "map": {
+    "id": "salas-01",
+    "width": 26,
+    "height": 22,
+    "path": [
+      { "x": 6, "y": 6 },
+      { "x": 16, "y": 6 },
+      { "x": 16, "y": 10 },
+      { "x": 9, "y": 10 },
+      { "x": 9, "y": 14 },
+      { "x": 18, "y": 14 }
+    ]
+  },
+  "startMargin": 1,
+  "afterWaves": [10, 20, 30],
+  "choices": 3,
+  "chooseSeconds": 20,
+  "rooms": [
+    { "id": "corredor", "name": "Corredor Interno", "rect": { "x": 5, "y": 8, "w": 10, "h": 1 } },
+    { "id": "galeria", "name": "Galeria Sul", "rect": { "x": 11, "y": 11, "w": 9, "h": 2 } },
+    { "id": "salao_norte", "name": "Salão Norte", "rect": { "x": 5, "y": 1, "w": 14, "h": 4 } },
+    {
+      "id": "ala_oeste",
+      "name": "Ala Oeste",
+      "rect": { "x": 0, "y": 9, "w": 8, "h": 8 },
+      "entrance": [{ "x": 0, "y": 12 }, { "x": 9, "y": 12 }]
+    },
+    {
+      "id": "ala_leste",
+      "name": "Ala Leste",
+      "rect": { "x": 18, "y": 4, "w": 8, "h": 8 },
+      "entrance": [{ "x": 25, "y": 8 }, { "x": 16, "y": 8 }]
+    },
+    { "id": "cripta_sul", "name": "Cripta Sul", "rect": { "x": 8, "y": 16, "w": 12, "h": 5 } },
+    { "id": "jardim", "name": "Jardim Sudeste", "rect": { "x": 20, "y": 12, "w": 6, "h": 9 } }
+  ]
+}

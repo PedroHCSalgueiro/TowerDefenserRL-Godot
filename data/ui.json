@@ -23,6 +23,13 @@
     "rerollLabel": "Rerolar (R) −{cost}",
     "freeRerollLabel": "Rerolar (R) grátis"
   },
+  "expansionScreen": {
+    "title": "Derrube uma parede",
+    "subtitle": "A sala escolhida abre casas novas para construir. Sala com entrada traz um caminho novo de inimigos. Passe o mouse para ver a sala no mapa (1, 2 ou 3).",
+    "cells": "{n} casas",
+    "entrance": "⚠ Entrada nova de inimigos",
+    "seconds": "{s} s"
+  },
   "rewardScreen": {
     "title": "Recompensa da onda {wave}",
     "extraTitle": "Recompensa extra",

@@ -16,8 +16,18 @@ var path_cells: Array[Vector2i]
 var entrance: Vector2i
 ## O núcleo ocupa 1 casa: a última do caminho.
 var nexus: Vector2i
+## Mapa que cresce (`Expansion`): entradas abertas por salas, na ordem em que abriram. Cada uma é
+## {"cells": Array[Vector2i] da borda até a casa antes do caminho principal, "join": índice em
+## `path_cells` onde ela se junta}. A entrada 0 é a do caminho principal.
+var extra_entrances: Array = []
+## Salas já aplicadas a este mapa (ids, na ordem).
+var applied_rooms: Array[String] = []
+## Sobe a cada mudança do mapa (salas abertas): a renderização refaz o chão quando muda.
+var revision := 0
 
 var _path_mask: PackedByteArray
+## Casas abertas (1) e no escuro (0). Vazio = todas abertas (mapa sem salas).
+var _open_mask := PackedByteArray()
 
 
 func _init(p_id: String, p_width: int, p_height: int, p_path_cells: Array[Vector2i]) -> void:
@@ -47,9 +57,67 @@ func is_path(cell: Vector2i) -> bool:
 	return is_inside(cell) and _path_mask[index_of(cell)] == 1
 
 
-## Torres só vão em casas dentro da grade e fora do caminho.
+## Torres só vão em casas dentro da grade, abertas e fora do caminho.
 func can_place_tower(cell: Vector2i) -> bool:
-	return is_inside(cell) and _path_mask[index_of(cell)] == 0
+	return is_inside(cell) and _path_mask[index_of(cell)] == 0 and is_open(cell)
+
+
+## A casa está aberta (no mapa sem salas, todas estão). O caminho aberto conta como aberto.
+func is_open(cell: Vector2i) -> bool:
+	return is_inside(cell) and (_open_mask.is_empty() or _open_mask[index_of(cell)] == 1)
+
+
+## Liga o mapa em salas: só `cells` (e o caminho principal) começam abertas.
+func set_start_cells(cells: Array[Vector2i]) -> void:
+	_open_mask = PackedByteArray()
+	_open_mask.resize(width * height)
+	for cell in path_cells:
+		_open_mask[index_of(cell)] = 1
+	open_cells(cells)
+
+
+## Abre casas (sala derrubada).
+func open_cells(cells: Array[Vector2i]) -> void:
+	if _open_mask.is_empty():
+		return
+	for cell in cells:
+		_open_mask[index_of(cell)] = 1
+	revision += 1
+
+
+## Entrada nova: as casas viram caminho abertas; os inimigos dela andam por elas e seguem o caminho
+## principal a partir de `join`.
+func add_entrance(cells: Array[Vector2i], join: int) -> void:
+	for cell in cells:
+		_path_mask[index_of(cell)] = 1
+		if not _open_mask.is_empty():
+			_open_mask[index_of(cell)] = 1
+	extra_entrances.append({"cells": cells, "join": join})
+	revision += 1
+
+
+## Quantas entradas o mapa tem (a principal e as abertas por salas).
+func entrance_count() -> int:
+	return 1 + extra_entrances.size()
+
+
+## Primeira casa da entrada `index` (0 = a principal).
+func entrance_cell(index: int) -> Vector2i:
+	if index == 0:
+		return entrance
+	var cells: Array[Vector2i] = extra_entrances[index - 1]["cells"]
+	return cells[0]
+
+
+## Casas que o terrestre da entrada `index` percorre, da entrada ao núcleo.
+func entrance_path(index: int) -> Array[Vector2i]:
+	if index == 0:
+		return path_cells
+	var extra: Dictionary = extra_entrances[index - 1]
+	var out: Array[Vector2i] = []
+	out.assign(extra["cells"])
+	out.append_array(path_cells.slice(int(extra["join"])))
+	return out
 
 
 ## Valida os dados do mapa ({id, width, height, path: [{x, y}, ...]}) e expande os
