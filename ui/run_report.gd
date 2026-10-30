@@ -21,7 +21,7 @@ var nexus_level := 1
 var gold_earned := 0
 ## Recompensas escolhidas (T24), na ordem: "Onda 5: Mais espaço".
 var rewards: Array[String] = []
-## Salas do mapa que cresce, na ordem em que abriram: "Onda 10: Ala Oeste".
+## Paredes do mapa que cresce, na ordem em que caíram: "Onda 5: Esticar a linha principal".
 var rooms: Array[String] = []
 var cheated := false
 ## Link da run (no Godot não há URL; fica vazio ou a semente).
@@ -84,7 +84,7 @@ func format() -> String:
 		"Núcleo: nível %d" % nexus_level,
 		"Ouro ganho: %d" % gold_earned,
 		"Recompensas (%d): %s" % [rewards.size(), ", ".join(rewards) if not rewards.is_empty() else "nenhuma"],
-		"Salas (%d): %s" % [rooms.size(), ", ".join(rooms) if not rooms.is_empty() else "nenhuma"],
+		"Paredes (%d): %s" % [rooms.size(), ", ".join(rooms) if not rooms.is_empty() else "nenhuma"],
 		"Trapaça: %s" % ("sim" if cheated else "não"),
 		"Link: %s" % link,
 	])

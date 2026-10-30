@@ -156,8 +156,8 @@ static func skip_to_wave(ctx: TickContext, schedules: Array[WaveSchedule], econo
 ## Fila invisível: com `max_active_enemies` ativos, os próximos esperam na entrada, nessa mesma
 ## ordem, e nascem quando abrir espaço.
 ##
-## Mapa com mais de uma entrada (salas do mapa que cresce): os inimigos de cada onda se alternam entre
-## as entradas, pela posição na lista da onda (o 1º na principal, o 2º na primeira sala, ...).
+## Mapa com mais de uma entrada (linhas do mapa que cresce): os inimigos de cada onda se alternam entre
+## as entradas, pela posição na lista da onda (o 1º na principal, o 2º na segunda linha, ...).
 static func create_wave_spawn_system(routes: Dictionary, enemies: EnemyData,
 		schedules: Array[WaveSchedule], max_active_enemies: int, map: SimMap = null) -> Callable:
 	return func(ctx: TickContext) -> void:

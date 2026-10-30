@@ -5,11 +5,12 @@ extends RefCounted
 class Option:
 	extends RefCounted
 	var index: int
-	var room_id: String
+	## Id da abertura (`ExpansionData`: "linha1", "cima"...).
+	var option_id: String
 	var name: String
-	## "18 casas"
+	## "90 casas"
 	var cells: String
-	## A sala traz uma entrada nova de inimigos.
+	## A abertura traz uma entrada nova de inimigos.
 	var entrance := false
 	## Tecla (1, 2, 3).
 	var key: String
@@ -20,7 +21,7 @@ var time_left := 1.0
 var seconds := 0
 
 
-## Null com a escolha fechada (ou no mapa sem salas).
+## Null com a escolha fechada (ou no mapa que não cresce).
 static func build(state: Object, data: ExpansionData, ticks_per_second: float) -> ExpansionScreenModel:
 	if state.expansion == null or state.expansion.screen == null or not data.enabled:
 		return null
@@ -28,15 +29,15 @@ static func build(state: Object, data: ExpansionData, ticks_per_second: float) -
 	var screen: ExpansionState.ExpansionScreen = state.expansion.screen
 	var model := ExpansionScreenModel.new()
 	for i in screen.options.size():
-		var room := data.get_room(screen.options[i])
-		if room == null:
+		var opening := data.opening(state.expansion.opened, screen.options[i])
+		if opening == null:
 			continue
 		var option := Option.new()
 		option.index = i
-		option.room_id = room.id
-		option.name = room.name
-		option.cells = String(texts["cells"]).replace("{n}", str(room.cells.size()))
-		option.entrance = room.has_entrance()
+		option.option_id = opening.id
+		option.name = opening.name
+		option.cells = String(texts["cells"]).replace("{n}", str(build_cells(opening)))
+		option.entrance = opening.new_entrance
 		option.key = str(i + 1)
 		model.options.append(option)
 	var total := Expansion.choose_ticks(data, ticks_per_second)
@@ -49,4 +50,16 @@ static func build(state: Object, data: ExpansionData, ticks_per_second: float) -
 static func key(model: ExpansionScreenModel) -> String:
 	if model == null:
 		return ""
-	return ",".join(model.options.map(func(o: Option) -> String: return o.room_id))
+	return ",".join(model.options.map(func(o: Option) -> String: return o.option_id))
+
+
+## Casas para construir que a abertura traz (as do pedaço fora do caminho novo).
+static func build_cells(opening: ExpansionData.Opening) -> int:
+	var path := {}
+	for cell in opening.path_cells:
+		path[cell] = true
+	var count := 0
+	for cell in opening.cells:
+		if not path.has(cell):
+			count += 1
+	return count

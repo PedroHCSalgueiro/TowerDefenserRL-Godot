@@ -11,6 +11,9 @@ extends Node
 ## com o mapa no limite de torres (T12): não pega a torre, e a torre já presa é cancelada se o limite
 ## encher. Com o jogo pausado (T14), nada disso funciona e a torre presa é cancelada. O botão direito
 ## (T25) também cancela, como o Esc.
+##
+## Debug (`carry_free`): um campeão de graça, na estrela escolhida, fica na mão; cada clique numa casa
+## livre posiciona um (`placeTower`) e ele continua na mão até o Esc ou o botão direito.
 
 ## Distância, em pixels, que separa um clique curto de um arrasto.
 const DRAG_THRESHOLD_PX := 6.0
@@ -31,6 +34,8 @@ var _dragging := false
 var _start := Vector2.ZERO
 var _moved := false
 var _key := ""
+## Campeão de graça na mão (debug): {"towerType", "star"}, ou {} (nenhum).
+var _free := {}
 
 
 func setup(p_panel: ShopPanel, map: SimMap, state: Callable, enqueue: Callable, evolve_nexus: Callable,
@@ -48,9 +53,11 @@ func setup(p_panel: ShopPanel, map: SimMap, state: Callable, enqueue: Callable, 
 	panel.sell_pressed.connect(_sell)
 
 
-## Slot preso ao mouse e o tipo ({"slot", "towerType"}), ou {} (nenhum), para a cena desenhar a
-## torre fantasma.
+## Slot preso ao mouse e o tipo ({"slot", "towerType"}; o campeão de graça do debug vem com
+## "slot" -1, "star" e "free"), ou {} (nenhum), para a cena desenhar a torre fantasma.
 func carrying() -> Dictionary:
+	if not _free.is_empty():
+		return {"slot": -1, "towerType": _free["towerType"], "star": _free["star"], "free": true}
 	if _carry_slot < 0:
 		return {}
 	var tower_type: Variant = _state.call().shop.slots[_carry_slot]
@@ -118,8 +125,19 @@ func _release(pos: Vector2) -> void:
 		_carry_slot = -1  # soltou numa casa inválida: cancela sem cobrar
 
 
+## Debug: põe na mão um campeão de graça (`star` estrelas).
+func carry_free(tower_type: String, star: int) -> void:
+	cancel()
+	_free = {"towerType": tower_type, "star": star}
+
+
 ## Clique no mapa com a torre presa ao mouse: posiciona se a casa serve.
 func click_cell(cell: Variant) -> void:
+	if not _free.is_empty():
+		if cell != null and ShopModel.can_place_at(_state.call(), _map, cell):
+			_enqueue.call({"type": "placeTower", "towerType": _free["towerType"], "x": cell.x, "y": cell.y,
+					"star": _free["star"]})
+		return
 	if _carry_slot < 0 or _dragging:
 		return
 	if cell != null and ShopModel.can_place_at(_state.call(), _map, cell):
@@ -134,6 +152,7 @@ func _model() -> ShopModel:
 func _pick_up(slot: int, dragging: bool, pos: Vector2) -> void:
 	if _paused.call():
 		return
+	_free = {}
 	var model := _model()
 	if slot >= model.slots.size():
 		_carry_slot = -1
@@ -160,6 +179,7 @@ func _buy(slot: int, cell: Vector2i) -> void:
 
 ## Solta a torre da mão sem comprar (Esc e botão direito).
 func cancel() -> void:
+	_free = {}
 	_carry_slot = -1
 	_dragging = false
 
@@ -180,6 +200,8 @@ func update() -> void:
 	# A torre presa some se o slot foi trocado, o ouro acabou ou o jogo pausou.
 	if _carry_slot >= 0 and (carrying().is_empty() or _paused.call()):
 		_carry_slot = -1
+	if not _free.is_empty() and _paused.call():
+		_free = {}
 	var model := _model()
 	if _carry_slot >= 0:
 		var entry := model.slots[_carry_slot]

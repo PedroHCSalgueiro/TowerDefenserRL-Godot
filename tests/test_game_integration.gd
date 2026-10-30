@@ -82,10 +82,12 @@ func _screen_of(cell: Vector2i) -> Vector2:
 	return game.camera.unproject_position(Vector3(cell.x, 0.0, cell.y))
 
 
-## Uma casa livre (fora do caminho) perto do meio do mapa.
+## Uma casa livre (fora do caminho) um pouco abaixo e à direita do núcleo (no mapa que cresce, só o
+## pedaço da base começa aberto; mais para cima, o painel do GUT cobre a tela e pega o clique).
 func _free_cell() -> Vector2i:
-	for y in range(5, 9):
-		for x in range(5, 9):
+	var nexus := game.map.nexus
+	for y in range(nexus.y + 1, nexus.y + 4):
+		for x in range(nexus.x + 2, nexus.x + 6):
 			var cell := Vector2i(x, y)
 			if game.map.can_place_tower(cell):
 				return cell
@@ -218,6 +220,27 @@ func test_arrastar_torre_move_fora_da_onda() -> void:
 	_mouse_button(target, MOUSE_BUTTON_LEFT, false)
 	await _seconds(0.3)
 	assert_eq(Vector2i(state.towers[0].x, state.towers[0].y), to, "a torre foi movida")
+
+
+func test_debug_poe_campeao_de_graca_na_mao() -> void:
+	var state := game._state()
+	var gold: int = state.gold
+	var towers := TowerData.game_data()
+	var type: String = towers.types.keys().filter(func(id: String) -> bool: return not towers.types[id].classes.is_empty())[0]
+	game.shop.carry_free(type, 2)
+	await _frames(1)
+	assert_true(game.shop.carrying()["free"])
+	var cell := _free_cell()
+	_click(_screen_of(cell))
+	await _seconds(0.3)
+	assert_eq(state.towers.size(), 1, "o campeão foi posicionado")
+	assert_eq(state.towers[0].type, type)
+	assert_eq(state.towers[0].star, 2, "na estrela escolhida")
+	assert_eq(state.gold, gold, "de graça")
+	assert_false(game.shop.carrying().is_empty(), "continua na mão para pôr outro")
+	_tap_key(KEY_ESCAPE)
+	await _frames(1)
+	assert_true(game.shop.carrying().is_empty(), "Esc solta")
 
 
 func test_run_perdida_mostra_a_tela_de_fim() -> void:

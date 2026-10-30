@@ -22,7 +22,7 @@ extends RefCounted
 
 ## `options` (Dictionary, todas opcionais; o padrão são os dados do jogo): enemies, nexus, towers,
 ## classes, debug, economy, waves, rewards, expansion (os objetos *Data) e ticksPerSecond (float).
-## O mapa que cresce (`Expansion`) só entra se `map` for o mapa das salas.
+## O mapa que cresce (`Expansion`) só entra se `map` for o mapa dele (`ExpansionData.build_map`).
 static func create(map: SimMap, options: Dictionary = {}) -> Array:
 	var enemies: EnemyData = options.get("enemies", EnemyData.game_data())
 	var nexus: NexusData = options.get("nexus", NexusData.game_data())
@@ -80,7 +80,7 @@ static func create(map: SimMap, options: Dictionary = {}) -> Array:
 		Economy.create_gold_system(enemies, economy),
 		WaveSystems.create_wave_progress_system(enemies, schedules, economy, towers),
 		Rewards.create_reward_open_system(rewards, economy, classes, ticks_per_second),
-		Expansion.create_open_system(map, expansion, schedules, enemies, ticks_per_second) if expansion != null else Callable(),
+		Expansion.create_open_system(map, routes, expansion, ticks_per_second) if expansion != null else Callable(),
 		ClassSystems.create_class_system(towers, classes),
 	]
 	return systems.filter(func(system: Callable) -> bool: return system.is_valid())

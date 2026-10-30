@@ -1,13 +1,13 @@
 class_name ExpansionScreenUi
 extends Control
-## Escolha da parede (mapa que cresce): um painel no topo com as salas oferecidas e a barra do tempo,
-## sem escurecer o mapa, para as salas acesas aparecerem (`GridView.show_candidates`). Clique ou teclas
-## 1, 2 e 3 escolhem; passar o mouse numa opção destaca a sala dela no mapa. A simulação é quem congela
+## Escolha da parede (mapa que cresce): um painel no topo com os pedaços oferecidos e a barra do tempo,
+## sem escurecer o mapa, para os pedaços acesos aparecerem (`GridView.show_candidates`). Clique ou teclas
+## 1, 2 e 3 escolhem; passar o mouse numa opção destaca o pedaço dela no mapa. A simulação é quem congela
 ## o jogo enquanto a escolha está aberta; com a pausa do relógio (P), nada é aceito.
 
 const OPTION_COLORS_KEY := "optionColors"
 
-## Opção sob o mouse (-1 = nenhuma), para o mapa destacar a sala.
+## Opção sob o mouse (-1 = nenhuma), para o mapa destacar o pedaço.
 var hovered_option := -1
 var _state: Callable      # () -> RunState
 var _enqueue: Callable    # (command: Dictionary)
@@ -63,14 +63,14 @@ func is_open() -> bool:
 	return _model != null
 
 
-## Ids das salas oferecidas, na ordem das opções ([] fechada).
-func option_rooms() -> Array:
+## Ids das aberturas oferecidas, na ordem das opções ([] fechada).
+func option_ids() -> Array:
 	if _model == null:
 		return []
-	return _model.options.map(func(o: ExpansionScreenModel.Option) -> String: return o.room_id)
+	return _model.options.map(func(o: ExpansionScreenModel.Option) -> String: return o.option_id)
 
 
-## Cor de cada opção (a mesma do destaque da sala no mapa).
+## Cor de cada opção (a mesma do destaque do pedaço no mapa).
 static func option_color(index: int) -> Color:
 	var colors: Array = RenderConfig.data()["expansion"][OPTION_COLORS_KEY]
 	return RenderConfig.color(colors[index % colors.size()])
@@ -103,7 +103,7 @@ func _render(model: ExpansionScreenModel) -> void:
 func _render_option(option: ExpansionScreenModel.Option, texts: Dictionary) -> Control:
 	var color := option_color(option.index)
 	var node := PanelContainer.new()
-	node.custom_minimum_size = Vector2(200, 0)
+	node.custom_minimum_size = Vector2(220, 0)
 	var normal := UiKit.style(Color("#1d1f23"), color, 10, 2, Vector2(12, 10))
 	var hover := UiKit.style(Color("#2a2c31"), color.lightened(0.3), 10, 3, Vector2(12, 10))
 	node.add_theme_stylebox_override("panel", normal)

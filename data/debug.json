@@ -2,8 +2,10 @@
   "maxSpawnPerCommand": 5000,
   "maxGoldPerCommand": 100000,
   "cheats": {
-    "addGold": 500
+    "addGold": 500,
+    "addGoldBig": 5000
   },
+  "waveShortcuts": [5, 10, 15, 20, 25, 30, 35, 40],
   "defaults": {
     "enemyCount": 1000,
     "towerCount": 30,
@@ -32,7 +34,9 @@
     "unlockKey": "D",
     "unlockParam": "debug",
     "unlockSessionKey": "td-debug-unlocked",
-    "refreshMs": 250
+    "refreshMs": 250,
+    "width": 380,
+    "pageHeight": 400
   },
   "fullScenario": {
     "name": "Cadeia (8 tipos)",

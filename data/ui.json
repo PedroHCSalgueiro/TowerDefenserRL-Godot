@@ -25,7 +25,7 @@
   },
   "expansionScreen": {
     "title": "Derrube uma parede",
-    "subtitle": "A sala escolhida abre casas novas para construir. Sala com entrada traz um caminho novo de inimigos. Passe o mouse para ver a sala no mapa (1, 2 ou 3).",
+    "subtitle": "Escolha para onde o mapa cresce. O caminho de cada direção já vem sorteado: passe o mouse para ver no mapa (1, 2 ou 3). O pedaço novo abre casas para construir.",
     "cells": "{n} casas",
     "entrance": "⚠ Entrada nova de inimigos",
     "seconds": "{s} s"

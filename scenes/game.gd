@@ -58,7 +58,7 @@ func _ready() -> void:
 	_parse_args()
 	if _args.has("set"):
 		GameSets.select(_args["set"])
-	# Mapa que cresce ligado (`data/expansion.json`): o mapa das salas, com só o começo aberto.
+	# Mapa que cresce ligado (`data/expansion.json`): só o pedaço da base aberto.
 	var expansion := ExpansionData.game_data()
 	map = expansion.build_map() if expansion.enabled else SimMap.load_map(DataLoader.load_json("map.json"))
 	var chosen_seed := forced_seed if forced_seed != "" else pending_seed
@@ -195,7 +195,8 @@ func _build_ui() -> void:
 
 	debug_panel = DebugPanel.new()
 	root.add_child(debug_panel)
-	debug_panel.setup(runner, _state, func() -> Variant: return grid.hovered_cell, func() -> Variant: return grid.selected_cell)
+	debug_panel.setup(runner, _state, func() -> Variant: return grid.hovered_cell, func() -> Variant: return grid.selected_cell,
+			func(tower_type: String, star: int) -> void: shop.carry_free(tower_type, star), func() -> Dictionary: return shop.carrying())
 
 	nexus_panel.evolve_pressed.connect(_evolve_nexus)
 	wave_hud.call_pressed.connect(_call_wave)
@@ -425,25 +426,25 @@ func _process(delta: float) -> void:
 			"tower_name": func(type: String) -> String: return TowerData.game_data().get_type(type).name,
 			"reward_name": func(id: String, class_id: Variant) -> String:
 				return RewardScreenModel.reward_card({"id": id, "classId": class_id}, 0, RewardData.game_data(), ClassData.game_data()).name,
-			"room_name": func(id: String) -> String: return ExpansionData.game_data().get_room(id).name,
+			"room_name": func(id: String) -> String: return ExpansionData.game_data().option_name(id),
 			"link": "semente %s" % state.seed_text,
 		}))
 	_run_dev_tools(delta)
 
 
-## Mapa que cresce: a escolha da parede (salas oferecidas acesas no mapa, a da opção sob o mouse mais
-## forte) e o chão novo quando a sala abre; a câmera passa a enquadrar a área aberta (e as salas oferecidas).
+## Mapa que cresce: a escolha da parede (pedaços oferecidos acesos no mapa, o da opção sob o mouse mais
+## forte) e o chão novo quando o pedaço abre; a câmera passa a enquadrar a área aberta (e os oferecidos).
 func _update_expansion(delta: float) -> void:
 	expansion_screen.update_screen()
 	var data := ExpansionData.for_map(map)
 	if data == null:
 		return
 	var offered: Array = []
-	for id: String in expansion_screen.option_rooms():
-		offered.append(data.get_room(id))
+	for id: String in expansion_screen.option_ids():
+		offered.append(data.opening(_state().expansion.opened, id))
 	grid.show_candidates(offered, expansion_screen.hovered_option)
 	var changed := grid.refresh(delta)
-	var offered_key := ",".join(expansion_screen.option_rooms())
+	var offered_key := ",".join(expansion_screen.option_ids())
 	if changed or offered_key != _offered_key:
 		_offered_key = offered_key
 		camera_ctl.set_map_cells(grid.view_cells(offered))
@@ -503,7 +504,7 @@ func _update_overlays(state: RunState, mouse: Vector2, over_ui: bool, now_ms: fl
 		if ghost_valid and hovered != null and (purchase == null or purchase.fusion == ""):
 			var cand2 := TriggerLinks.Candidate.new()
 			cand2.type = ghost_type
-			cand2.star = 1
+			cand2.star = int(carrying.get("star", 1))
 			cand2.x = hovered.x
 			cand2.y = hovered.y
 			cand2.moving_id = -1

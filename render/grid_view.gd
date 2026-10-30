@@ -3,10 +3,11 @@ extends Node3D
 ## O chão do mapa: uma laje por casa aberta (livre, caminho, entradas e núcleo), a casa sob o mouse e a
 ## casa selecionada (porte de `GridView.ts`). A casa sob o mouse vem do raio da câmera contra o chão.
 ##
-## Mapa que cresce: casas fechadas não têm laje (ficam no escuro do fundo). Quando uma sala abre
+## Mapa que cresce: casas fechadas não têm laje (ficam no escuro do fundo). Quando um pedaço abre
 ## (`SimMap.revision` muda), as lajes novas sobem do escuro, uma depois da outra. Durante a escolha da
-## parede, as salas oferecidas aparecem como chão fantasma na cor da opção (`show_candidates`), pulsando,
-## e a entrada nova em vermelho.
+## parede, os pedaços oferecidos aparecem como chão fantasma na cor da opção (`show_candidates`), pulsando,
+## e o caminho novo em vermelho. As casas reservadas (passagem de uma linha que ainda pode abrir) têm
+## cor própria.
 
 var map: SimMap
 var hovered_cell: Variant = null
@@ -22,6 +23,7 @@ var _free_mat: Material
 var _path_mat: Material
 var _entrance_mat: Material
 var _nexus_mat: Material
+var _reserved_mat: Material
 var _drawn_revision := -1
 ## Casas que já têm laje (índice -> true): só as novas sobem animadas.
 var _drawn := {}
@@ -38,6 +40,7 @@ func setup(p_map: SimMap) -> void:
 	_path_mat = MeshUtil.lit_material(RenderConfig.color(cfg["pathColor"]))
 	_entrance_mat = MeshUtil.lit_material(RenderConfig.color(cfg["entranceColor"]))
 	_nexus_mat = MeshUtil.lit_material(RenderConfig.color(cfg["nexusColor"]))
+	_reserved_mat = MeshUtil.lit_material(RenderConfig.color(RenderConfig.data()["expansion"]["reservedColor"]))
 	_slab = BoxMesh.new()
 	_slab.size = Vector3(0.96, 0.12, 0.96)
 	_ghost_slab = BoxMesh.new()
@@ -80,6 +83,8 @@ func _material_for(cell: Vector2i, entrances: Dictionary) -> Material:
 		return _nexus_mat
 	if map.is_path(cell):
 		return _path_mat
+	if map.is_reserved(cell):
+		return _reserved_mat
 	return _free_mat
 
 
@@ -119,10 +124,11 @@ func _build_tiles(animate: bool) -> void:
 				.set_delay(spread * 0.04).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-## Salas oferecidas na escolha da parede: chão fantasma na cor de cada opção; `hovered` (índice da opção
-## sob o mouse, -1 = nenhuma) fica mais forte e as outras mais fracas. Lista vazia apaga.
+## Pedaços oferecidos na escolha da parede (`ExpansionData.Opening`): chão fantasma na cor de cada opção;
+## `hovered` (índice da opção sob o mouse, -1 = nenhuma) fica mais forte e as outras mais fracas. Lista
+## vazia apaga.
 func show_candidates(rooms: Array, hovered: int) -> void:
-	var ids: Array = rooms.map(func(r: ExpansionData.Room) -> String: return r.id)
+	var ids: Array = rooms.map(func(r: ExpansionData.Opening) -> String: return r.id)
 	var key := "%s|%d" % [",".join(ids), hovered]
 	if key == _ghost_key:
 		return
@@ -133,7 +139,7 @@ func show_candidates(rooms: Array, hovered: int) -> void:
 	_ghost_materials.clear()
 	var cfg: Dictionary = RenderConfig.data()["expansion"]
 	for i in rooms.size():
-		var room: ExpansionData.Room = rooms[i]
+		var room: ExpansionData.Opening = rooms[i]
 		var alpha := float(cfg["alpha"])
 		if hovered == i:
 			alpha = float(cfg["hoverAlpha"])
@@ -142,15 +148,15 @@ func show_candidates(rooms: Array, hovered: int) -> void:
 		var mat := MeshUtil.flat_material(Color(ExpansionScreenUi.option_color(i), alpha))
 		_ghost_materials.append([mat, alpha])
 		for cell in room.cells:
-			MeshUtil.instance(_ghost_slab, mat, _ghosts).position = Vector3(cell.x, -0.1, cell.y)
-		if room.has_entrance():
-			var door := MeshUtil.flat_material(RenderConfig.color(cfg["entranceColor"], minf(1.0, alpha + 0.25)))
-			_ghost_materials.append([door, minf(1.0, alpha + 0.25)])
-			for cell in room.entrance_cells:
-				MeshUtil.instance(_ghost_slab, door, _ghosts).position = Vector3(cell.x, -0.08, cell.y)
+			if not map.is_open(cell):
+				MeshUtil.instance(_ghost_slab, mat, _ghosts).position = Vector3(cell.x, -0.1, cell.y)
+		var door := MeshUtil.flat_material(RenderConfig.color(cfg["entranceColor"], minf(1.0, alpha + 0.25)))
+		_ghost_materials.append([door, minf(1.0, alpha + 0.25)])
+		for cell in room.path_cells:
+			MeshUtil.instance(_ghost_slab, door, _ghosts).position = Vector3(cell.x, 0.0 if map.is_open(cell) else -0.08, cell.y)
 
 
-## Bloco de casas que a câmera deve mostrar: as abertas e, se houver, as `extra` (salas oferecidas).
+## Bloco de casas que a câmera deve mostrar: as abertas e, se houver, as `extra` (pedaços oferecidos).
 func view_cells(extra: Array = []) -> Rect2i:
 	var lo := Vector2i(map.width, map.height)
 	var hi := Vector2i(-1, -1)
@@ -159,11 +165,8 @@ func view_cells(extra: Array = []) -> Rect2i:
 			if map.is_open(Vector2i(x, y)):
 				lo = Vector2i(mini(lo.x, x), mini(lo.y, y))
 				hi = Vector2i(maxi(hi.x, x), maxi(hi.y, y))
-	for room: ExpansionData.Room in extra:
-		var cells: Array[Vector2i] = []
-		cells.append_array(room.cells)
-		cells.append_array(room.entrance_cells)
-		for cell in cells:
+	for room: ExpansionData.Opening in extra:
+		for cell in room.cells:
 			lo = Vector2i(mini(lo.x, cell.x), mini(lo.y, cell.y))
 			hi = Vector2i(maxi(hi.x, cell.x), maxi(hi.y, cell.y))
 	return Rect2i(lo, hi - lo + Vector2i.ONE)

@@ -15,6 +15,7 @@
     },
     "resetMs": 200,
     "marginPx": 180,
+    "uiInsetsPx": { "top": 60, "bottom": 230 },
     "keyPanSpeedPx": 800,
     "dragThresholdPx": 6,
     "edgePan": {
@@ -36,6 +37,7 @@
     "hoverAlpha": 0.75,
     "pulseSeconds": 1.2,
     "entranceColor": "#e05a48",
+    "reservedColor": "#4b4a3a",
     "riseSeconds": 0.5,
     "riseDepth": 0.9
   },

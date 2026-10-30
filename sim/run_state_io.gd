@@ -22,7 +22,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"marks": _marks_to_list(e.marks), "curse": e.curse.duplicate(),
 			"poisonDamage": e.poison_damage, "poisonTicks": e.poison_ticks, "poisonSource": e.poison_source,
 		}
-		# Só no mapa que cresce (o save do mapa sem salas não muda).
+		# Só no mapa que cresce (o save do mapa que não cresce não muda).
 		if e.entrance != 0:
 			enemy["entrance"] = e.entrance
 		enemies.append(enemy)
@@ -77,7 +77,7 @@ static func to_dict(state: RunState) -> Dictionary:
 		screen = {"wave": s.wave, "options": s.options.duplicate(true), "rerolls": s.rerolls, "ticksLeft": s.ticks_left}
 	var out := _base_dict(state, enemies, projectiles, towers, traps, queue, last, chains, classes, active_waves,
 			taken, screen)
-	# Mapa que cresce: só entra no save depois que algo aconteceu (o save do mapa sem salas não muda).
+	# Mapa que cresce: só entra no save depois que algo aconteceu (o save do mapa que não cresce não muda).
 	if state.expansion != null and not state.expansion.is_untouched(state.seed_text):
 		var ex: ExpansionState = state.expansion
 		var ex_screen: Variant = null
@@ -86,6 +86,8 @@ static func to_dict(state: RunState) -> Dictionary:
 		out["expansion"] = {"rngState": ex.rng_state, "opened": ex.opened.duplicate(),
 				"openedWaves": ex.opened_waves.duplicate(), "screen": ex_screen,
 				"pending": ex.pending}
+		if ex.split_next:
+			out["expansion"]["splitNext"] = true
 	return out
 
 
@@ -187,18 +189,19 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 	state.nexus.attack_cooldown_ticks = nx["attackCooldownTicks"]
 	state.nexus.level = nx["level"]
 
-	# Mapa que cresce: as salas abertas voltam ao mapa antes das rotas dos inimigos (as entradas novas).
+	# Mapa que cresce: as aberturas voltam ao mapa antes das rotas dos inimigos (as entradas novas).
 	state.expansion = ExpansionState.create(state.seed_text)
 	if d.has("expansion"):
 		var ex: Dictionary = d["expansion"]
 		state.expansion.rng_state = ex["rngState"]
 		for id in ex["opened"]:
 			state.expansion.opened.append(str(id))
-		# Saves de antes do relatório das salas não têm as ondas: ficam como onda 0.
+		# Saves sem as ondas das aberturas: ficam como onda 0.
 		var waves: Array = ex.get("openedWaves", [])
 		for i in state.expansion.opened.size():
 			state.expansion.opened_waves.append(int(waves[i]) if i < waves.size() else 0)
 		state.expansion.pending = ex["pending"]
+		state.expansion.split_next = ex.get("splitNext", false)
 		if ex["screen"] != null:
 			var ex_screen := ExpansionState.ExpansionScreen.new()
 			ex_screen.wave = ex["screen"]["wave"]

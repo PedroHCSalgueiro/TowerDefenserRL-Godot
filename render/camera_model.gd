@@ -100,6 +100,9 @@ var _wheel_lines_per_notch: float
 var _smooth_ms: float
 var _reset_ms: float
 var _margin_px: float
+## Faixas da tela cobertas pela interface (painel de cima e loja embaixo): o enquadramento usa só o meio.
+var _inset_top := 0.0
+var _inset_bottom := 0.0
 var _viewport: Vector2
 var _bounds: Rect2
 var _limit_min: float
@@ -125,6 +128,9 @@ func _init(config: Dictionary, viewport: Vector2, bounds: Rect2) -> void:
 	_smooth_ms = float(zoom["smoothMs"])
 	_reset_ms = float(config["resetMs"])
 	_margin_px = float(config["marginPx"])
+	var insets: Dictionary = config.get("uiInsetsPx", {})
+	_inset_top = float(insets.get("top", 0.0))
+	_inset_bottom = float(insets.get("bottom", 0.0))
 	_viewport = viewport
 	_bounds = bounds
 	_update_limits()
@@ -189,7 +195,7 @@ static func edge_direction(point: Vector2, viewport: Vector2, band_px: float) ->
 
 
 func _update_limits() -> void:
-	var fit := fit_zoom(_bounds, _viewport)
+	var fit := fit_zoom(_bounds, _free_viewport())
 	_limit_min = minf(_zoom_min, fit)
 	_limit_default = minf(_zoom_default, fit)
 	_limit_max = _zoom_max
@@ -201,6 +207,11 @@ func view() -> View:
 
 func zoom_limits() -> Dictionary:
 	return {"min": _limit_min, "default": _limit_default, "max": _limit_max}
+
+
+## A tela menos as faixas cobertas pela interface.
+func _free_viewport() -> Vector2:
+	return Vector2(_viewport.x, maxf(1.0, _viewport.y - _inset_top - _inset_bottom))
 
 
 ## Zoom suave ou volta ao padrão em andamento.
@@ -298,6 +309,9 @@ func update(dt_ms: float) -> void:
 ## A vista dentro dos limites: zoom entre o mínimo e o máximo e a tela sem sair do mapa.
 func _clamp(view: View) -> View:
 	var zoom := clampf(view.zoom, _limit_min, _limit_max)
+	# No eixo vertical, o limite vale para o meio livre da tela (entre o painel de cima e a loja).
+	var shift := (_inset_top - _inset_bottom) / 2.0 / zoom
 	return View.new(zoom, Vector2(
 			_clamp_axis(view.center.x, _bounds.position.x, _bounds.size.x, _viewport.x, _margin_px, zoom),
-			_clamp_axis(view.center.y, _bounds.position.y, _bounds.size.y, _viewport.y, _margin_px, zoom)))
+			_clamp_axis(view.center.y + shift, _bounds.position.y, _bounds.size.y, _free_viewport().y, _margin_px,
+					zoom) - shift))
