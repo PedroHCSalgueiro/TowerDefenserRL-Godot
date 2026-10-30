@@ -21,13 +21,15 @@ var nexus_level := 1
 var gold_earned := 0
 ## Recompensas escolhidas (T24), na ordem: "Onda 5: Mais espaço".
 var rewards: Array[String] = []
+## Salas do mapa que cresce, na ordem em que abriram: "Onda 10: Ala Oeste".
+var rooms: Array[String] = []
 var cheated := false
 ## Link da run (no Godot não há URL; fica vazio ou a semente).
 var link := ""
 
 
 ## Monta o resumo a partir do estado final da run. `ctx`: version, total_waves, ticks_per_second,
-## link e os Callables tower_name(type) e reward_name(id, class_id).
+## link e os Callables tower_name(type), reward_name(id, class_id) e room_name(id).
 static func summarize(state: Object, ctx: Dictionary) -> RunReport:
 	var newest: int = state.wave
 	if not state.waves.active.is_empty():
@@ -47,6 +49,10 @@ static func summarize(state: Object, ctx: Dictionary) -> RunReport:
 	r.gold_earned = state.stats.gold_earned
 	for t: RewardsState.TakenReward in state.rewards.taken:
 		r.rewards.append("Onda %d: %s" % [t.wave, ctx["reward_name"].call(t.id, t.class_id)])
+	var ex: ExpansionState = state.expansion
+	if ex != null:
+		for i in ex.opened.size():
+			r.rooms.append("Onda %d: %s" % [ex.opened_waves[i], ctx["room_name"].call(ex.opened[i])])
 	r.cheated = state.cheated
 	r.link = ctx.get("link", "")
 	return r
@@ -78,6 +84,7 @@ func format() -> String:
 		"Núcleo: nível %d" % nexus_level,
 		"Ouro ganho: %d" % gold_earned,
 		"Recompensas (%d): %s" % [rewards.size(), ", ".join(rewards) if not rewards.is_empty() else "nenhuma"],
+		"Salas (%d): %s" % [rooms.size(), ", ".join(rooms) if not rooms.is_empty() else "nenhuma"],
 		"Trapaça: %s" % ("sim" if cheated else "não"),
 		"Link: %s" % link,
 	])

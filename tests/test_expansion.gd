@@ -84,6 +84,7 @@ func test_choose_opens_the_room() -> void:
 	assert_has(_types(events), "expansionChosen")
 	assert_null(sim.state.expansion.screen)
 	assert_eq(sim.state.expansion.opened, ["salao_norte"] as Array[String])
+	assert_eq(sim.state.expansion.opened_waves, [0] as Array[int], "pelo debug antes da onda 1: onda 0")
 	assert_true(map.can_place_tower(Vector2i(10, 2)), "o Salão Norte abriu")
 	var tick: int = sim.state.tick
 	_step(sim)
@@ -177,6 +178,7 @@ func test_save_mid_run_restores_rooms_and_entrances() -> void:
 	assert_not_null(restored)
 	assert_eq(map2.entrance_count(), 2, "a sala volta ao mapa novo")
 	assert_true(map2.can_place_tower(Vector2i(20, 6)), "as casas da Ala Leste voltam abertas")
+	assert_eq(restored.expansion.opened_waves, sim.state.expansion.opened_waves, "a onda de cada sala volta")
 	var sim2 := Simulation.new(restored, GameSystems.create(map2))
 	_step(sim, 90)
 	_step(sim2, 90)
@@ -191,3 +193,24 @@ func test_map_without_rooms_has_no_expansion() -> void:
 	assert_null(sim.state.expansion.screen)
 	assert_true(map.can_place_tower(Vector2i(5, 0)), "o mapa sem salas continua todo aberto")
 	assert_false(sim.serialize().contains("\"expansion\""), "o save do mapa sem salas não muda")
+
+
+func test_run_report_lists_rooms_with_their_wave() -> void:
+	var s := _sim("salas-relatorio")
+	var sim: Simulation = s["sim"]
+	_open_with(sim, "ala_oeste")
+	sim.state.expansion.screen.wave = 10
+	sim.enqueue({"type": "chooseExpansion", "index": 0})
+	_step(sim)
+	_open_with(sim, "cripta_sul")
+	sim.state.expansion.screen.wave = 20
+	sim.enqueue({"type": "chooseExpansion", "index": 0})
+	_step(sim)
+	var report := RunReport.summarize(sim.state, {
+		"version": "teste", "total_waves": 40, "ticks_per_second": 60.0,
+		"tower_name": func(type: String) -> String: return type,
+		"reward_name": func(id: String, _class_id: Variant) -> String: return id,
+		"room_name": func(id: String) -> String: return data.get_room(id).name,
+	})
+	assert_eq(report.rooms, ["Onda 10: Ala Oeste", "Onda 20: Cripta Sul"] as Array[String])
+	assert_string_contains(report.format(), "Salas (2): Onda 10: Ala Oeste, Onda 20: Cripta Sul")

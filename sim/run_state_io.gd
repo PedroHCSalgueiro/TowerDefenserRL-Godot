@@ -83,7 +83,8 @@ static func to_dict(state: RunState) -> Dictionary:
 		var ex_screen: Variant = null
 		if ex.screen != null:
 			ex_screen = {"wave": ex.screen.wave, "options": ex.screen.options.duplicate(), "ticksLeft": ex.screen.ticks_left}
-		out["expansion"] = {"rngState": ex.rng_state, "opened": ex.opened.duplicate(), "screen": ex_screen,
+		out["expansion"] = {"rngState": ex.rng_state, "opened": ex.opened.duplicate(),
+				"openedWaves": ex.opened_waves.duplicate(), "screen": ex_screen,
 				"pending": ex.pending}
 	return out
 
@@ -193,6 +194,10 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		state.expansion.rng_state = ex["rngState"]
 		for id in ex["opened"]:
 			state.expansion.opened.append(str(id))
+		# Saves de antes do relatório das salas não têm as ondas: ficam como onda 0.
+		var waves: Array = ex.get("openedWaves", [])
+		for i in state.expansion.opened.size():
+			state.expansion.opened_waves.append(int(waves[i]) if i < waves.size() else 0)
 		state.expansion.pending = ex["pending"]
 		if ex["screen"] != null:
 			var ex_screen := ExpansionState.ExpansionScreen.new()

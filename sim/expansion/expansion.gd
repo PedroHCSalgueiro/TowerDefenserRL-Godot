@@ -83,6 +83,7 @@ static func choose(ctx: TickContext, map: SimMap, routes: Dictionary, data: Expa
 		return false
 	var room := data.get_room(screen.options[index])
 	state.expansion.opened.append(room.id)
+	state.expansion.opened_waves.append(screen.wave)
 	state.expansion.screen = null
 	apply_room(map, routes, room)
 	ctx.emit({"type": "expansionChosen", "tick": state.tick, "wave": screen.wave, "roomId": room.id,

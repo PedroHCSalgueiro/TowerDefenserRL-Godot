@@ -19,6 +19,8 @@ const RNG_STREAM := "/salas"
 var rng_state := 0
 ## Salas abertas, na ordem em que abriram.
 var opened: Array[String] = []
+## Onda que deu a escolha de cada sala aberta (mesma ordem de `opened`), para o relatório da run.
+var opened_waves: Array[int] = []
 ## Escolha aberta; com ela, a simulação fica congelada (null = fechada).
 var screen: ExpansionScreen = null
 ## Escolhas esperando para abrir (chefões fechados), depois das telas de recompensa.

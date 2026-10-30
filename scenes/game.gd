@@ -425,6 +425,7 @@ func _process(delta: float) -> void:
 			"tower_name": func(type: String) -> String: return TowerData.game_data().get_type(type).name,
 			"reward_name": func(id: String, class_id: Variant) -> String:
 				return RewardScreenModel.reward_card({"id": id, "classId": class_id}, 0, RewardData.game_data(), ClassData.game_data()).name,
+			"room_name": func(id: String) -> String: return ExpansionData.game_data().get_room(id).name,
 			"link": "semente %s" % state.seed_text,
 		}))
 	_run_dev_tools(delta)
