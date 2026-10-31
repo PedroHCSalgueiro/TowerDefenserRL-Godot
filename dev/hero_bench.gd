@@ -6,10 +6,14 @@ extends SceneTree
 ##
 ##   godot --headless --path . -s dev/hero_bench.gd -- --set=costarubra --copies=4 --star=2 --seeds=2 --out=arquivo.json
 ##
+## Roda no mapa que cresce (`--map=fixed` usa o de `data/map.json`; `--walls=`, ver `WaveBot.WALL_POLICIES`): as
+## torres ficam nas melhores casas da base e as paredes abrem como no jogo, sem torre nova nos pedaços novos.
+##
 ## Suportes e quem depende de vizinhas (auras, "vizinha abate", "ao ser ativado") rendem menos aqui por
 ## natureza: o relatório (`tools/playtest/agent_report.js`) não os marca como fracos só por isso.
 
 const MAX_WAVE_TICKS := 30 * 60 * 5
+const MAX_WAVE_TICKS_GROWING := 30 * 60 * 40
 
 
 func _init() -> void:
@@ -18,6 +22,7 @@ func _init() -> void:
 	if not GameSets.select(set_id):
 		quit(1)
 		return
+	WaveBot.use_growing_map(args.get("map", "growing") != "fixed", args.get("walls", "auto"))
 	var copies := int(args.get("copies", "4"))
 	var star := int(args.get("star", "2"))
 	var seeds := int(args.get("seeds", "2"))
@@ -92,7 +97,7 @@ func _parse_args() -> Dictionary:
 
 ## Uma run da bancada: `copies` torres do herói nas melhores casas, ondas uma a uma até o fim.
 func _bench(hero: String, copies: int, star: int, seed_text: String) -> Dictionary:
-	var map := WaveBot.bot_map()
+	var map := WaveBot.new_run_map()
 	var sim := Simulation.create(seed_text, GameSystems.create(map))
 	var state: RunState = sim.state
 	var cells := WaveBot.bot_cells(map)
@@ -105,23 +110,28 @@ func _bench(hero: String, copies: int, star: int, seed_text: String) -> Dictiona
 	Damage.dealt = {}
 	var kills := 0
 	var total := WaveBot.total_waves()
+	var limit := MAX_WAVE_TICKS_GROWING if WaveBot.growing else MAX_WAVE_TICKS
+	var timed_out := false
 	while state.status == "playing" and state.wave < total:
-		while state.rewards.screen_open() and state.status == "playing":
-			sim.enqueue({"type": "chooseReward", "index": 0})
-			sim.step()
-			sim.drain_events()
+		WaveBot.resolve_rewards(sim, WaveBot.first_reward)
+		sim.drain_events()
+		if state.status != "playing":
+			break
 		sim.enqueue({"type": "callWave"})
 		sim.step()
 		var guard := 0
-		while state.status == "playing" and not state.waves.active.is_empty() and guard < MAX_WAVE_TICKS:
+		while state.status == "playing" and not state.waves.active.is_empty() and guard < limit:
 			if state.rewards.screen_open():
 				sim.enqueue({"type": "chooseReward", "index": 0})
+			elif state.expansion.screen_open():
+				WaveBot.choose_wall(sim)
 			sim.step()
 			for e: Dictionary in sim.drain_events():
 				if e["type"] == "enemyKilled":
 					kills += 1
 			guard += 1
-		if guard >= MAX_WAVE_TICKS:
+		if guard >= limit:
+			timed_out = true
 			break
 	Damage.track = false
 	var damage := 0.0
@@ -129,4 +139,4 @@ func _bench(hero: String, copies: int, star: int, seed_text: String) -> Dictiona
 		if who != -1:
 			damage += Damage.dealt[who]
 	return {"wave": state.wave, "damage": damage, "kills": kills, "seconds": float(state.tick) / 30.0,
-			"dropped": state.triggers.dropped_total}
+			"dropped": state.triggers.dropped_total, "path": map.path_cells.size(), "timedOut": timed_out}

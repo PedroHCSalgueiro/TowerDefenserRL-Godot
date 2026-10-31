@@ -4,6 +4,9 @@ extends SceneTree
 ##
 ##   godot --headless --path . -s dev/playtest.gd -- --set=valcoroa --policy=sequential --from=0 --count=20 --out=arquivo.json
 ##
+## Mapa: `--map=growing` (padrão, o mapa que cresce de `data/expansion.json`, como no jogo) ou `--map=fixed` (o de
+## `data/map.json`). `--walls=auto` (padrão) diz como o bot escolhe a parede; ver `WaveBot.WALL_POLICIES`.
+##
 ## Políticas:
 ##   sequential: o jogador clássico. Entre as ondas compra, evolui o núcleo e rerola um pouco; depois chama
 ##               a próxima onda e só chama outra quando a anterior acabou.
@@ -12,9 +15,10 @@ extends SceneTree
 ##   lazy:       o jogador que quase não joga (como no relato do Pedro): compra só até o limite de torres do núcleo
 ##               (prefere Sir Aldric, depois Irmão Tomás, depois Lyra), funde quando dá, põe as torres lado a lado,
 ##               nunca rerola nem evolui o núcleo e chama as ondas uma de cada vez.
+##   good:       o bot bom (`GoodBot`): guarda para os juros, funde, escolhe por classe e posiciona por vizinhança.
 ## Ondas de chefão só podem ser chamadas com o mapa vazio (regra do jogo), então o empilhamento para nelas.
 
-const MAX_TICKS := 30 * 60 * 60  # 1 hora de jogo: teto de segurança
+const MAX_TICKS := 30 * 60 * 60 * 8  # 8 horas de jogo: teto de segurança (no mapa que cresce, as ondas demoram bem mais)
 const STACK_CHECK_TICKS := 30
 
 var _id_to_type: Dictionary = {}
@@ -26,6 +30,7 @@ func _init() -> void:
 	if not GameSets.select(set_id):
 		quit(1)
 		return
+	WaveBot.use_growing_map(args.get("map", "growing") != "fixed", args.get("walls", "auto"))
 	# Varredura de balanço: sobrescreve o ouro por abate (base, por degrau e tamanho do degrau) sem mexer nos dados.
 	var economy := EconomyData.game_data()
 	if args.has("kill-base"):
@@ -107,13 +112,30 @@ func _play(seed_text: String, policy: String, interval: int) -> Dictionary:
 		"waveStartGold": {}, "waveStartTowers": {}, "waveStartTick": {}, "waveEndTick": {}, "waveNexusHp": {},
 		"purchases": {}, "merges": 0, "rerolls": 0, "evolves": 0, "towerWaves": {}, "starWaves": {},
 		"killsByEnemy": {}, "rewards": [], "gotKillsAtWave": {}, "activeWavesAtCall": [], "firstBuyWave": {}, "buysByRarity": {},
+		"wavePath": {}, "waveNexusMaxHp": {}, "waveFirstShotTick": {},
 	}
 	var next_call := 0
 	var rerolls := {"left": 0}
 	var ticks_guard := 0
 	while state.status == "playing" and state.tick < MAX_TICKS:
 		if state.rewards.screen_open():
-			sim.enqueue({"type": "chooseReward", "index": 0})
+			if policy == "good":
+				GoodBot.reward(sim)
+			else:
+				sim.enqueue({"type": "chooseReward", "index": 0})
+		elif state.expansion.screen_open():
+			WaveBot.choose_wall(sim)
+		elif policy == "good":
+			if state.waves.active.is_empty() and WaveState.next_wave_number(state) <= total:
+				rerolls = {"left": GoodBot.MAX_REROLLS}
+				var good_guard := 0
+				while good_guard < 100 and GoodBot._action(sim, rerolls):
+					_step(sim, m)
+					good_guard += 1
+					if state.status != "playing":
+						break
+				if state.status == "playing" and not state.rewards.screen_open():
+					sim.enqueue({"type": "callWave"})
 		elif policy == "lazy":
 			if state.waves.active.is_empty() and WaveState.next_wave_number(state) <= total:
 				var lazy_guard := 0
@@ -155,6 +177,12 @@ func _play(seed_text: String, policy: String, interval: int) -> Dictionary:
 	var final_towers := {}
 	for t: Tower in state.towers:
 		final_towers[t.type] = final_towers.get(t.type, []) + [t.star]
+	var map := WaveBot.bot_map()
+	m["map"] = map.id
+	m["walls"] = WaveBot.wall_policy
+	m["pathFinal"] = map.path_cells.size()
+	m["opened"] = state.expansion.opened.duplicate()
+	m["openedWaves"] = state.expansion.opened_waves.duplicate()
 	m["outcome"] = outcome
 	m["wave"] = state.wave
 	m["seconds"] = float(state.tick) / 30.0
@@ -193,6 +221,9 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 			"towerFired":
 				var type: String = str(_id_to_type.get(e["towerId"], "?"))
 				m["shotsByType"][type] = m["shotsByType"].get(type, 0) + 1
+				var firing := str(state.wave + 1)
+				if not m["waveFirstShotTick"].has(firing):
+					m["waveFirstShotTick"][firing] = state.tick
 			"enemyKilled":
 				m["kills"] += 1
 				m["killGold"] += int(Economy.kill_gold_for(EconomyData.game_data(), 0.0, int(e["wave"])))
@@ -204,6 +235,7 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 				m["waveStartGold"][w] = state.gold
 				m["waveStartTowers"][w] = state.towers.size()
 				m["waveStartTick"][w] = e["tick"]
+				m["wavePath"][w] = WaveBot.bot_map().path_cells.size()
 				m["activeWavesAtCall"].append(state.waves.active.size())
 				if e["early"]:
 					m["earlyCalls"] += 1
@@ -214,6 +246,7 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 				var w := str(e["wave"])
 				m["waveEndTick"][w] = e["tick"]
 				m["waveNexusHp"][w] = state.nexus.hp
+				m["waveNexusMaxHp"][w] = state.nexus.max_hp
 				m["interestGold"] += int(e["interest"])
 				m["bonusGold"] += int(e["bonus"])
 				m["earlyGold"] += int(e["earlyBonus"])

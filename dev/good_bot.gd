@@ -36,12 +36,15 @@ const MAX_REWARD_REROLLS := 2
 
 static var _coverage: Dictionary = {}
 static var _cells: Array[Vector2i] = []
+static var _cells_version := -1
 
 
 static func _init_cells() -> void:
-	if _cells.is_empty():
-		var map := WaveBot.bot_map()
+	var map := WaveBot.bot_map()
+	if _cells.is_empty() or _cells_version != WaveBot.cells_version:
+		_cells_version = WaveBot.cells_version
 		_cells = WaveBot.bot_cells(map)
+		_coverage = {}
 		for i in _cells.size():
 			_coverage[map.index_of(_cells[i])] = _cells.size() - i
 

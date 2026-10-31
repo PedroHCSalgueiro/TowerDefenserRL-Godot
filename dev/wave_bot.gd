@@ -13,18 +13,57 @@ const REROLLS_PER_BREAK := 2
 const REROLL_RESERVE := 10
 ## Teto de ticks de uma onda (as últimas passam de 100 s; o chefão final leva 76 s só de caminho).
 const MAX_WAVE_TICKS := 30 * 60 * 8
+## O mesmo teto no mapa que cresce: com o caminho inteiro aberto, o chefão anda bem mais.
+const MAX_WAVE_TICKS_GROWING := 30 * 60 * 40
+## Como o bot escolhe a parede: a primeira opção, a que abre mais ou menos caminho, ou deixa o tempo
+## acabar para a simulação sortear.
+const WALL_POLICIES: Array[String] = ["first", "longest", "shortest", "auto"]
 
 static var _bot_map: SimMap = null
 static var _cells: Array[Vector2i] = []
+## Sobe quando `_cells` muda (run nova ou parede aberta), para quem guarda algo calculado a partir dela.
+static var cells_version := 0
+static var _cells_revision := -1
+## Mapa das runs do bot: false = o fixo de `map.json` (testes e paridade com o Phaser); true = o mapa
+## que cresce, como no jogo. Ligue com `use_growing_map`.
+static var growing := false
+static var wall_policy := "first"
 ## Contagem de TODOS os eventos drenados pelo bot (para comparar com o Phaser): tipo -> int.
 static var tally: Dictionary = {}
 
 
 static func bot_map() -> SimMap:
 	if _bot_map == null:
-		_bot_map = SimMap.load_map(DataLoader.load_json("map.json"))
-		_cells = bot_cells(_bot_map)
+		_bot_map = ExpansionData.game_data().build_map() if growing else SimMap.load_map(DataLoader.load_json("map.json"))
+	_sync_cells()
 	return _bot_map
+
+
+## Liga ou desliga o mapa que cresce nas próximas runs do bot.
+static func use_growing_map(value: bool, policy: String = "first") -> void:
+	growing = value
+	wall_policy = policy
+	_bot_map = null
+
+
+## Mapa da próxima run: o que cresce muda quando uma parede cai, então cada run precisa do seu.
+static func new_run_map() -> SimMap:
+	if growing:
+		_bot_map = null
+	return bot_map()
+
+
+## As casas de torre ficam em dia com o mapa: parede aberta traz casas novas e caminho novo.
+static func _sync_cells() -> void:
+	if _cells_revision == _bot_map.revision and not _cells.is_empty():
+		return
+	_cells = bot_cells(_bot_map)
+	_cells_revision = _bot_map.revision
+	cells_version += 1
+
+
+static func max_wave_ticks() -> int:
+	return MAX_WAVE_TICKS_GROWING if growing else MAX_WAVE_TICKS
 
 
 static func total_waves() -> int:
@@ -66,7 +105,7 @@ static func no_rewards() -> RewardData:
 
 
 static func bot_sim(seed_text: String, nexus_invulnerable: bool = false, options: Dictionary = {}) -> Simulation:
-	var sim := Simulation.create(seed_text, GameSystems.create(bot_map(), options), options.get("economy"))
+	var sim := Simulation.create(seed_text, GameSystems.create(new_run_map(), options), options.get("economy"))
 	if nexus_invulnerable:
 		sim.enqueue({"type": "debugSetNexusInvulnerable", "value": true})
 	return sim
@@ -135,14 +174,37 @@ static func first_reward(sim: Simulation) -> void:
 	sim.enqueue({"type": "chooseReward", "index": 0})
 
 
-## Resolve as telas de recompensa abertas (e as da fila), uma ação por tick. Se `on_reward` não
-## fizer nada, o tempo da tela acaba e a simulação escolhe.
+## Escolha da parede aberta, conforme `wall_policy`. Com "auto" não faz nada: o tempo da tela acaba e a
+## simulação sorteia.
+static func choose_wall(sim: Simulation) -> void:
+	var screen: ExpansionState.ExpansionScreen = sim.state.expansion.screen
+	if screen == null or wall_policy == "auto":
+		return
+	var best := 0
+	if wall_policy != "first":
+		var data := ExpansionData.game_data()
+		var opened: Array[String] = sim.state.expansion.opened
+		var best_size := -1
+		for i in screen.options.size():
+			var o := data.opening(opened, screen.options[i])
+			var size: int = o.path_cells.size() if o != null else 0
+			if best_size < 0 or (wall_policy == "longest" and size > best_size) or (wall_policy == "shortest" and size < best_size):
+				best = i
+				best_size = size
+	sim.enqueue({"type": "chooseExpansion", "index": best})
+
+
+## Resolve as telas de recompensa abertas (e as da fila) e a escolha da parede que vem depois delas,
+## uma ação por tick. Se `on_reward` não fizer nada, o tempo da tela acaba e a simulação escolhe.
 static func resolve_rewards(sim: Simulation, on_reward: Callable) -> void:
 	var guard := 0
-	while guard < 10000 and sim.state.rewards.screen_open():
+	while guard < 10000 and (sim.state.rewards.screen_open() or sim.state.expansion.screen_open()):
 		if sim.state.status != "playing":
 			return
-		on_reward.call(sim)
+		if sim.state.rewards.screen_open():
+			on_reward.call(sim)
+		else:
+			choose_wall(sim)
 		sim.step()
 		guard += 1
 
@@ -171,11 +233,14 @@ static func play_wave(sim: Simulation, on_reward: Callable = Callable()) -> Dict
 	var m := {"peak": 0, "max_depth": 0, "peak_triggers": 0, "peak_enemies": 0}
 	_observe(sim, m)
 	var i := 0
-	while i < MAX_WAVE_TICKS and not sim.state.waves.active.is_empty():
+	var limit := max_wave_ticks()
+	while i < limit and not sim.state.waves.active.is_empty():
 		if sim.state.status != "playing":
 			break
 		if sim.state.rewards.screen_open():
 			on_reward.call(sim)
+		elif sim.state.expansion.screen_open():
+			choose_wall(sim)
 		sim.step()
 		_observe(sim, m)
 		i += 1
