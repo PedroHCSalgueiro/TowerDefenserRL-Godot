@@ -25,3 +25,7 @@ assets/sir-aldric_*.png.import
 
 # Saídas de exportação
 build/
+
+# Prototipos de arte: quadros intermediarios e testes regenerados pelos scripts
+dev/proto25d/**/raw/
+dev/proto25d/art_aldric/
