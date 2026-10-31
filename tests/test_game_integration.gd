@@ -86,7 +86,7 @@ func _screen_of(cell: Vector2i) -> Vector2:
 ## pedaço da base começa aberto; mais para cima, o painel do GUT cobre a tela e pega o clique).
 func _free_cell() -> Vector2i:
 	var nexus := game.map.nexus
-	for y in range(nexus.y + 1, nexus.y + 4):
+	for y in range(nexus.y + 4, nexus.y + 7):
 		for x in range(nexus.x + 2, nexus.x + 6):
 			var cell := Vector2i(x, y)
 			if game.map.can_place_tower(cell):

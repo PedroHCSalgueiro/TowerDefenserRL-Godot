@@ -55,7 +55,7 @@ func setup(state: Callable, enqueue: Callable, paused: Callable, ticks_per_secon
 	box.add_child(_timer_text)
 	_panel.add_child(box)
 	add_child(_panel)
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 70)
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 48)
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 
 

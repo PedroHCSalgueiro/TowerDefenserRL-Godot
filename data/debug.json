@@ -35,8 +35,8 @@
     "unlockParam": "debug",
     "unlockSessionKey": "td-debug-unlocked",
     "refreshMs": 250,
-    "width": 380,
-    "pageHeight": 400
+    "width": 290,
+    "pageHeight": 300
   },
   "fullScenario": {
     "name": "Cadeia (8 tipos)",

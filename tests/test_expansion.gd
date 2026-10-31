@@ -1,9 +1,10 @@
 extends GutTest
 ## Mapa que cresce com moldes (`Expansion`, `ExpansionData`, `data/expansion.json`): começa só com o
-## pedaço da base (zigue-zague fixo); as primeiras paredes seguem para a frente na hora; depois o jogador
-## escolhe a direção e o molde de cada uma já vem sorteado; o caminho nunca encosta em si mesmo; quem está
-## andando numa linha esticada fica no mesmo lugar; no debug, a parede pode dividir a linha principal
-## (entrada nova, horda dividida); save no meio continua igual.
+## pedaço da base (zigue-zague fixo até a borda); as primeiras paredes seguem para a frente na hora; depois
+## o jogador escolhe a direção (virar abre uma ligação e o pedaço na direção nova) e o molde já vem
+## sorteado; todo pedaço abre inteiro; peça nunca cobre peça e o caminho nunca encosta em si mesmo; quem
+## está andando numa linha esticada fica no mesmo lugar; no debug, a parede pode dividir a linha principal
+## por um cruzamento (entrada nova, horda dividida); save no meio continua igual.
 
 var data: ExpansionData
 
@@ -58,9 +59,9 @@ func _walls(sim: Simulation, n: int, dir: String = ExpansionData.RIGHT) -> void:
 			_choose(sim, maxi(0, _option(sim, dir)))
 
 
-## Centro do pedaço `piece`, onde a linha entrou indo para `dir` (a entrada dos inimigos dele).
-func _center(piece: Vector2i, dir: String) -> Vector2i:
-	return data.to_global(piece, dir, Vector2i(data.center(), data.center()))
+## Ponta da linha principal depois de `n` paredes para a frente (a porta da frente do último pedaço).
+func _forward_tip(n: int) -> Vector2i:
+	return data.base_start() + Vector2i(data.piece_size * (n + 1) - 1, 0)
 
 
 ## Primeiro inimigo vivo da entrada `entrance` depois de chamar a onda (null se não nascer).
@@ -103,16 +104,15 @@ func test_starts_with_the_fixed_zigzag_base() -> void:
 	assert_eq(data.piece_size, 11)
 	assert_eq(data.after_waves, [5, 10, 15, 20, 25, 30] as Array[int])
 	var map := data.build_map()
-	assert_eq(map.id, "moldes-01")
-	assert_eq([map.width, map.height], [77, 99], "6 pedaços para a direita e 4 para cima e para baixo")
-	assert_eq(map.nexus, Vector2i(1, 46))
-	assert_eq(map.entrance, Vector2i(5, 49), "os inimigos saem do centro da base")
-	assert_eq(map.path_cells.size(), 14, "zigue-zague fixo do centro até o núcleo")
+	assert_eq(map.id, "viradas-01")
+	assert_eq([map.width, map.height], [94, 115], "folga para 6 paredes de até 13 casas (ligação + pedaço)")
+	assert_eq(map.nexus, Vector2i(1, 54))
+	assert_eq(map.entrance, Vector2i(10, 57), "os inimigos saem da porta da frente, na borda da base")
+	assert_eq(map.path_cells.size(), 31, "zigue-zague fixo da porta até o núcleo")
 	assert_eq(_touches(map.path_cells), 0)
-	assert_true(map.can_place_tower(Vector2i(2, 45)))
-	assert_true(map.is_reserved(Vector2i(8, 47)), "a metade de longe da base fica cercada")
-	assert_false(map.can_place_tower(Vector2i(8, 47)))
-	assert_false(map.is_open(Vector2i(13, 49)), "o pedaço seguinte começa no escuro")
+	assert_true(map.can_place_tower(Vector2i(2, 53)))
+	assert_true(map.can_place_tower(Vector2i(8, 53)), "o pedaço todo é de construir, nada cercado")
+	assert_false(map.is_open(Vector2i(11, 57)), "o pedaço seguinte não existe até a parede cair")
 
 
 func test_first_walls_go_forward_at_once() -> void:
@@ -124,12 +124,12 @@ func test_first_walls_go_forward_at_once() -> void:
 		var events := _open(sim)
 		assert_null(sim.state.expansion.screen, "com uma opção só, não abre escolha")
 		assert_has(_types(events), "expansionChosen")
-		assert_eq(map.entrance, Vector2i(5 + 11 * (k + 1), 49), "a entrada vai para o centro do pedaço novo")
+		assert_eq(map.entrance, _forward_tip(k + 1), "a entrada vai para a porta da frente do pedaço novo")
+		assert_false(map.is_open(map.entrance + Vector2i.RIGHT), "o caminho chega na borda")
 		assert_true(sim.state.expansion.opened[k].begins_with("0:direita:"))
 		_step(sim)
 		assert_eq(sim.state.tick, tick + 2, "a simulação não congela")
 	assert_eq(_touches(map.path_cells), 0)
-	assert_false(map.is_reserved(Vector2i(8, 47)), "a metade de longe da base libera")
 
 
 func test_then_the_player_chooses_up_down_or_right() -> void:
@@ -147,15 +147,31 @@ func test_then_the_player_chooses_up_down_or_right() -> void:
 	var tick: int = sim.state.tick
 	_step(sim, 5)
 	assert_eq(sim.state.tick, tick, "congelada com a escolha aberta")
-	var old_tip := Vector2i(2, data.vertical_pieces())
+	var old_tip := _forward_tip(data.forward_only_walls)
+	var link := data.link_size
 	_choose(sim, _option(sim, ExpansionData.UP))
-	var tip := old_tip + Vector2i(0, -1)
-	assert_eq(map.entrance, _center(tip, ExpansionData.UP), "entrada no centro do pedaço de cima")
-	assert_true(map.is_open(tip * 11), "o pedaço de cima abriu")
+	# Ligação: anda até a saída e vira para cima; o pedaço de cima fica colado na saída dela.
+	var exit := old_tip + Vector2i(link.x - 1, -(link.y / 2))
+	var tip := exit + Vector2i(0, -data.piece_size)
+	assert_eq(map.entrance, tip, "entrada na porta de cima do pedaço novo")
+	assert_true(map.is_open(old_tip + Vector2i(link.x, 0)), "a ligação abriu inteira")
+	assert_false(map.is_open(old_tip + Vector2i(link.x + 1, 0)), "e não passa do tamanho dela")
+	assert_true(map.can_place_tower(tip + Vector2i(data.center(), 1)), "o pedaço de cima abriu inteiro")
+	assert_false(map.is_open(tip + Vector2i.UP))
 	assert_eq(_touches(map.path_cells), 0)
-	assert_true(map.is_reserved(data.to_global(tip, ExpansionData.UP, Vector2i(8, 8))), "o pedaço novo fica cercado na metade de longe")
 	var dirs := data.free_dirs(data.layout(sim.state.expansion.opened), 0)
 	assert_eq(dirs, [ExpansionData.RIGHT, ExpansionData.UP] as Array[String], "subindo: para cima ou para a direita (nunca volta)")
+
+
+func test_a_direction_without_room_is_not_offered() -> void:
+	var opened: Array = []
+	var rng := Rng.new(RngHolder.new(Rng.hash_seed("sem-espaco")))
+	for k in data.forward_only_walls:
+		opened.append(data.roll_options(opened, rng)[0])
+	var lay := data.layout(opened)
+	# Uma casa já aberta onde o pedaço de cima ficaria.
+	lay.cells[_forward_tip(data.forward_only_walls) + Vector2i(8, -10)] = true
+	assert_eq(data.free_dirs(lay, 0), [ExpansionData.RIGHT, ExpansionData.DOWN] as Array[String], "peça nunca cobre peça")
 
 
 func test_path_never_touches_itself() -> void:
@@ -165,10 +181,13 @@ func test_path_never_touches_itself() -> void:
 		for wall in data.max_walls():
 			var options := data.roll_options(map.applied, rng)
 			assert_false(options.is_empty())
-			assert_true(Expansion.apply(map, null, data, options[rng.next_int(0, options.size() - 1)]))
+			var id: String = options[rng.next_int(0, options.size() - 1)]
+			var o := data.opening(map.applied, id)
+			for cell in o.cells:
+				assert_false(map.is_open(cell), "mapa %d: peça nova nunca cobre casa aberta" % n)
+			assert_true(Expansion.apply(map, null, data, id))
 		assert_eq(_touches(map.path_cells), 0, "mapa %d: o caminho nunca encosta nele mesmo" % n)
 		assert_true(data.roll_options(map.applied, rng).is_empty(), "acabaram as paredes")
-		assert_true(data.reserved_cells(map.applied).is_empty(), "sem parede, nada cercado")
 
 
 func test_molds_are_rolled_from_the_wall_rng() -> void:
@@ -204,7 +223,7 @@ func test_debug_split_opens_a_second_line() -> void:
 	var sim: Simulation = s["sim"]
 	var map: SimMap = s["map"]
 	_walls(sim, data.forward_only_walls)
-	var old_c := map.entrance
+	var cross := map.entrance + Vector2i(data.center() + 1, 0)
 	_open(sim, true)
 	var screen: ExpansionState.ExpansionScreen = sim.state.expansion.screen
 	assert_not_null(screen)
@@ -213,7 +232,7 @@ func test_debug_split_opens_a_second_line() -> void:
 		assert_true(id.contains("+"))
 	_choose(sim, 0)
 	assert_eq(map.entrance_count(), 2)
-	assert_eq(map.path_cells[int(map.extra_entrances[0]["join"])], old_c, "as duas linhas se juntam no centro antigo")
+	assert_eq(map.path_cells[int(map.extra_entrances[0]["join"])], cross, "as duas linhas se juntam no centro do cruzamento")
 	assert_eq(_touches(map.entrance_path(1)), 0)
 	assert_eq(_touches(map.path_cells), 0)
 	assert_false(sim.state.expansion.split_next)
@@ -367,7 +386,6 @@ func test_save_mid_run_restores_lines_and_enemies() -> void:
 	assert_eq(map2.entrance_count(), 2, "a segunda linha volta ao mapa novo")
 	assert_eq(map2.path_cells, map.path_cells)
 	assert_eq(map2.entrance_cell(1), map.entrance_cell(1))
-	assert_eq(data.reserved_cells(map2.applied), data.reserved_cells(map.applied))
 	var sim2 := Simulation.new(restored, GameSystems.create(map2))
 	_step(sim, 90)
 	_step(sim2, 90)
@@ -394,12 +412,12 @@ func test_map_that_does_not_grow_has_no_expansion() -> void:
 
 
 func test_option_names_and_run_report() -> void:
-	assert_eq(data.option_name("0:direita:s:reto"), "Seguir para a direita")
-	assert_eq(data.option_name("1:baixo:u:u-largo~"), "Linha 2: Abrir para baixo")
-	assert_eq(data.option_name("0:direita:s:reto+n:cima:reto:reto"), "Dividir: Seguir para a direita + Abrir para cima")
+	assert_eq(data.option_name("0:direita:s"), "Seguir para a direita")
+	assert_eq(data.option_name("1:baixo:u~"), "Linha 2: Abrir para baixo")
+	assert_eq(data.option_name("0:direita:s+n:cima:reto"), "Dividir: Seguir para a direita + Abrir para cima")
 	var s := _sim("moldes-relatorio")
 	var sim: Simulation = s["sim"]
-	sim.state.expansion.opened.assign(["0:direita:s:reto", "0:cima:gancho~:u-largo"])
+	sim.state.expansion.opened.assign(["0:direita:s", "0:cima:u~"])
 	sim.state.expansion.opened_waves.assign([5, 15])
 	var report := RunReport.summarize(sim.state, {
 		"version": "teste", "total_waves": 40, "ticks_per_second": 60.0,
@@ -412,13 +430,14 @@ func test_option_names_and_run_report() -> void:
 
 
 func test_invalid_openings_are_refused() -> void:
-	assert_null(data.opening([], "0:cima:gancho:reto"), "nas primeiras paredes só para a frente")
-	assert_null(data.opening([], "0:direita:nao-existe:reto"))
-	assert_null(data.opening([], "0:esquerda:reto:reto"), "nunca para o lado do núcleo")
+	assert_null(data.opening([], "0:cima:u"), "nas primeiras paredes só para a frente")
+	assert_null(data.opening([], "0:direita:nao-existe"))
+	assert_null(data.opening([], "0:esquerda:reto"), "nunca para o lado do núcleo")
 	assert_null(data.opening([], "lixo"))
-	assert_not_null(data.opening([], "0:direita:u~:u-pequeno"))
-	assert_not_null(data.opening([], "0:direita:reto:reto+n:cima:reto:reto"), "dividir ignora as primeiras paredes")
-	assert_null(data.opening([], "0:direita:reto:reto+n:cima:reto~:reto"), "o molde do lado precisa sair pelo lado escolhido")
+	assert_null(data.opening([], "0:direita:s:reto"), "formato velho (molde de saída e de entrada)")
+	assert_not_null(data.opening([], "0:direita:u~"))
+	assert_not_null(data.opening([], "0:direita:reto+n:cima:reto"), "dividir ignora as primeiras paredes")
+	assert_null(data.opening([], "0:direita:reto+n:direita:reto"), "dividir precisa de duas direções")
 
 
 func test_bad_data_is_rejected() -> void:
@@ -428,10 +447,18 @@ func test_bad_data_is_rejected() -> void:
 	assert_null(ExpansionData.load_data(even))
 	assert_push_error("ímpar")
 	var diagonal := raw.duplicate(true)
-	diagonal["molds"]["forward"][0]["points"] = [[5, 5], [10, 6]]
+	diagonal["molds"][0]["points"] = [[0, 5], [10, 6]]
 	assert_null(ExpansionData.load_data(diagonal))
 	assert_push_error("molde")
 	var wrong_end := raw.duplicate(true)
-	wrong_end["molds"]["side"][0]["points"] = [[5, 5], [10, 5]]
+	wrong_end["molds"][0]["points"] = [[0, 5], [5, 5]]
 	assert_null(ExpansionData.load_data(wrong_end))
 	assert_push_error("molde")
+	var touching := raw.duplicate(true)
+	touching["molds"][0]["points"] = [[0, 5], [3, 5], [3, 4], [1, 4], [1, 2], [10, 2], [10, 5]]
+	assert_null(ExpansionData.load_data(touching))
+	assert_push_error("molde")
+	var link_ahead := raw.duplicate(true)
+	link_ahead["link"]["points"] = [[0, 2], [6, 2]]
+	assert_null(ExpansionData.load_data(link_ahead))
+	assert_push_error("link")

@@ -1,34 +1,18 @@
 {
   "enabled": true,
-  "mapId": "moldes-01",
+  "mapId": "viradas-01",
   "pieceSize": 11,
   "afterWaves": [5, 10, 15, 20, 25, 30],
   "forwardOnlyWalls": 2,
   "chooseSeconds": 20,
-  "base": [[1, 2], [1, 8], [3, 8], [3, 5], [5, 5]],
-  "molds": {
-    "entry": [
-      {"id": "reto", "weight": 1, "points": [[0, 5], [5, 5]]},
-      {"id": "u-pequeno", "weight": 3, "points": [[0, 5], [1, 5], [1, 3], [3, 3], [3, 5], [5, 5]]},
-      {"id": "u-largo", "weight": 3, "points": [[0, 5], [1, 5], [1, 1], [3, 1], [3, 5], [5, 5]]}
-    ],
-    "forward": [
-      {"id": "reto", "weight": 1, "points": [[5, 5], [10, 5]]},
-      {"id": "s", "weight": 3, "points": [[5, 5], [5, 2], [7, 2], [7, 8], [9, 8], [9, 5], [10, 5]]},
-      {"id": "u", "weight": 3, "points": [[5, 5], [5, 8], [9, 8], [9, 5], [10, 5]]},
-      {"id": "degrau", "weight": 3, "points": [[5, 5], [7, 5], [7, 8], [9, 8], [9, 5], [10, 5]]}
-    ],
-    "side": [
-      {"id": "reto", "weight": 1, "points": [[5, 5], [5, 0]]},
-      {"id": "gancho", "weight": 3, "points": [[5, 5], [7, 5], [7, 1], [5, 1], [5, 0]]},
-      {"id": "u-grande", "weight": 3, "points": [[5, 5], [5, 7], [9, 7], [9, 2], [5, 2], [5, 0]]}
-    ]
-  },
-  "names": {
-    "direita": "Seguir para a direita",
-    "cima": "Abrir para cima",
-    "baixo": "Abrir para baixo",
-    "line": "Linha {n}: {name}",
-    "split": "Dividir: {a} + {b}"
-  }
+  "base": [[1, 2], [1, 8], [3, 8], [3, 2], [5, 2], [5, 8], [7, 8], [7, 5], [10, 5]],
+  "link": {"depth": 7, "width": 5, "points": [[0, 2], [5, 2], [5, 0]]},
+  "molds": [
+    {"id": "reto", "weight": 1, "points": [[0, 5], [10, 5]]},
+    {"id": "u", "weight": 3, "points": [[0, 5], [2, 5], [2, 1], [8, 1], [8, 5], [10, 5]]},
+    {"id": "s", "weight": 3, "points": [[0, 5], [2, 5], [2, 2], [5, 2], [5, 8], [8, 8], [8, 5], [10, 5]]},
+    {"id": "degrau", "weight": 3, "points": [[0, 5], [3, 5], [3, 8], [7, 8], [7, 5], [10, 5]]},
+    {"id": "zigue", "weight": 2, "points": [[0, 5], [2, 5], [2, 1], [4, 1], [4, 9], [6, 9], [6, 1], [8, 1], [8, 5], [10, 5]]}
+  ],
+  "names": {"direita": "Seguir para a direita", "cima": "Abrir para cima", "baixo": "Abrir para baixo", "line": "Linha {n}: {name}", "split": "Dividir: {a} + {b}"}
 }

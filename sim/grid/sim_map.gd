@@ -28,8 +28,6 @@ var revision := 0
 var _path_mask: PackedByteArray
 ## Casas abertas (1) e no escuro (0). Vazio = todas abertas (mapa que não cresce).
 var _open_mask := PackedByteArray()
-## Casas abertas sem construir (1): a passagem de uma linha que ainda pode abrir. Vazio = nenhuma.
-var _reserved_mask := PackedByteArray()
 
 
 func _init(p_id: String, p_width: int, p_height: int, p_path_cells: Array[Vector2i]) -> void:
@@ -59,24 +57,9 @@ func is_path(cell: Vector2i) -> bool:
 	return is_inside(cell) and _path_mask[index_of(cell)] == 1
 
 
-## Torres só vão em casas dentro da grade, abertas, fora do caminho e não reservadas.
+## Torres só vão em casas dentro da grade, abertas e fora do caminho.
 func can_place_tower(cell: Vector2i) -> bool:
-	return is_inside(cell) and _path_mask[index_of(cell)] == 0 and is_open(cell) and not is_reserved(cell)
-
-
-## Casa guardada para um caminho que ainda pode abrir (sem construir).
-func is_reserved(cell: Vector2i) -> bool:
-	return not _reserved_mask.is_empty() and is_inside(cell) and _reserved_mask[index_of(cell)] == 1
-
-
-## Troca as casas reservadas (lista vazia = nenhuma).
-func set_reserved(cells: Array[Vector2i]) -> void:
-	_reserved_mask = PackedByteArray()
-	if not cells.is_empty():
-		_reserved_mask.resize(width * height)
-		for cell in cells:
-			_reserved_mask[index_of(cell)] = 1
-	revision += 1
+	return is_inside(cell) and _path_mask[index_of(cell)] == 0 and is_open(cell)
 
 
 ## A casa está aberta (no mapa sem salas, todas estão). O caminho aberto conta como aberto.

@@ -1,8 +1,8 @@
 class_name WaveHudModel
 extends RefCounted
 ## Modelo do HUD das ondas (sem nós, para testar): "Onda 3/40" ou "Ondas 5–7 de 40", o que falta,
-## o bônus antecipado pendente, o botão de chamar (que vira "Chamar antecipada (+10)" com a janela
-## do bônus, ou "Chamar próxima onda (sem bônus)" depois dela) e a faixa das próximas ondas com
+## o bônus antecipado pendente, o botão de chamar (que vira "Antecipar +10" com a janela do bônus,
+## ou "Chamar próxima" depois dela; textos em `ui.json`) e a faixa das próximas ondas com
 ## elite e chefão marcados (T23). Porte de `waveHudModel.ts`.
 
 ## "Onda 3/10" (a onda em andamento ou a próxima a chamar) ou "Ondas 5–7 de 10".
@@ -51,16 +51,16 @@ static func build(state: Object, paused: bool = false, schedules: Array[WaveSche
 	elif refusal == "enemies":
 		model.detail = "Limpe o mapa (%d)" % state.enemies.active_count
 	elif refusal == "":
-		model.detail = "Pronta para chamar"
+		model.detail = "Pronta"
 
 	var pending := 0
 	for w: WaveState.ActiveWave in active:
 		pending += w.early_bonus
 	model.pending_bonus = "+%d ao limpar" % pending if pending > 0 else ""
 
-	model.call_label = "Chamar onda (Espaço)"
+	model.call_label = texts["call"]
 	if refusal == "active":
-		model.call_label = "Chefão: limpe o mapa"
+		model.call_label = texts["callBoss"]
 	elif refusal == "" and not active.is_empty():
 		var window := WaveSystems.early_bonus_window(state, schedules, economy)
 		if not window.is_empty() and window["open"]:

@@ -32,7 +32,6 @@ static func apply(map: SimMap, routes: Variant, data: ExpansionData, id: String,
 		else:
 			map.extend_entrance(line, cells)
 			changed.append(line)
-	map.set_reserved(data.reserved_cells(map.applied))
 	if routes != null:
 		for i in o.steps.size():
 			Route.set_entrance_routes(map, routes, changed[i])

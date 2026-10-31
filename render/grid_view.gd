@@ -23,7 +23,6 @@ var _free_mat: Material
 var _path_mat: Material
 var _entrance_mat: Material
 var _nexus_mat: Material
-var _reserved_mat: Material
 var _drawn_revision := -1
 ## Casas que já têm laje (índice -> true): só as novas sobem animadas.
 var _drawn := {}
@@ -40,7 +39,6 @@ func setup(p_map: SimMap) -> void:
 	_path_mat = MeshUtil.lit_material(RenderConfig.color(cfg["pathColor"]))
 	_entrance_mat = MeshUtil.lit_material(RenderConfig.color(cfg["entranceColor"]))
 	_nexus_mat = MeshUtil.lit_material(RenderConfig.color(cfg["nexusColor"]))
-	_reserved_mat = MeshUtil.lit_material(RenderConfig.color(RenderConfig.data()["expansion"]["reservedColor"]))
 	_slab = BoxMesh.new()
 	_slab.size = Vector3(0.96, 0.12, 0.96)
 	_ghost_slab = BoxMesh.new()
@@ -83,8 +81,6 @@ func _material_for(cell: Vector2i, entrances: Dictionary) -> Material:
 		return _nexus_mat
 	if map.is_path(cell):
 		return _path_mat
-	if map.is_reserved(cell):
-		return _reserved_mat
 	return _free_mat
 
 

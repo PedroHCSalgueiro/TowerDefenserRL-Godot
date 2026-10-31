@@ -30,22 +30,24 @@ var _key := ""
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiKit.full_rect(self)
-	_panel = UiKit.game_panel(12, Vector2(16, 8))
-	var row := UiKit.hbox(14)
-	_label = UiKit.label("", 22, UiKit.GOLD, true)
-	_detail = UiKit.label("", 13, Color("#b4b8bc"))
-	_detail.custom_minimum_size = Vector2(120, 0)
+	_panel = UiKit.game_panel(9, Vector2(10, 3))
+	var row := UiKit.hbox(10)
+	_label = UiKit.label("", 16, UiKit.GOLD, true)
+	_detail = UiKit.label("", 11, Color("#b4b8bc"))
+	_detail.custom_minimum_size = Vector2(84, 0)
 	_detail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_pending = UiKit.label("", 13, UiKit.GREEN, true)
+	_pending = UiKit.label("", 11, UiKit.GREEN, true)
 	_pending.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var call_group := UiKit.vbox(3)
-	_call = UiKit.primary_button("Chamar onda (Espaço)", func() -> void: call_pressed.emit())
+	var call_group := UiKit.vbox(2)
+	call_group.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_call = _compact(UiKit.primary_button("", func() -> void: call_pressed.emit()))
+	_call.tooltip_text = "Espaço"
 	call_group.add_child(_call)
-	_window_box = UiKit.vbox(2)
-	_window_text = UiKit.label("", 11, UiKit.GREEN)
+	_window_box = UiKit.vbox(1)
+	_window_text = UiKit.label("", 10, UiKit.GREEN)
 	_window_bar = Control.new()
-	_window_bar.custom_minimum_size = Vector2(0, 3)
+	_window_bar.custom_minimum_size = Vector2(0, 2)
 	_window_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var back := ColorRect.new()
 	back.color = Color("#2c3a26")
@@ -61,10 +63,13 @@ func _init() -> void:
 	_window_box.add_child(_window_bar)
 	_window_box.visible = false
 	call_group.add_child(_window_box)
-	_speed = UiKit.button("1x (Q)", func() -> void: speed_pressed.emit())
-	_speed.custom_minimum_size = Vector2(60, 0)
-	_pause = UiKit.button("Pausar (P)", func() -> void: pause_pressed.emit())
-	_controls = UiKit.hbox(6)
+	_speed = _compact(UiKit.button("1x", func() -> void: speed_pressed.emit()))
+	_speed.custom_minimum_size = Vector2(36, 0)
+	_speed.tooltip_text = "Velocidade (Q)"
+	_pause = _compact(UiKit.button("Pausar", func() -> void: pause_pressed.emit()))
+	_pause.tooltip_text = "Pausar (P)"
+	_controls = UiKit.hbox(4)
+	_controls.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_controls.add_child(_speed)
 	_controls.add_child(_pause)
 	row.add_child(_label)
@@ -77,12 +82,12 @@ func _init() -> void:
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_panel)
 
-	_upcoming_panel = UiKit.panel(Color(0.075, 0.08, 0.1, 0.85), UiKit.FRAME.darkened(0.3), 8, Vector2(12, 3))
+	_upcoming_panel = UiKit.panel(Color(0.075, 0.08, 0.1, 0.7), UiKit.FRAME.darkened(0.4), 6, Vector2(8, 1))
 	_upcoming_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_upcoming_row = UiKit.hbox(8)
+	_upcoming_row = UiKit.hbox(6)
 	_upcoming_panel.add_child(_upcoming_row)
 	_upcoming_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 8)
-	_upcoming_panel.position.y = 84
+	_upcoming_panel.position.y = 46
 	_upcoming_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	add_child(_upcoming_panel)
 
@@ -96,8 +101,16 @@ func _init() -> void:
 	add_child(_banner)
 
 
-## Põe mais um controle no fim do HUD (o botão "?" da ajuda).
+## Botão menor (fonte e margens), para o HUD ficar enxuto.
+static func _compact(b: Button) -> Button:
+	b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return UiKit.compact(b, 12)
+
+
+## Põe mais um controle no fim do HUD (o botão "?" da ajuda), no tamanho compacto.
 func append_control(control: Control) -> void:
+	if control is Button:
+		_compact(control as Button)
 	_controls.add_child(control)
 
 
@@ -120,8 +133,8 @@ func update(state: Object, speed: float, paused: bool) -> void:
 		# A barra mostra o que ainda resta da janela.
 		_window_fill.anchor_right = clampf(1.0 - float(model.bonus_window["spent"]), 0.0, 1.0)
 	_render_upcoming(model.upcoming)
-	_speed.text = "%sx (Q)" % TowerInfo.fmt(speed)
-	_pause.text = "Continuar (P)" if paused else "Pausar (P)"
+	_speed.text = "%sx" % TowerInfo.fmt(speed)
+	_pause.text = "Seguir" if paused else "Pausar"
 	_banner.visible = paused
 
 
@@ -131,7 +144,7 @@ func _render_upcoming(upcoming: Array) -> void:
 	if upcoming.is_empty():
 		return
 	var texts: Dictionary = DataLoader.load_json("ui.json")["waveHud"]["texts"]
-	_upcoming_row.add_child(UiKit.label(texts["upcoming"], 12, Color("#8a8f94")))
+	_upcoming_row.add_child(UiKit.label(texts["upcoming"], 10, Color("#8a8f94")))
 	for item: Dictionary in upcoming:
 		var color := Color("#dddddd")
 		var text := str(item["wave"])
@@ -141,4 +154,4 @@ func _render_upcoming(upcoming: Array) -> void:
 		elif item["kind"] == "boss":
 			color = Color("#ff5a4a")
 			text += texts["bossMark"]
-		_upcoming_row.add_child(UiKit.label(text, 12, color, true))
+		_upcoming_row.add_child(UiKit.label(text, 10, color, true))

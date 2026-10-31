@@ -103,7 +103,7 @@ func setup(runner: SimulationRunner, state: Callable, hovered_cell: Callable, se
 	_unlocked = OS.is_debug_build() or OS.get_cmdline_user_args().has("--debug")
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	add_theme_stylebox_override("panel", UiKit.game_style(10, Vector2(12, 10)))
+	add_theme_stylebox_override("panel", UiKit.game_style(8, Vector2(8, 6)))
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 8)
 	position = Vector2(8, 8)
 	_build()
@@ -137,21 +137,20 @@ func _send(command: Dictionary) -> void:
 
 func _build() -> void:
 	var width := float(_cfg["panel"]["width"])
-	var box := UiKit.vbox(8)
+	var box := UiKit.vbox(5)
 	box.custom_minimum_size = Vector2(width, 0)
 	add_child(box)
-	var head := UiKit.hbox(8)
-	var title := UiKit.label("Debug", 18, UiKit.GOLD, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title)
-	head.add_child(UiKit.label("F2 fecha", 11, UiKit.MUTED))
+	var head := UiKit.hbox(6)
+	head.add_child(UiKit.label("Debug", 13, UiKit.GOLD, true))
+	head.add_child(UiKit.label("F2 fecha", 10, UiKit.MUTED))
 	box.add_child(head)
-	_summary = UiKit.label("", 12, Color("#9fd6a0"))
+	_summary = UiKit.label("", 10, Color("#9fd6a0"))
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_summary)
 
 	var tabs := HFlowContainer.new()
-	tabs.add_theme_constant_override("h_separation", 4)
-	tabs.add_theme_constant_override("v_separation", 4)
+	tabs.add_theme_constant_override("h_separation", 3)
+	tabs.add_theme_constant_override("v_separation", 3)
 	box.add_child(tabs)
 	var pages := [_page_game(), _page_waves(), _page_map(), _page_champions(), _page_enemies(), _page_info()]
 	for i in TABS.size():
@@ -179,9 +178,9 @@ func _show_tab(index: int) -> void:
 
 
 func _page_game() -> Control:
-	var page := UiKit.vbox(6)
+	var page := UiKit.vbox(4)
 	page.add_child(_section("Velocidade"))
-	var speeds := UiKit.hbox(4)
+	var speeds := UiKit.hbox(3)
 	for speed in SPEEDS:
 		var b := _chip("%dx" % int(speed), func() -> void: _runner.clock.set_speed(speed))
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -209,8 +208,8 @@ func _page_game() -> Control:
 
 
 func _page_waves() -> Control:
-	var page := UiKit.vbox(6)
-	_wave_label = UiKit.label("", 15, UiKit.TEXT, true)
+	var page := UiKit.vbox(4)
+	_wave_label = UiKit.label("", 12, UiKit.TEXT, true)
 	page.add_child(_wave_label)
 	var row := UiKit.hbox(4)
 	row.add_child(_grow(_button("Chamar onda", func() -> void: _send({"type": "callWave"}))))
@@ -221,8 +220,8 @@ func _page_waves() -> Control:
 	page.add_child(_section("Pular para a onda"))
 	var shortcuts := GridContainer.new()
 	shortcuts.columns = 4
-	shortcuts.add_theme_constant_override("h_separation", 4)
-	shortcuts.add_theme_constant_override("v_separation", 4)
+	shortcuts.add_theme_constant_override("h_separation", 3)
+	shortcuts.add_theme_constant_override("v_separation", 3)
 	for wave in _cfg["waveShortcuts"]:
 		var target := int(wave)
 		var b := _button(str(target), func() -> void: _skip_to(target))
@@ -249,8 +248,8 @@ func _skip_to(wave: int) -> void:
 
 
 func _page_map() -> Control:
-	var page := UiKit.vbox(6)
-	_map_label = UiKit.label("", 13, UiKit.TEXT)
+	var page := UiKit.vbox(4)
+	_map_label = UiKit.label("", 11, UiKit.TEXT)
 	_map_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	page.add_child(_map_label)
 	page.add_child(_section("Paredes"))
@@ -275,9 +274,9 @@ func _open_all_walls() -> void:
 
 
 func _page_champions() -> Control:
-	var page := UiKit.vbox(6)
-	var stars := UiKit.hbox(4)
-	stars.add_child(UiKit.label("Estrela", 12, UiKit.MUTED))
+	var page := UiKit.vbox(4)
+	var stars := UiKit.hbox(3)
+	stars.add_child(UiKit.label("Estrela", 11, UiKit.MUTED))
 	for s in [1, 2, 3]:
 		var star: int = s
 		var b := _chip("★%d" % star, func() -> void: _set_star(star))
@@ -289,15 +288,16 @@ func _page_champions() -> Control:
 	_search = LineEdit.new()
 	_search.placeholder_text = "Buscar campeão ou classe..."
 	_search.clear_button_enabled = true
+	_search.add_theme_font_size_override("font_size", 11)
 	_search.text_changed.connect(func(_text: String) -> void: _fill_champions())
 	page.add_child(_search)
-	_hand_label = UiKit.label("", 12, Color("#9fd6a0"))
+	_hand_label = UiKit.label("", 10, Color("#9fd6a0"))
 	_hand_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	page.add_child(_hand_label)
 	_champion_grid = GridContainer.new()
 	_champion_grid.columns = 2
-	_champion_grid.add_theme_constant_override("h_separation", 4)
-	_champion_grid.add_theme_constant_override("v_separation", 4)
+	_champion_grid.add_theme_constant_override("h_separation", 3)
+	_champion_grid.add_theme_constant_override("v_separation", 3)
 	page.add_child(_champion_grid)
 	_fill_champions()
 
@@ -362,7 +362,7 @@ func _champion_button(id: String, type: TowerData.TowerType, class_text: String)
 	var accent := RenderConfig.tower_color(TowerData.game_data(), id)
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 48)
+	b.custom_minimum_size = Vector2(0, 34)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var normal := UiKit.style(Color("#1d1f23"), rarity_color.darkened(0.25), 6, 1, Vector2(8, 4))
@@ -375,18 +375,18 @@ func _champion_button(id: String, type: TowerData.TowerType, class_text: String)
 	b.add_theme_stylebox_override("pressed", hover)
 	var box := UiKit.vbox(0)
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 0)
-	box.offset_left = 10
-	box.offset_top = 4
+	box.offset_left = 8
+	box.offset_top = 3
 	var name_row := UiKit.hbox(6)
 	var dot := ColorRect.new()
 	dot.color = accent
-	dot.custom_minimum_size = Vector2(8, 8)
+	dot.custom_minimum_size = Vector2(6, 6)
 	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(dot)
-	name_row.add_child(UiKit.label(type.name, 13, UiKit.TEXT, true))
+	name_row.add_child(UiKit.label(type.name, 11, UiKit.TEXT, true))
 	box.add_child(name_row)
-	box.add_child(UiKit.label(class_text if class_text != "" else "teste", 11, UiKit.MUTED))
+	box.add_child(UiKit.label(class_text if class_text != "" else "teste", 9, UiKit.MUTED))
 	b.add_child(box)
 	b.pressed.connect(func() -> void:
 		if _carry.is_valid():
@@ -395,7 +395,7 @@ func _champion_button(id: String, type: TowerData.TowerType, class_text: String)
 
 
 func _page_enemies() -> Control:
-	var page := UiKit.vbox(6)
+	var page := UiKit.vbox(4)
 	var enemies := EnemyData.game_data()
 	_enemy_option = _option()
 	_enemy_option.add_item("sorteados")
@@ -422,8 +422,8 @@ func _page_enemies() -> Control:
 
 
 func _page_info() -> Control:
-	var page := UiKit.vbox(6)
-	_stats = UiKit.label("", 11, Color("#9fd6a0"))
+	var page := UiKit.vbox(4)
+	_stats = UiKit.label("", 10, Color("#9fd6a0"))
 	_stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	page.add_child(_stats)
 	return page
@@ -432,8 +432,8 @@ func _page_info() -> Control:
 # --- Peças --------------------------------------------------------------------------------------
 
 func _section(text: String) -> Control:
-	var box := UiKit.vbox(2)
-	box.add_child(UiKit.label(text, 13, UiKit.GOLD, true))
+	var box := UiKit.vbox(1)
+	box.add_child(UiKit.label(text, 11, UiKit.GOLD, true))
 	var line := ColorRect.new()
 	line.color = Color(UiKit.FRAME, 0.6)
 	line.custom_minimum_size = Vector2(0, 1)
@@ -443,15 +443,13 @@ func _section(text: String) -> Control:
 
 
 func _hint(text: String) -> Label:
-	var l := UiKit.label(text, 11, UiKit.MUTED)
+	var l := UiKit.label(text, 10, UiKit.MUTED)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l
 
 
 func _button(text: String, on_pressed: Callable) -> Button:
-	var b := UiKit.button(text, on_pressed)
-	b.add_theme_font_size_override("font_size", 13)
-	return b
+	return UiKit.compact(UiKit.button(text, on_pressed), 11)
 
 
 ## Botão que fica aceso (aba, velocidade, estrela).
@@ -463,12 +461,18 @@ func _chip(text: String, on_pressed: Callable) -> Button:
 
 func _set_on(b: Button, on: bool) -> void:
 	if on:
-		var s := UiKit.style(Color("#4a3c18"), ON_COLOR, 6, 1, Vector2(10, 5))
-		s.border_width_bottom = 3
+		var s := UiKit.style(Color("#4a3c18"), ON_COLOR, 6, 1, Vector2(7, 2))
+		s.border_width_bottom = 2
+		s.content_margin_bottom = 3.0
 		b.add_theme_stylebox_override("normal", s)
 		b.add_theme_color_override("font_color", Color("#ffe9a8"))
 	else:
-		b.add_theme_stylebox_override("normal", UiKit._button_style(UiKit.BUTTON_BG, UiKit.BUTTON_BORDER))
+		var off := UiKit._button_style(UiKit.BUTTON_BG, UiKit.BUTTON_BORDER)
+		off.content_margin_left = 7.0
+		off.content_margin_right = 7.0
+		off.content_margin_top = 2.0
+		off.content_margin_bottom = 3.0
+		b.add_theme_stylebox_override("normal", off)
 		b.add_theme_color_override("font_color", Color("#eeeeee"))
 
 
@@ -481,7 +485,7 @@ func _check(text: String, on_toggled: Callable) -> CheckBox:
 	var c := CheckBox.new()
 	c.text = text
 	c.focus_mode = Control.FOCUS_NONE
-	c.add_theme_font_size_override("font_size", 13)
+	c.add_theme_font_size_override("font_size", 11)
 	if on_toggled.is_valid():
 		c.toggled.connect(on_toggled)
 	return c
@@ -490,7 +494,7 @@ func _check(text: String, on_toggled: Callable) -> CheckBox:
 func _option() -> OptionButton:
 	var o := OptionButton.new()
 	o.focus_mode = Control.FOCUS_NONE
-	o.add_theme_font_size_override("font_size", 13)
+	o.add_theme_font_size_override("font_size", 11)
 	return o
 
 
@@ -500,6 +504,7 @@ func _spin(min_v: int, max_v: int, value: int) -> SpinBox:
 	s.max_value = max_v
 	s.value = value
 	s.step = 1
+	s.get_line_edit().add_theme_font_size_override("font_size", 11)
 	return s
 
 

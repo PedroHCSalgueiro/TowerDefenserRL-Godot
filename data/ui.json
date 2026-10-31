@@ -63,7 +63,7 @@
   "help": {
     "key": "h",
     "title": "Controles",
-    "buttonLabel": "? (H)",
+    "buttonLabel": "?",
     "closeLabel": "Fechar (H ou Esc)",
     "pausedNote": "O jogo fica pausado enquanto a ajuda está aberta.",
     "controls": [
@@ -165,9 +165,11 @@
   "waveHud": {
     "upcomingCount": 5,
     "texts": {
-      "callEarly": "Chamar antecipada (+{bonus})",
-      "callNoBonus": "Chamar próxima onda (sem bônus)",
-      "bonusWindow": "bônus por mais {n} {inimigos}",
+      "call": "Chamar onda",
+      "callBoss": "Chefão: limpe o mapa",
+      "callEarly": "Antecipar +{bonus}",
+      "callNoBonus": "Chamar próxima",
+      "bonusWindow": "bônus: mais {n} {inimigos}",
       "upcoming": "Próximas:",
       "eliteMark": "◆",
       "bossMark": "◆",

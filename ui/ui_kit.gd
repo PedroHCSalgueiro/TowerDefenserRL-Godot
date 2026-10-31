@@ -108,6 +108,19 @@ static func button(text: String, on_pressed: Callable) -> Button:
 	return b
 
 
+## Deixa o botão enxuto (fonte `font_size` e margens pequenas), para HUD e painéis compactos.
+static func compact(b: Button, font_size: int = 12) -> Button:
+	b.add_theme_font_size_override("font_size", font_size)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var s := (b.get_theme_stylebox(state) as StyleBoxFlat).duplicate() as StyleBoxFlat
+		s.content_margin_left = 7.0
+		s.content_margin_right = 7.0
+		s.content_margin_top = 2.0
+		s.content_margin_bottom = 3.0
+		b.add_theme_stylebox_override(state, s)
+	return b
+
+
 ## Botão de destaque (chamar onda): verde, com a mesma sombra de baixo dos demais.
 static func primary_button(text: String, on_pressed: Callable) -> Button:
 	var b := button(text, on_pressed)
