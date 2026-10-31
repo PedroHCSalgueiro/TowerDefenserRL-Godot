@@ -247,3 +247,27 @@ func test_run_perdida_mostra_a_tela_de_fim() -> void:
 	game._state().status = "lost"
 	await _frames(2)
 	assert_true(game.end_screen.visible)
+
+
+func test_escolha_da_parede_deixa_mapa_e_opcoes_ao_lado_do_painel() -> void:
+	var sim: Variant = game.runner.sim
+	for i in 3:  # as 2 primeiras paredes abrem direto; a 3ª pergunta
+		sim.enqueue({"type": "debugOpenExpansion"})
+		await _seconds(0.3)
+	await _seconds(0.4)  # o painel abre e a câmera termina de se afastar
+	var screen: ExpansionScreenUi = game.expansion_screen
+	assert_true(screen.is_open(), "a 3ª parede pergunta")
+	var insets: Dictionary = RenderConfig.data()["camera"]["choiceInsetsPx"]
+	assert_lte(screen.get_child(0).get_global_rect().end.x, float(insets["left"]), "painel dentro da coluna")
+	var data := ExpansionData.for_map(game.map)
+	var offered: Array = screen.option_ids().map(func(id: String) -> ExpansionData.Opening:
+		return data.opening(game._state().expansion.opened, id))
+	var bounds := GroundProjection.cells_view_bounds(game.grid.view_cells(offered))
+	var model: CameraModel = game.camera_ctl.model
+	var viewport := game.get_viewport().get_visible_rect().size
+	var top_left := model.world_to_screen(bounds.position)
+	var bottom_right := model.world_to_screen(bounds.end)
+	assert_gte(top_left.x, float(insets["left"]) - 0.5, "não passa por baixo do painel")
+	assert_gte(top_left.y, float(insets["top"]) - 0.5, "nem da barra de cima")
+	assert_lte(bottom_right.x, viewport.x - float(insets["right"]) + 0.5, "nem da coluna da direita")
+	assert_lte(bottom_right.y, viewport.y - float(insets["bottom"]) + 0.5, "nem da loja")

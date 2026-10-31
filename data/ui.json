@@ -25,7 +25,7 @@
   },
   "expansionScreen": {
     "title": "Derrube uma parede",
-    "subtitle": "Escolha para onde o mapa cresce. O caminho de cada direção já vem sorteado: passe o mouse para ver no mapa (1, 2 ou 3). O pedaço novo abre casas para construir.",
+    "subtitle": "Escolha para onde o mapa cresce. Passe o mouse numa opção para ver o caminho sorteado no mapa.",
     "cells": "{n} casas",
     "entrance": "⚠ Entrada nova de inimigos",
     "seconds": "{s} s"

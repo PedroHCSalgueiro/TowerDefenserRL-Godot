@@ -16,6 +16,7 @@
     "resetMs": 200,
     "marginPx": 180,
     "uiInsetsPx": { "top": 44, "bottom": 230 },
+    "choiceInsetsPx": { "top": 66, "bottom": 170, "left": 256, "right": 206 },
     "keyPanSpeedPx": 800,
     "dragThresholdPx": 6,
     "edgePan": {

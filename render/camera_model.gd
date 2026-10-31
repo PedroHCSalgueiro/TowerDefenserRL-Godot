@@ -100,9 +100,9 @@ var _wheel_lines_per_notch: float
 var _smooth_ms: float
 var _reset_ms: float
 var _margin_px: float
-## Faixas da tela cobertas pela interface (painel de cima e loja embaixo): o enquadramento usa só o meio.
-var _inset_top := 0.0
-var _inset_bottom := 0.0
+## Faixas da tela cobertas pela interface (painel de cima, loja embaixo e, na escolha da parede, as colunas
+## dos lados): o enquadramento usa só o meio.
+var _insets := {}
 var _viewport: Vector2
 var _bounds: Rect2
 var _limit_min: float
@@ -128,9 +128,7 @@ func _init(config: Dictionary, viewport: Vector2, bounds: Rect2) -> void:
 	_smooth_ms = float(zoom["smoothMs"])
 	_reset_ms = float(config["resetMs"])
 	_margin_px = float(config["marginPx"])
-	var insets: Dictionary = config.get("uiInsetsPx", {})
-	_inset_top = float(insets.get("top", 0.0))
-	_inset_bottom = float(insets.get("bottom", 0.0))
+	_insets = config.get("uiInsetsPx", {})
 	_viewport = viewport
 	_bounds = bounds
 	_update_limits()
@@ -211,7 +209,17 @@ func zoom_limits() -> Dictionary:
 
 ## A tela menos as faixas cobertas pela interface.
 func _free_viewport() -> Vector2:
-	return Vector2(_viewport.x, maxf(1.0, _viewport.y - _inset_top - _inset_bottom))
+	return Vector2(maxf(1.0, _viewport.x - _inset("left") - _inset("right")),
+			maxf(1.0, _viewport.y - _inset("top") - _inset("bottom")))
+
+
+func _inset(side: String) -> float:
+	return float(_insets.get(side, 0.0))
+
+
+## Do centro da tela ao centro do meio livre, em pixels do mundo.
+func _free_center_shift(zoom: float) -> Vector2:
+	return Vector2(_inset("left") - _inset("right"), _inset("top") - _inset("bottom")) / 2.0 / zoom
 
 
 ## Zoom suave ou volta ao padrão em andamento.
@@ -227,6 +235,15 @@ func set_bounds(bounds: Rect2) -> void:
 	_current = _clamp(_current)
 
 
+## A interface passou a cobrir outras faixas da tela (`{top, bottom, left, right}`, em pixels). Como
+## `set_bounds`, refaz os limites e mantém a vista dentro deles.
+func set_insets(insets: Dictionary) -> void:
+	_insets = insets
+	_update_limits()
+	_target_zoom = -1.0
+	_current = _clamp(_current)
+
+
 ## O tamanho da tela mudou.
 func set_viewport(viewport: Vector2) -> void:
 	_viewport = viewport
@@ -234,9 +251,10 @@ func set_viewport(viewport: Vector2) -> void:
 	_current = _clamp(_current)
 
 
-## Zoom padrão com o mapa centralizado.
+## Zoom padrão com o mapa centralizado no meio livre da tela.
 func default_view() -> View:
-	return _clamp(View.new(_limit_default, _bounds.position + _bounds.size / 2.0))
+	var center := _bounds.position + _bounds.size / 2.0
+	return _clamp(View.new(_limit_default, center - _free_center_shift(_limit_default)))
 
 
 func screen_to_world(point: Vector2) -> Vector2:
@@ -309,9 +327,9 @@ func update(dt_ms: float) -> void:
 ## A vista dentro dos limites: zoom entre o mínimo e o máximo e a tela sem sair do mapa.
 func _clamp(view: View) -> View:
 	var zoom := clampf(view.zoom, _limit_min, _limit_max)
-	# No eixo vertical, o limite vale para o meio livre da tela (entre o painel de cima e a loja).
-	var shift := (_inset_top - _inset_bottom) / 2.0 / zoom
+	# O limite vale para o meio livre da tela (entre os painéis e a loja).
+	var shift := _free_center_shift(zoom)
+	var free := _free_viewport()
 	return View.new(zoom, Vector2(
-			_clamp_axis(view.center.x, _bounds.position.x, _bounds.size.x, _viewport.x, _margin_px, zoom),
-			_clamp_axis(view.center.y + shift, _bounds.position.y, _bounds.size.y, _free_viewport().y, _margin_px,
-					zoom) - shift))
+			_clamp_axis(view.center.x + shift.x, _bounds.position.x, _bounds.size.x, free.x, _margin_px, zoom) - shift.x,
+			_clamp_axis(view.center.y + shift.y, _bounds.position.y, _bounds.size.y, free.y, _margin_px, zoom) - shift.y))

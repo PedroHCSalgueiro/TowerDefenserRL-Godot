@@ -1,11 +1,15 @@
 class_name ExpansionScreenUi
 extends Control
-## Escolha da parede (mapa que cresce): um painel no topo com os pedaços oferecidos e a barra do tempo,
-## sem escurecer o mapa, para os pedaços acesos aparecerem (`GridView.show_candidates`). Clique ou teclas
-## 1, 2 e 3 escolhem; passar o mouse numa opção destaca o pedaço dela no mapa. A simulação é quem congela
-## o jogo enquanto a escolha está aberta; com a pausa do relógio (P), nada é aceito.
+## Escolha da parede (mapa que cresce): uma coluna à esquerda com os pedaços oferecidos e a barra do tempo,
+## sem escurecer o mapa, para os pedaços acesos aparecerem (`GridView.show_candidates`). A câmera enquadra o
+## mapa ao lado dela (`choiceInsetsPx` em render.json). Clique ou teclas 1, 2 e 3 escolhem; passar o mouse
+## numa opção destaca o pedaço dela no mapa. A simulação é quem congela o jogo enquanto a escolha está
+## aberta; com a pausa do relógio (P), nada é aceito.
 
 const OPTION_COLORS_KEY := "optionColors"
+## Largura do texto da coluna; com as margens, ela não passa de `choiceInsetsPx.left` (render.json).
+const TEXT_WIDTH := 212
+const SCREEN_MARGIN := 12
 
 ## Opção sob o mouse (-1 = nenhuma), para o mapa destacar o pedaço.
 var hovered_option := -1
@@ -14,7 +18,7 @@ var _enqueue: Callable    # (command: Dictionary)
 var _paused: Callable     # () -> bool
 var _ticks_per_second: float
 var _panel: PanelContainer
-var _options_row: HBoxContainer
+var _options_column: VBoxContainer
 var _timer_fill: ColorRect
 var _timer_text: Label
 var _model: ExpansionScreenModel = null
@@ -30,16 +34,16 @@ func setup(state: Callable, enqueue: Callable, paused: Callable, ticks_per_secon
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visible = false
 	var texts: Dictionary = DataLoader.load_json("ui.json")["expansionScreen"]
-	_panel = UiKit.game_panel(14, Vector2(18, 12))
+	_panel = UiKit.game_panel(14, Vector2(12, 10))
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	var box := UiKit.vbox(8)
-	box.add_child(UiKit.label(texts["title"], 24, UiKit.GOLD, true))
+	box.add_child(UiKit.label(texts["title"], 20, UiKit.GOLD, true))
 	var subtitle := UiKit.label(texts["subtitle"], 13, UiKit.MUTED)
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	subtitle.custom_minimum_size = Vector2(640, 0)
+	subtitle.custom_minimum_size = Vector2(TEXT_WIDTH, 0)
 	box.add_child(subtitle)
-	_options_row = UiKit.hbox(12)
-	box.add_child(_options_row)
+	_options_column = UiKit.vbox(8)
+	box.add_child(_options_column)
 	var timer_back := ColorRect.new()
 	timer_back.color = Color("#2a2c2f")
 	timer_back.custom_minimum_size = Vector2(0, 6)
@@ -55,8 +59,7 @@ func setup(state: Callable, enqueue: Callable, paused: Callable, ticks_per_secon
 	box.add_child(_timer_text)
 	_panel.add_child(box)
 	add_child(_panel)
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 48)
-	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, SCREEN_MARGIN)
 
 
 func is_open() -> bool:
@@ -94,31 +97,33 @@ func _choose(index: int) -> void:
 
 func _render(model: ExpansionScreenModel) -> void:
 	var texts: Dictionary = DataLoader.load_json("ui.json")["expansionScreen"]
-	UiKit.clear(_options_row)
+	UiKit.clear(_options_column)
 	hovered_option = -1
 	for option in model.options:
-		_options_row.add_child(_render_option(option, texts))
+		_options_column.add_child(_render_option(option, texts))
 
 
 func _render_option(option: ExpansionScreenModel.Option, texts: Dictionary) -> Control:
 	var color := option_color(option.index)
 	var node := PanelContainer.new()
-	node.custom_minimum_size = Vector2(220, 0)
-	var normal := UiKit.style(Color("#1d1f23"), color, 10, 2, Vector2(12, 10))
-	var hover := UiKit.style(Color("#2a2c31"), color.lightened(0.3), 10, 3, Vector2(12, 10))
+	var normal := UiKit.style(Color("#1d1f23"), color, 10, 2, Vector2(10, 8))
+	var hover := UiKit.style(Color("#2a2c31"), color.lightened(0.3), 10, 3, Vector2(10, 8))
 	node.add_theme_stylebox_override("panel", normal)
 	node.mouse_filter = Control.MOUSE_FILTER_STOP
 	node.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var box := UiKit.vbox(4)
+	var box := UiKit.vbox(2)
 	var top := UiKit.hbox(6)
-	var name_label := UiKit.label(option.name, 17, UiKit.TEXT, true)
+	var name_label := UiKit.label(option.name, 15, UiKit.TEXT, true)
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 	top.add_child(UiKit.label(option.key, 15, color, true))
 	box.add_child(top)
 	box.add_child(UiKit.label(option.cells, 13, Color("#9fd6a0")))
 	if option.entrance:
-		box.add_child(UiKit.label(texts["entrance"], 13, Color("#ff7a6b"), true))
+		var entrance := UiKit.label(texts["entrance"], 13, Color("#ff7a6b"), true)
+		entrance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(entrance)
 	node.add_child(box)
 	var index := option.index
 	node.mouse_entered.connect(func() -> void:

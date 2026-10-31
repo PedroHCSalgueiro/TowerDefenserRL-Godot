@@ -197,6 +197,8 @@ func _build_ui() -> void:
 	root.add_child(debug_panel)
 	debug_panel.setup(runner, _state, func() -> Variant: return grid.hovered_cell, func() -> Variant: return grid.selected_cell,
 			func(tower_type: String, star: int) -> void: shop.carry_free(tower_type, star), func() -> Dictionary: return shop.carrying())
+	# As duas ficam no canto de cima à esquerda: a escolha da parede, aberta pelo debug, vem por cima.
+	root.move_child(expansion_screen, debug_panel.get_index())
 
 	nexus_panel.evolve_pressed.connect(_evolve_nexus)
 	wave_hud.call_pressed.connect(_call_wave)
@@ -447,7 +449,7 @@ func _update_expansion(delta: float) -> void:
 	var offered_key := ",".join(expansion_screen.option_ids())
 	if changed or offered_key != _offered_key:
 		_offered_key = offered_key
-		camera_ctl.set_map_cells(grid.view_cells(offered))
+		camera_ctl.set_map_cells(grid.view_cells(offered), expansion_screen.is_open())
 
 
 ## Arrastando a partir da interface (slot da loja): a casa sob o mouse vale mesmo fora do painel.

@@ -42,8 +42,10 @@ func setup(camera: Camera3D, map: SimMap, blocked: Callable, holding_tower: Call
 
 
 ## A área aberta do mapa mudou (mapa que cresce): os limites passam a ser essas casas e a vista volta ao
-## padrão com animação (a câmera se afasta para a sala nova caber).
-func set_map_cells(cells: Rect2i) -> void:
+## padrão com animação (a câmera se afasta para a sala nova caber). `choosing`: a escolha da parede está
+## aberta, e o enquadramento desconta também a coluna dela e a do lado direito.
+func set_map_cells(cells: Rect2i, choosing: bool = false) -> void:
+	model.set_insets(_config["choiceInsetsPx"] if choosing else _config["uiInsetsPx"])
 	model.set_bounds(GroundProjection.cells_view_bounds(cells))
 	model.reset()
 
