@@ -39,7 +39,10 @@ citadas, apresente um plano e só então implemente.
   uma pasta por região (`valcoroa`, `costarubra`, `forjaferro`, `cripta`, `panteao`) e as das combinações
   (`valcoroa_costarubra`, `todas`: só os cenários de debug).
 - `tests/`: testes da simulação.
-- `assets/`, `scenes/`, `blender/` (com `.gdignore`): arte.
+- `assets/`, `scenes/`: arte final que o jogo carrega (modelos em `assets/personagens/<nome>/`).
+- `dev/prototipos/`: experimentos de visual, fora do export.
+- Arte de trabalho fica FORA do repositório, em `E:\Programacao\Jogos\TD RogueLite\Arte` (ver o `LEIA-ME.md` de lá):
+  referências, modelos, `.blend`, sprites, scripts do Blender e pacotes baixados. Só os arquivos finais vêm para cá.
 
 ## Regras
 - Nunca colocar números de jogo no código: sempre em `data/`.

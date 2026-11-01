@@ -1,5 +1,5 @@
 extends Node3D
-# Sir Aldric (torre do raio). O modelo vem de assets/sir-aldric.glb (V2: cabeça nova, capa, escudo e espada no esqueleto CC).
+# Sir Aldric (torre do raio). O modelo vem de assets/personagens/sir-aldric/sir-aldric.glb (V2: cabeça nova, capa, escudo e espada no esqueleto CC).
 # - Parado: fica na pose do primeiro quadro da animação "ataque" (ainda não há idle).
 # - atacar(intervalo): toca "ataque" acelerada para caber no intervalo entre ataques.
 # - A animação tem uma faixa Call Method no quadro em que a espada está mais alta (t = 0,70 s)
