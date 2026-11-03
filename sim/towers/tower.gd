@@ -46,6 +46,9 @@ var loot_count := 0
 var mark_next := false
 ## % de dano a mais até o fim da onda (Acólito Sombrio: cada abate perto dele soma).
 var wave_buff_percent := 0.0
+## Cópias guardadas para a próxima estrela, além da própria torre (só com mais de 2 cópias por estrela;
+## ver `Fusion`).
+var copies := 0
 
 
 func _init(p_id: int = 0, p_type: String = "", cell: Vector2i = Vector2i.ZERO, p_star: int = 1) -> void:

@@ -1,11 +1,12 @@
 class_name ClassPreview
 extends RefCounted
 ## Prévia da compra na janela do slot da loja (T16): o que a compra muda nas classes ("Arcana 1/2
-## → 2/2 (ativa nível 2)") ou, se funde, a estrela nova ("★2↑", e as classes não mudam). Usa a mesma
+## → 2/2 (ativa nível 2)") ou, se funde, a estrela nova ("★2↑") ou as cópias juntadas ("★2 2/3"); as classes
+## não mudam. Usa a mesma
 ## `Fusion.plan_fusion` da compra e a mesma contagem de classes da simulação (porte de
 ## `classPreview.ts`). Sem nós.
 
-## "★2↑" quando a compra funde ("" = não funde).
+## "★2↑" quando a compra sobe a estrela, "★2 2/3" quando a cópia fica guardada ("" = não funde).
 var fusion := ""
 ## Uma linha por classe do tipo, só quando a compra traz um tipo novo ao mapa.
 var classes: Array[String] = []
@@ -26,7 +27,7 @@ static func preview(towers: Array, tower_type: String, data: TowerData, classes:
 	var plan := Fusion.plan_fusion(towers, data, tower_type)
 	if plan != null:
 		var p := ClassPreview.new()
-		p.fusion = "★%d↑" % plan.star
+		p.fusion = Fusion.plan_label(plan)
 		return p
 	for t: Tower in towers:
 		if t.type == tower_type:

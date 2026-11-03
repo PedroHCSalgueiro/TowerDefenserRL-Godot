@@ -63,6 +63,7 @@ func _slot(index: int, slot_name: String, rarity: String, label: String, classes
 	slot.classes = classes
 	slot.price = price
 	slot.fuse_star = fuse
+	slot.fuse_label = "★%d↑" % fuse if fuse > 0 else ""
 	slot.affordable = affordable
 	slot.blocked_by_limit = blocked
 	return slot

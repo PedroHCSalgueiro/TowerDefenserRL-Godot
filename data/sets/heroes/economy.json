@@ -1,7 +1,7 @@
 {
   "waveBonus": {
-    "base": 8,
-    "perWave": 2
+    "base": 3,
+    "perWave": 1
   },
   "killGold": {
     "base": 0,
@@ -12,7 +12,9 @@
     "commonOnlyWaves": 0,
     "rarityMode": "wave",
     "prices": {
-      "legendary": 40
+      "uncommon": 20,
+      "rare": 30,
+      "legendary": 50
     },
     "rarityByWave": [
       {

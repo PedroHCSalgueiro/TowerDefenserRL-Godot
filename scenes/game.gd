@@ -530,7 +530,10 @@ func _update_overlays(state: RunState, mouse: Vector2, over_ui: bool, now_ms: fl
 		if tower_hover != null:
 			info = TowerInfo.describe_tower(towers.get_type(tower_hover.type), tower_hover.star, classes, tower_hover.type)
 			key = "torre:%d:%d" % [tower_hover.id, tower_hover.star]
-			progress = TowerInfo.charge_progress(towers.get_type(tower_hover.type), tower_hover, classes, state)
+			var hover_type := towers.get_type(tower_hover.type)
+			var lines := [TowerInfo.charge_progress(hover_type, tower_hover, classes, state),
+					TowerInfo.copies_progress(hover_type, tower_hover, towers)].filter(func(l: String) -> bool: return l != "")
+			progress = "\n".join(lines)
 	tooltip.update_info(info, key, now_ms, mouse, preview, progress)
 	var shown: Tower = tower_hover if (tower_hover != null and tooltip.is_shown()) else null
 	var neighbors: Array = TriggerNeighborhood.affected_neighbors(state, shown, towers, classes) if shown != null else []

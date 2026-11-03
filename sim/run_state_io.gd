@@ -44,6 +44,7 @@ static func to_dict(state: RunState) -> Dictionary:
 			"lastEffect": null if t.last_effect == null else {"effect": t.last_effect.effect, "seq": t.last_effect.seq},
 			"doubleShot": t.double_shot, "followupTicks": t.followup_ticks, "curseNext": t.curse_next.duplicate(),
 			"lootCount": t.loot_count, "markNext": t.mark_next, "waveBuffPercent": t.wave_buff_percent,
+			"copies": t.copies,
 		})
 	var traps := []
 	for trap: Trap in state.traps:
@@ -305,6 +306,7 @@ static func from_dict(d: Variant, map: SimMap) -> RunState:
 		tower.loot_count = t.get("lootCount", 0)
 		tower.mark_next = t.get("markNext", false)
 		tower.wave_buff_percent = float(t.get("waveBuffPercent", 0.0))
+		tower.copies = t.get("copies", 0)
 		state.towers.append(tower)
 
 	for t: Dictionary in d.get("traps", []):

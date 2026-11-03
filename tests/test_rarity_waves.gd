@@ -45,7 +45,7 @@ func test_valcoroa_tabela_por_onda() -> void:
 	GameSets.select("valcoroa")
 	var economy := EconomyData.game_data()
 	assert_eq(economy.rarity_mode, "wave")
-	assert_eq(economy.shop_prices["legendary"], 40)
+	assert_eq(economy.shop_prices["legendary"], 50)
 	var expected := {0: [100, 0, 0, 0], 7: [100, 0, 0, 0], 8: [70, 30, 0, 0], 15: [70, 30, 0, 0], 16: [50, 35, 15, 0],
 			23: [50, 35, 15, 0], 24: [35, 35, 25, 5], 31: [35, 35, 25, 5], 32: [25, 30, 30, 15], 39: [25, 30, 30, 15]}
 	for waves_done: int in expected:

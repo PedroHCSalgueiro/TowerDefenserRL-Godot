@@ -191,6 +191,14 @@ static func charge_progress(type: TowerData.TowerType, tower: Tower, classes: Cl
 	return "Carga: %s de %d %s" % [fmt(minf(tower.trigger_counter, float(count))), count, unit]
 
 
+## Cópias juntadas para a próxima estrela, só para o tooltip: "Cópias: 2 de 3 para ★2". "" com 2 cópias por
+## estrela (a próxima cópia já sobe) ou na última estrela.
+static func copies_progress(type: TowerData.TowerType, tower: Tower, data: TowerData) -> String:
+	if data.copies_per_star <= 2 or tower.star >= Stars.max_stars(type):
+		return ""
+	return "Cópias: %d de %d para ★%d" % [tower.copies + 1, data.copies_per_star, tower.star + 1]
+
+
 ## Frase simples da torre em `ui.json` ("" = sem frase, como as torres do debug).
 static func tower_summary(type_id: String) -> String:
 	var summaries: Dictionary = DataLoader.load_json("ui.json")["texts"]["towerSummaries"]

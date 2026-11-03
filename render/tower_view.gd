@@ -299,10 +299,10 @@ func flash(tower_id: int) -> void:
 		node.flash = 1.0
 
 
-## Eventos do quadro: fusão (brilho) e torres travadas.
+## Eventos do quadro: fusão e cópia guardada (brilho) e torres travadas.
 func handle_events(events: Array) -> void:
 	for event: Dictionary in events:
-		if event["type"] == "towersMerged":
+		if event["type"] == "towersMerged" or event["type"] == "copyStored":
 			var node: TowerNode = _nodes.get(event["towerId"])
 			if node != null:
 				node.merge = 1.0

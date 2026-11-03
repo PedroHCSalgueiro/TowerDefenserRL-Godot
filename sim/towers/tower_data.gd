@@ -59,6 +59,8 @@ var statuses: Dictionary = {"mark": {}, "push": {"eliteMaxCells": 1.0, "bossImmu
 ## Movimento das invocações que andam (bloco opcional `summons` de `towers.json`):
 ## "skeleton": {"speed", "seconds", "contactRadius", "blastRadius"}.
 var summons: Dictionary = {}
+## Cópias da mesma estrela que sobem uma estrela na fusão (`copiesPerStar`, opcional; 2 no Padrão).
+var copies_per_star := 2
 ## Alguma aura dá alcance (Sacerdotisa Amunet)? Sem isso, o alcance não olha as vizinhas.
 var has_range_auras := false
 ## id -> TowerType, na ordem do JSON.
@@ -133,6 +135,11 @@ static func load_data(raw: Variant, classes: ClassData = null) -> TowerData:
 		return null
 	var data := TowerData.new()
 	data.projectile_retarget_radius = float(raw["projectileRetargetRadius"])
+	var copies: Variant = raw.get("copiesPerStar", 2)
+	if not (copies is float or copies is int) or int(copies) != copies or int(copies) < 2:
+		push_error('Dados de torres inválidos: "copiesPerStar" precisa ser um inteiro de 2 para cima')
+		return null
+	data.copies_per_star = int(copies)
 	if raw.has("statuses"):
 		var statuses: Variant = _parse_statuses(raw["statuses"], classes)
 		if statuses == null:

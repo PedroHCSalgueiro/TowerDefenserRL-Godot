@@ -1,6 +1,7 @@
 {
   "$replace": true,
   "projectileRetargetRadius": 2,
+  "copiesPerStar": 3,
   "statuses": {
     "mark": {
       "class": "hunter",

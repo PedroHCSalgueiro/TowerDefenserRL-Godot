@@ -7,9 +7,10 @@ extends RngHolder
 ## Phaser (camelCase). `status`: "playing" | "lost" | "won".
 
 ## 17: Costa Rubra (marcas, Maldição, tiro duplo, ouro guardado para o fim da onda). 18: Forjaferro, Cripta
-## Cinzenta e Panteão (Envenenado, invocações com parâmetros, almas, eco, deus do núcleo). Saves 16 e 17 ainda
-## abrem (os campos novos começam vazios; ver `RunStateIO.from_dict`).
-const VERSION := 18
+## Cinzenta e Panteão (Envenenado, invocações com parâmetros, almas, eco, deus do núcleo). 19: cópias guardadas
+## na torre (3 cópias por estrela). Saves 16 a 18 ainda abrem (os campos novos começam vazios; ver
+## `RunStateIO.from_dict`).
+const VERSION := 19
 ## Versões de save que ainda abrem.
 const OLDEST_VERSION := 16
 

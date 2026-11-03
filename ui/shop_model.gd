@@ -17,8 +17,11 @@ class SlotModel:
 	var price := 0
 	## Tem ouro para comprar (slot vazio nunca tem).
 	var affordable := false
-	## Estrela que a compra daria ao fundir com uma torre do mapa (0 = não funde).
+	## Estrela que a compra daria ao fundir com uma torre do mapa (0 = não funde; quando a cópia só fica
+	## guardada, a estrela que a torre já tem).
 	var fuse_star := 0
+	## Etiqueta da fusão na carta: "★2↑" ou "★2 2/3" ("" = não funde).
+	var fuse_label := ""
 	## A compra precisaria de casa nova e o mapa está no limite do núcleo (aviso "limite").
 	var blocked_by_limit := false
 
@@ -66,7 +69,9 @@ static func build(state: Object, selected: Variant, economy: EconomyData, towers
 			slot.rarity_label = TowerInfo.RARITY_LABELS[type.rarity] if type.rarity != null else ""
 			slot.price = maxi(price, 0)
 			slot.affordable = state.gold >= slot.price
-			slot.fuse_star = Fusion.fusion_star(state.towers, towers, tower_type)
+			var plan := Fusion.plan_fusion(state.towers, towers, tower_type)
+			slot.fuse_star = plan.star if plan != null else 0
+			slot.fuse_label = Fusion.plan_label(plan)
 			slot.blocked_by_limit = slot.fuse_star == 0 and not room
 		model.slots.append(slot)
 	var tower: Tower = null
@@ -94,8 +99,8 @@ static func build(state: Object, selected: Variant, economy: EconomyData, towers
 func key(carry_slot: int) -> String:
 	var parts: Array[String] = []
 	for s in slots:
-		parts.append("%s:%d:%d:%d:%d" % [s.tower_type if s.tower_type != "" else "-", s.price,
-				1 if s.affordable else 0, s.fuse_star, 1 if s.blocked_by_limit else 0])
+		parts.append("%s:%d:%d:%s:%d" % [s.tower_type if s.tower_type != "" else "-", s.price,
+				1 if s.affordable else 0, s.fuse_label, 1 if s.blocked_by_limit else 0])
 	var sell_key := "%d:%d" % [sell["towerId"], sell["refund"]] if not sell.is_empty() else "-"
 	return "|".join([str(gold), str(interest), str(next_wave), str(reroll_cost), "1" if can_reroll else "0",
 			",".join(parts), sell_key, str(carry_slot) if carry_slot >= 0 else "-"])

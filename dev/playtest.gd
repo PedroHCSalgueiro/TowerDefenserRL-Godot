@@ -39,6 +39,19 @@ func _init() -> void:
 		economy.kill_gold_per_wave = int(args["kill-per"])
 	if args.has("kill-step"):
 		economy.kill_gold_wave_step = int(args["kill-step"])
+	# Varredura do início da run: `--prices=10,20,30,50` (comum, incomum, rara, lendária), `--bonus=3:1` (renda de fim
+	# de onda `base + por onda × onda`) e `--copies=3` (cópias da mesma estrela para fundir).
+	if args.has("prices"):
+		var values := String(args["prices"]).split(",")
+		var rarities := ["common", "uncommon", "rare", "legendary"]
+		for i in rarities.size():
+			economy.shop_prices[rarities[i]] = int(values[i])
+	if args.has("bonus"):
+		var parts := String(args["bonus"]).split(":")
+		economy.wave_bonus_base = int(parts[0])
+		economy.wave_bonus_per_wave = int(parts[1])
+	if args.has("copies"):
+		TowerData.game_data().copies_per_star = int(args["copies"])
 	# `--brom=old|mid`: valores antigos do Mestre Brom (dano, raio e dano da bola carregada), para isolar o efeito.
 	if args.has("brom") and args["brom"] != "new":
 		var brom: TowerData.TowerType = TowerData.game_data().get_type("brom")
@@ -218,6 +231,9 @@ func _step(sim: Simulation, m: Dictionary) -> void:
 						m["firstBuyWave"][rarity] = state.wave + 1
 			"towersMerged":
 				m["merges"] += 1
+				var star_key := "firstStar%d" % int(e["stars"])
+				if not m.has(star_key):
+					m[star_key] = state.wave + 1
 			"towerFired":
 				var type: String = str(_id_to_type.get(e["towerId"], "?"))
 				m["shotsByType"][type] = m["shotsByType"].get(type, 0) + 1

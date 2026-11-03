@@ -220,7 +220,7 @@ func _draw_tags(art: Rect2) -> void:
 	if tag != "":
 		_pill(tag, Vector2(art.end.x - 4.0, art.position.y + 4.0), true, _accent.darkened(0.55), _accent.lightened(0.55), 9)
 	if _slot.fuse_star > 0:
-		_pill("★%d↑" % _slot.fuse_star, Vector2(art.position.x + 4.0, art.end.y - 4.0), false, Color("#4a3c12"), Color("#ffd75e"), 11, true)
+		_pill(_slot.fuse_label, Vector2(art.position.x + 4.0, art.end.y - 4.0), false, Color("#4a3c12"), Color("#ffd75e"), 11, true)
 	elif _slot.blocked_by_limit:
 		_pill(DataLoader.load_json("ui.json")["texts"]["limitWarning"], Vector2(art.position.x + 4.0, art.end.y - 4.0), false,
 				Color("#4a1e18"), Color("#ff7a6b"), 10, true)

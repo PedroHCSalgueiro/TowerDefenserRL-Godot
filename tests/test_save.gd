@@ -110,7 +110,7 @@ func test_save_16_antigo_abre_com_os_campos_novos_vazios() -> void:
 		p.erase("curse")
 		p.erase("forceMark")
 	for t: Dictionary in d["towers"]:
-		for key in ["doubleShot", "followupTicks", "curseNext", "lootCount", "markNext", "waveBuffPercent"]:
+		for key in ["doubleShot", "followupTicks", "curseNext", "lootCount", "markNext", "waveBuffPercent", "copies"]:
 			t.erase(key)
 	for trap: Dictionary in d["traps"]:
 		trap.erase("params")
