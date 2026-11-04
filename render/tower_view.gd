@@ -46,8 +46,9 @@ var _data: TowerData
 var _nodes: Dictionary = {}  # id -> TowerNode
 var _range_disc: MeshInstance3D
 var _range_ring: MeshInstance3D
-var _star_mesh: SphereMesh
-var _star_material: StandardMaterial3D
+## Estrela em pixel (`towers.stars.pixels`), no tamanho do pixel da arte (`camera.pixelArt`).
+var _star_texture: ImageTexture
+var _art_unit := 0.0
 var _cfg: Dictionary
 ## Raios de luz vivos: {"mesh": MeshInstance3D, "material": StandardMaterial3D, "left": ms}.
 var _beams: Array = []
@@ -63,12 +64,21 @@ func setup(data: TowerData) -> void:
 			RenderConfig.color(range_cfg["lineColor"], range_cfg["lineAlpha"])), self)
 	_range_disc.visible = false
 	_range_ring.visible = false
-	_star_mesh = SphereMesh.new()
-	_star_mesh.radius = 0.07
-	_star_mesh.height = 0.14
-	_star_mesh.radial_segments = 8
-	_star_mesh.rings = 4
-	_star_material = MeshUtil.flat_material(RenderConfig.color(_cfg["stars"]["color"]))
+	_art_unit = float(RenderConfig.data()["camera"]["pixelArt"]["viewPxPerArtPx"]) / GroundProjection.PX_PER_UNIT
+	_star_texture = _star_image(_cfg["stars"], RenderConfig.color(_cfg["outlineColor"]))
+
+
+## A estrela desenhada pelas linhas de `pixels` (o = contorno, y = cor, w = brilho, . = vazio).
+static func _star_image(cfg: Dictionary, outline: Color) -> ImageTexture:
+	var rows: Array = cfg["pixels"]
+	var colors := {"o": outline, "y": RenderConfig.color(cfg["color"]), "w": RenderConfig.color(cfg["lightColor"])}
+	var image := Image.create_empty(String(rows[0]).length(), rows.size(), false, Image.FORMAT_RGBA8)
+	for y in rows.size():
+		var row := String(rows[y])
+		for x in row.length():
+			if colors.has(row[x]):
+				image.set_pixel(x, y, colors[row[x]])
+	return ImageTexture.create_from_image(image)
 
 
 ## Sincroniza os nós com as torres do estado. `selected_cell`: Vector2i ou null.
@@ -151,7 +161,9 @@ func _create_node(tower: Tower) -> TowerNode:
 		node.parrot.position = Vector3(tower.x, 0.0, tower.y) + _shoulder()
 		node.parrot_speed = float(parrot_cfg.get("speed", 4.0))
 	node.stars = Node3D.new()
-	node.stars.position = Vector3(0, node.star_height, 0)
+	# altura acertada num pixel inteiro da arte na tela (a altura aparece encurtada pelo cosseno da elevação)
+	var up_px := cos(GroundProjection.elevation()) / _art_unit
+	node.stars.position = Vector3(0, roundf(node.star_height * up_px) / up_px, 0)
 	node.add_child(node.stars)
 	node.position = Vector3(tower.x, 0.0, tower.y)
 	node.home = node.position
@@ -159,18 +171,29 @@ func _create_node(tower: Tower) -> TowerNode:
 	return node
 
 
-## Troca o bloco pelo modelo 3D da torre, se o arquivo existir (senão fica o bloco).
+## Troca o bloco pelo modelo 3D da torre (ou pelo herói em pixel de `sprites`), se o arquivo existir
+## (senão fica o bloco).
 func _attach_model(node: TowerNode, cfg: Dictionary) -> void:
-	var path: String = cfg["scene"]
-	if not ResourceLoader.exists(path):
-		return
-	var scene := load(path) as PackedScene
-	if scene == null:
-		return
-	var model := scene.instantiate() as Node3D
-	if model == null:
-		return
-	model.scale = Vector3.ONE * float(cfg.get("scale", 1.0))
+	var model: Node3D
+	if cfg.has("sprites"):
+		var sprite_cfg: Dictionary = _cfg["heroSprites"]
+		var hero := HeroSprite.create(cfg["sprites"], sprite_cfg)
+		if hero == null:
+			return
+		hero.raio = cfg.has("beamColor")
+		model = hero
+		node.star_height = float(sprite_cfg["heightUnits"]) + float(sprite_cfg["starGap"])
+	else:
+		var path: String = cfg["scene"]
+		if not ResourceLoader.exists(path):
+			return
+		var scene := load(path) as PackedScene
+		if scene == null:
+			return
+		model = scene.instantiate() as Node3D
+		if model == null:
+			return
+		model.scale = Vector3.ONE * float(cfg.get("scale", 1.0))
 	model.rotation.y = deg_to_rad(float(cfg.get("restYawDegrees", 0.0)))
 	node.add_child(model)
 	node.model = model
@@ -249,9 +272,17 @@ func _update_node(node: TowerNode, tower: Tower, delta_ms: float) -> void:
 		for child in node.stars.get_children():
 			child.queue_free()
 		var right := Vector3(cos(GroundProjection.azimuth()), 0.0, -sin(GroundProjection.azimuth()))
+		var spacing := float(_cfg["stars"]["spacingPx"]) * _art_unit
 		for i in tower.star:
-			var s := MeshUtil.instance(_star_mesh, _star_material, node.stars)
-			s.position = right * ((float(i) - float(tower.star - 1) / 2.0) * 0.17)
+			var s := Sprite3D.new()
+			s.texture = _star_texture
+			s.pixel_size = _art_unit
+			s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			s.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			s.shaded = false
+			s.position = right * ((float(i) - float(tower.star - 1) / 2.0) * spacing)
+			node.stars.add_child(s)
 	# Flash do gatilho e brilho da fusão.
 	node.flash = maxf(0.0, node.flash - delta_ms / FLASH_MS)
 	node.merge = maxf(0.0, node.merge - delta_ms / FLASH_MS)
@@ -327,6 +358,12 @@ func show_locked(tower_id: int) -> void:
 func tower_position(tower_id: int) -> Variant:
 	var node: TowerNode = _nodes.get(tower_id)
 	return node.home if node != null else null
+
+
+## Altura das estrelas da torre (o topo do herói ou do bloco), para os textos ficarem acima dela.
+func star_height(tower_id: int) -> float:
+	var node: TowerNode = _nodes.get(tower_id)
+	return node.star_height if node != null else BODY_SIZE.y + 0.5
 
 
 ## Id da torre atingida por um raio (a mais próxima da câmera), ou -1.

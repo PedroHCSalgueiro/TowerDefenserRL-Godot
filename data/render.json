@@ -22,6 +22,9 @@
     "edgePan": {
       "bandPx": 32,
       "speedPx": 600
+    },
+    "pixelArt": {
+      "viewPxPerArtPx": 2
     }
   },
   "grid": {
@@ -30,7 +33,30 @@
     "freeColor": "#3e5245",
     "pathColor": "#8c7a5b",
     "entranceColor": "#4f7cac",
-    "nexusColor": "#b54848"
+    "nexusColor": "#b54848",
+    "ground": {
+      "folder": "res://assets/cenario/grama/",
+      "free": {
+        "lisa_01": 4,
+        "lisa_02": 4,
+        "lisa_03": 4,
+        "lisa_04": 4,
+        "lisa_05": 4,
+        "escura_01": 2,
+        "flores_01": 1,
+        "flores_02": 1,
+        "pedrinhas_01": 1,
+        "terra_01": 1
+      },
+      "path": {
+        "caminho_01": 1,
+        "caminho_02": 1,
+        "caminho_03": 1
+      },
+      "tintAmount": 0.55,
+      "sideColor": "#5e4330",
+      "gridShade": 0.1
+    }
   },
   "expansion": {
     "optionColors": ["#f0c040", "#5fc8e8", "#c07ef0"],
@@ -113,6 +139,16 @@
     "width": 14,
     "height": 18,
     "fallbackColor": "#ff00ff",
+    "heroSprites": {
+      "heightUnits": 1.75,
+      "idleFps": 8,
+      "attackFps": 15,
+      "attackShare": 0.9,
+      "fireFrame": 5,
+      "beamHeight": 0.9,
+      "forwardUnits": 0.75,
+      "starGap": 0.3
+    },
     "classColors": {
       "artillery": "#e0703c",
       "mechanical": "#4fb3a9",
@@ -129,7 +165,19 @@
     "stars": {
       "fontSize": 9,
       "color": "#ffd84a",
-      "offsetY": 1
+      "lightColor": "#fff4be",
+      "offsetY": 1,
+      "spacingPx": 8,
+      "pixels": [
+        "...o....",
+        "..owo...",
+        ".oyyyo..",
+        "oyyyyyo.",
+        ".oyyyo..",
+        ".oyoyo..",
+        ".oo.oo..",
+        "........"
+      ]
     },
     "fusion": {
       "flashColor": "#ffffff",

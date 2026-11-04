@@ -23,6 +23,11 @@ var _free_mat: Material
 var _path_mat: Material
 var _entrance_mat: Material
 var _nexus_mat: Material
+## Chão em pixel do bioma (`grid.ground`): cada laje ganha uma tampa desenhada pelo `GroundTiles`, e as lajes
+## ficam só com a cor da lateral (terra). Sem ele, as lajes coloridas de antes.
+var _ground: GroundTiles
+var _top: PlaneMesh
+var _side_mat: Material
 var _drawn_revision := -1
 ## Casas que já têm laje (índice -> true): só as novas sobem animadas.
 var _drawn := {}
@@ -43,6 +48,11 @@ func setup(p_map: SimMap) -> void:
 	_slab.size = Vector3(0.96, 0.12, 0.96)
 	_ghost_slab = BoxMesh.new()
 	_ghost_slab.size = Vector3(0.92, 0.04, 0.92)
+	_ground = GroundTiles.create(cfg)
+	if _ground != null:
+		_top = PlaneMesh.new()
+		_top.size = Vector2(1.0, 1.0)
+		_side_mat = MeshUtil.lit_material(RenderConfig.color(cfg["ground"]["sideColor"]))
 	_tiles = Node3D.new()
 	add_child(_tiles)
 	_ghosts = Node3D.new()
@@ -94,13 +104,18 @@ func _build_tiles(animate: bool) -> void:
 	for child in _tiles.get_children():
 		_tiles.remove_child(child)
 		child.queue_free()
+	if _ground != null:
+		_ground.update(map, entrances)
 	for y in map.height:
 		for x in map.width:
 			var cell := Vector2i(x, y)
 			if not map.is_open(cell):
 				continue
-			var mi := MeshUtil.instance(_slab, _material_for(cell, entrances), _tiles)
+			var mi := MeshUtil.instance(_slab, _side_mat if _ground != null else _material_for(cell, entrances), _tiles)
 			mi.position = Vector3(x, -0.06, y)
+			if _ground != null:
+				# a tampa cobre a casa inteira (1x1), logo acima da laje
+				MeshUtil.instance(_top, _ground.material, mi).position = Vector3(0, 0.061, 0)
 			var index := map.index_of(cell)
 			if animate and not _drawn.has(index):
 				fresh.append(mi)

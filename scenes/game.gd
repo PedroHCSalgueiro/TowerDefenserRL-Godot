@@ -6,7 +6,8 @@ extends Node3D
 ##
 ## Linha de comando (depois de `--`): `--seed=abc` fixa a semente; `--demo` compra torres e chama
 ## ondas sozinho (para capturas de tela); `--shot=arquivo.png` salva uma captura depois de
-## `--shot-seconds=N` segundos (padrão 8) e encerra.
+## `--shot-seconds=N` segundos (padrão 8) e encerra; `--zoom=N` aproxima N dentes da rodinha (negativo
+## afasta) logo depois de enquadrar o mapa.
 
 ## Semente fixa para testes (vazio = sorteia ou usa --seed).
 static var forced_seed := ""
@@ -599,6 +600,12 @@ func _open_for_dev() -> void:
 
 
 func _run_dev_tools(delta: float) -> void:
+	# `--zoom=N` depois do enquadramento do começo (que volta a vista ao padrão)
+	if _args.has("zoom") and _elapsed >= 0.5:
+		var notches := int(_args["zoom"])
+		_args.erase("zoom")
+		for i in absi(notches):
+			camera_ctl.model.wheel(-signf(notches), get_viewport().get_visible_rect().size / 2.0)
 	if _args.has("demo"):
 		_demo_step += delta
 		if _demo_step > 0.8:

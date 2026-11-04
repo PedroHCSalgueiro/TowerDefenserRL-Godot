@@ -115,6 +115,10 @@ var _target_anchor := Vector2.ZERO
 ## Volta ao padrão: vista de partida e tempo passado (_reset_from == null = sem animação).
 var _reset_from: View = null
 var _reset_elapsed := 0.0
+## Pixel exato (`camera.pixelArt`): o zoom só para em múltiplos de `_zoom_step`, em que um pixel da arte vira um
+## número inteiro de pixels da tela, até `_max_steps` passos; 0 = zoom livre (rodinha suave).
+var _zoom_step := 0.0
+var _max_steps := 0
 
 
 func _init(config: Dictionary, viewport: Vector2, bounds: Rect2) -> void:
@@ -197,6 +201,54 @@ func _update_limits() -> void:
 	_limit_min = minf(_zoom_min, fit)
 	_limit_default = minf(_zoom_default, fit)
 	_limit_max = _zoom_max
+	if _zoom_step > 0.0:
+		# Pixel exato: o padrão e o máximo do render.json viram o passo inteiro mais perto (a janela quase nunca tem o
+		# tamanho exato: em 1886x1061 o 3x é o zoom 1,018), o mínimo é um passo, e o mapa que não cabe desce até o
+		# passo que cabe.
+		_limit_min = _step_below(minf(_zoom_step, fit))
+		_limit_default = minf(_nearest_step(_zoom_default), _step_below(fit))
+		_limit_max = maxf(_limit_default, minf(_nearest_step(_zoom_max), _zoom_step * _max_steps))
+
+
+## O passo inteiro mais perto de `zoom` (no mínimo um passo).
+func _nearest_step(zoom: float) -> float:
+	return maxf(1.0, roundf(zoom / _zoom_step)) * _zoom_step
+
+
+## O maior passo de zoom até `zoom`. Abaixo de um passo (o mapa não cabe nem com um pixel da arte por pixel da
+## tela, como na escolha da parede com o mapa grande) o zoom fica livre: é a vista geral, com a arte reduzida.
+func _step_below(zoom: float) -> float:
+	if zoom < _zoom_step:
+		return zoom
+	return floorf(zoom / _zoom_step + 0.001) * _zoom_step
+
+
+## O passo de zoom mais perto (ou o zoom livre da vista geral), dentro dos limites; no zoom livre não muda nada.
+func _on_step(zoom: float) -> float:
+	if _zoom_step <= 0.0:
+		return zoom
+	var stepped := roundf(zoom / _zoom_step) * _zoom_step if zoom >= _zoom_step else zoom
+	return clampf(stepped, _limit_min, _limit_max)
+
+
+## Liga o zoom em passos (pixel exato): `step` é o zoom em que um pixel da arte ocupa um pixel da tela física, e o
+## zoom vai de 1 a `max_steps` passos (abaixo de um passo, só a vista geral do mapa grande). Refaz os limites e leva
+## a vista para o passo mais perto.
+func set_zoom_step(step: float, max_steps: int) -> void:
+	_zoom_step = step
+	_max_steps = max_steps
+	_update_limits()
+	_target_zoom = -1.0
+	_current = _clamp(View.new(_on_step(_current.zoom), _current.center))
+
+
+## A vista com o centro acertado na grade de pixels da arte (`art_px` pixels da vista por pixel da arte, numa
+## tela de `viewport` pixels): todo ponto com coordenada inteira em pixels da arte cai na borda de um pixel da
+## tela, e os sprites e o chão saem sem pixel partido. Anda menos de um pixel da arte.
+static func snap_center(view: View, viewport: Vector2, art_px: float) -> View:
+	var size := viewport / (view.zoom * art_px)
+	var corner := view.center / art_px - size / 2.0
+	return View.new(view.zoom, (corner.round() + size / 2.0) * art_px)
 
 
 func view() -> View:
@@ -270,6 +322,14 @@ func wheel(notches: float, anchor: Vector2) -> void:
 	if notches == 0.0:
 		return
 	_reset_from = null
+	if _zoom_step > 0.0:
+		# Pixel exato: cada dente vai ao passo seguinte, na hora (o zoom suave passaria por tamanhos quebrados).
+		# Da vista geral (abaixo de um passo), o primeiro dente leva ao primeiro passo.
+		var steps := _current.zoom / _zoom_step
+		var next := floorf(steps + 0.001) + 1.0 if notches < 0.0 else ceilf(steps - 0.001) - 1.0
+		var zoom := clampf(next * _zoom_step, _limit_min, _limit_max)
+		_current = _clamp(zoom_around(_current, zoom, anchor, _viewport))
+		return
 	var base := _target_zoom if _target_zoom >= 0.0 else _current.zoom
 	_target_zoom = clampf(base * pow(_wheel_step, -notches), _limit_min, _limit_max)
 	_target_anchor = anchor
@@ -320,8 +380,9 @@ func update(dt_ms: float) -> void:
 			_reset_from = null
 		else:
 			var e := _ease_out_cubic(t)
-			_current = _clamp(View.new(_lerp_zoom(_reset_from.zoom, to.zoom, e),
-					_reset_from.center.lerp(to.center, e)))
+			# no pixel exato o zoom pula para o passo do padrão e só o centro anda
+			var zoom := to.zoom if _zoom_step > 0.0 else _lerp_zoom(_reset_from.zoom, to.zoom, e)
+			_current = _clamp(View.new(zoom, _reset_from.center.lerp(to.center, e)))
 
 
 ## A vista dentro dos limites: zoom entre o mínimo e o máximo e a tela sem sair do mapa.

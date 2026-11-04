@@ -27,6 +27,15 @@ var _holding_tower: Callable
 ## Botão direito com o esquerdo apertado: cancela o arrasto de torre (mover ou da loja).
 var _cancel_drag: Callable
 var _applied_view: CameraModel.View = null
+## Pixel exato (`camera.pixelArt`): pixels da vista por pixel da arte no zoom 1 (2 = pixel 2x em 1280x720);
+## 0 = desligado. O 3D é desenhado com um pixel por pixel da arte e ampliado sem filtro; a interface, por
+## cima, continua na resolução da tela.
+var _art_px := 0.0
+## Pixels da tela física por pixel da arte no zoom atual.
+var _pixel_scale := 0
+
+## O `scaling_3d_scale` do Godot não desce de 0,1: o zoom máximo para em 10 pixels da tela por pixel da arte.
+const MAX_PIXEL_SCALE := 10
 
 
 func setup(camera: Camera3D, map: SimMap, blocked: Callable, holding_tower: Callable, cancel_drag: Callable) -> void:
@@ -37,8 +46,29 @@ func setup(camera: Camera3D, map: SimMap, blocked: Callable, holding_tower: Call
 	_cancel_drag = cancel_drag
 	var viewport := get_viewport().get_visible_rect().size
 	model = CameraModel.new(_config, viewport, GroundProjection.map_view_bounds(map.width, map.height))
+	_art_px = float(_config.get("pixelArt", {}).get("viewPxPerArtPx", 0.0))
+	if _art_px > 0.0:
+		# sem suavizar a borda das malhas: no pixel 2x a borda é a escada de pixels
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		get_viewport().scaling_3d_mode = Viewport.SCALING_3D_MODE_NEAREST
+		_update_zoom_step()
 	get_viewport().size_changed.connect(_on_resize)
 	_apply()
+
+
+## Pixels da tela física por pixel lógico: o jogo é desenhado em 1280x720 e esticado para a janela. Sem janela de
+## verdade (testes sem tela: o servidor de tela devolve 0x0; janela minimizada) conta 1.
+func _screen_scale() -> float:
+	var logical := get_viewport().get_visible_rect().size
+	var physical := Vector2(DisplayServer.window_get_size())
+	if physical.x < 1.0 or physical.y < 1.0 or logical.x < 1.0 or logical.y < 1.0:
+		return 1.0
+	return minf(physical.x / logical.x, physical.y / logical.y)
+
+
+## Um passo de zoom = um pixel da arte num pixel da tela física (depende do tamanho da janela).
+func _update_zoom_step() -> void:
+	model.set_zoom_step(1.0 / (_art_px * _screen_scale()), MAX_PIXEL_SCALE)
 
 
 ## A área aberta do mapa mudou (mapa que cresce): os limites passam a ser essas casas e a vista volta ao
@@ -52,6 +82,8 @@ func set_map_cells(cells: Rect2i, choosing: bool = false) -> void:
 
 func _on_resize() -> void:
 	model.set_viewport(get_viewport().get_visible_rect().size)
+	if _art_px > 0.0:
+		_update_zoom_step()
 	_applied_view = null
 
 
@@ -141,4 +173,13 @@ func _apply() -> void:
 	if view == _applied_view:
 		return
 	_applied_view = view
-	GroundProjection.apply_view(_camera, view, get_viewport().get_visible_rect().size.y)
+	var size := get_viewport().get_visible_rect().size
+	if _art_px > 0.0:
+		# a câmera anda de pixel da arte em pixel da arte, e o 3D sai com um pixel por pixel da arte
+		view = CameraModel.snap_center(view, size, _art_px)
+		var scale := maxi(1, roundi(view.zoom * _art_px * _screen_scale()))
+		if scale != _pixel_scale:
+			_pixel_scale = scale
+			# um pouco acima de 1/escala: o Godot arredonda o tamanho para baixo
+			get_viewport().scaling_3d_scale = 1.0 / scale + 0.0001
+	GroundProjection.apply_view(_camera, view, size.y)

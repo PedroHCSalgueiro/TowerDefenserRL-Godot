@@ -12,6 +12,28 @@
       "volta": "#7fd7ff",
       "engrena": "#8a5cd6",
       "ferro": "#6c7a89"
+    },
+    "models": {
+      "bolt": {
+        "sprites": "res://assets/personagens/bolt/pixel/",
+        "restYawDegrees": 45
+      },
+      "vapora": {
+        "sprites": "res://assets/personagens/vapora/pixel/",
+        "restYawDegrees": 45
+      },
+      "caldeira": {
+        "sprites": "res://assets/personagens/caldeira/pixel/",
+        "restYawDegrees": 45
+      },
+      "tic": {
+        "sprites": "res://assets/personagens/tic/pixel/",
+        "restYawDegrees": 45
+      },
+      "greta": {
+        "sprites": "res://assets/personagens/greta/pixel/",
+        "restYawDegrees": 45
+      }
     }
   }
 }

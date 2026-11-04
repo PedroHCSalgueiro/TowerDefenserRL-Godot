@@ -1,6 +1,6 @@
 extends GutTest
-## O Sir Aldric com modelo 3D no jogo (`towers.models` do conjunto Valcoroa): o modelo entra no lugar do
-## bloco, vira e ataca quando a torre atira, e o raio de luz sai da ponta da espada.
+## Heróis com modelo no jogo (`towers.models`): hoje são as folhas em pixel (`HeroSprite`). O modelo entra no
+## lugar do bloco, vira e ataca quando a torre atira, e o raio de luz do Sir Aldric sai no quadro do disparo.
 
 var game: Game
 
@@ -62,9 +62,24 @@ func test_lyra_usa_o_modelo_e_toca_a_animacao_de_ataque() -> void:
 	assert_true(animated, "a animação de ataque toca")
 
 
-func test_heroi_sem_modelo_continua_bloco() -> void:
+func test_selene_usa_a_folha_em_pixel() -> void:
 	var cell: Vector2i = WaveBot.bot_cells(game.map)[0]
 	game.runner.sim.enqueue({"type": "placeTower", "towerType": "selene", "x": cell.x, "y": cell.y})
 	await get_tree().create_timer(0.3).timeout
 	for node in game.tower_view._nodes.values():
+		assert_true(node.model is HeroSprite, "a Selene aparece em pixel")
+		assert_false(node.body.visible, "o bloco some")
+
+
+func test_heroi_sem_modelo_continua_bloco() -> void:
+	# o Volta (Forjaferro) ainda não tem folha; o jogo do Valcoroa sai antes de trocar o conjunto
+	remove_child(game)
+	game.free()
+	GameSets.select("forjaferro")
+	var forja: Game = load("res://scenes/game.tscn").instantiate()
+	add_child_autofree(forja)
+	var cell: Vector2i = WaveBot.bot_cells(forja.map)[0]
+	forja.runner.sim.enqueue({"type": "placeTower", "towerType": "volta", "x": cell.x, "y": cell.y})
+	await get_tree().create_timer(0.3).timeout
+	for node in forja.tower_view._nodes.values():
 		assert_null(node.model, "sem modelo configurado, fica o bloco colorido")

@@ -18,6 +18,40 @@
         "color": "#5fd35f",
         "speed": 4
       }
+    },
+    "models": {
+      "bart": {
+        "sprites": "res://assets/personagens/bart/pixel/",
+        "restYawDegrees": 45
+      },
+      "ruby": {
+        "sprites": "res://assets/personagens/ruby/pixel/",
+        "restYawDegrees": 45
+      },
+      "anchor": {
+        "sprites": "res://assets/personagens/anchor/pixel/",
+        "restYawDegrees": 45
+      },
+      "morgana": {
+        "sprites": "res://assets/personagens/morgana/pixel/",
+        "restYawDegrees": 45
+      },
+      "pena": {
+        "sprites": "res://assets/personagens/pena/pixel/",
+        "restYawDegrees": 45
+      },
+      "kraus": {
+        "sprites": "res://assets/personagens/kraus/pixel/",
+        "restYawDegrees": 45
+      },
+      "zuri": {
+        "sprites": "res://assets/personagens/zuri/pixel/",
+        "restYawDegrees": 45
+      },
+      "nerea": {
+        "sprites": "res://assets/personagens/nerea/pixel/",
+        "restYawDegrees": 45
+      }
     }
   }
 }

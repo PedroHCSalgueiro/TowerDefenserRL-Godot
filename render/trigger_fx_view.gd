@@ -10,11 +10,10 @@ extends Node3D
 ##   `lingerMs` depois); a cadeia do núcleo mostra o rótulo sobre o núcleo, sem anel;
 ## - números de dano agregados por efeito (liga e desliga com N).
 ##
-## Uma malha de faixas redesenhada por quadro e textos 3D reaproveitados (um pool do tamanho do
-## limite), para o caos do empilhamento não derrubar o FPS. Os textos têm tamanho fixo na tela.
-
-## Escala dos textos de tamanho fixo (ajustada visualmente).
-const LABEL_PIXEL_SIZE := 0.0009
+## Uma malha de faixas redesenhada por quadro e textos reaproveitados (um pool do tamanho do
+## limite), para o caos do empilhamento não derrubar o FPS. Os textos ficam numa camada 2D entre o mundo
+## e a interface, presos ao ponto 3D de cada um: com o 3D em pixel 2x (`camera.pixelArt`), texto
+## desenhado dentro dele sairia borrado.
 
 var _cfg: Dictionary
 var _towers: TowerData
@@ -27,9 +26,12 @@ var _pulse_mesh: MeshInstance3D
 var _pulse_material: StandardMaterial3D
 var _ring_pool: Array[MeshInstance3D] = []
 var _ring_materials: Array[StandardMaterial3D] = []
-var _label_pool: Array[Label3D] = []
+var _text_layer: CanvasLayer
+var _label_pool: Array[Label] = []
+var _label_at: Array[Vector3] = []
 var _label_shown: Array[Dictionary] = []
-var _number_pool: Array[Label3D] = []
+var _number_pool: Array[Label] = []
+var _number_at: Array[Vector3] = []
 var _number_owner: Array[int] = []
 var _tower_info := {}  # id -> {"x","y","color"}
 var _time_ms := 0.0
@@ -55,9 +57,14 @@ func setup(map: SimMap, towers: TowerData, tower_view: TowerView) -> void:
 	_pulse_mesh.material_override = _pulse_material
 	_pulse_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_pulse_mesh)
+	# por cima do mundo e por baixo da interface (camada 1)
+	_text_layer = CanvasLayer.new()
+	_text_layer.layer = -1
+	add_child(_text_layer)
 	var chain: Dictionary = _cfg["chain"]
 	for i in int(chain["maxLabels"]):
 		_label_pool.append(_make_label(chain, 2))
+		_label_at.append(Vector3.ZERO)
 		_label_shown.append({"chain_id": 0, "length": 0, "at_ms": 0.0})
 		var mat := MeshUtil.flat_material(RenderConfig.color(_ring_cfg["color"], _ring_cfg["alpha"]))
 		_ring_materials.append(mat)
@@ -67,23 +74,39 @@ func setup(map: SimMap, towers: TowerData, tower_view: TowerView) -> void:
 	var numbers: Dictionary = _cfg["numbers"]
 	for i in int(numbers["maxActive"]):
 		_number_pool.append(_make_label(numbers, 1))
+		_number_at.append(Vector3.ZERO)
 		_number_owner.append(0)
 
 
-func _make_label(style: Dictionary, priority: int) -> Label3D:
-	var label := Label3D.new()
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.fixed_size = true
-	label.pixel_size = LABEL_PIXEL_SIZE
-	label.no_depth_test = true
-	label.render_priority = priority
-	label.font_size = int(style["fontSize"]) * 3
-	label.modulate = RenderConfig.color(style["color"])
-	label.outline_modulate = RenderConfig.color(style["strokeColor"])
-	label.outline_size = int(style["strokeWidth"]) * 3
+func _make_label(style: Dictionary, priority: int) -> Label:
+	var label := Label.new()
+	var settings := LabelSettings.new()
+	settings.font_size = int(style["fontSize"])
+	settings.font_color = RenderConfig.color(style["color"])
+	settings.outline_color = RenderConfig.color(style["strokeColor"])
+	settings.outline_size = int(style["strokeWidth"])
+	label.label_settings = settings
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.z_index = priority
 	label.visible = false
-	add_child(label)
+	_text_layer.add_child(label)
 	return label
+
+
+## Põe cada texto visível sobre o ponto 3D dele (centrado), em pixels inteiros da tela.
+func _place_texts() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	for pair: Array in [[_label_pool, _label_at], [_number_pool, _number_at]]:
+		var labels: Array[Label] = pair[0]
+		var points: Array[Vector3] = pair[1]
+		for i in labels.size():
+			var label := labels[i]
+			if label.visible:
+				label.size = label.get_minimum_size()
+				label.position = (cam.unproject_position(points[i]) - label.size * 0.5).round()
 
 
 ## Liga ou desliga os números de dano (tecla N); devolve o estado novo.
@@ -122,6 +145,7 @@ func draw(state: Object, frame_delta_ms: float) -> void:
 	_draw_pulses()
 	_draw_chains()
 	_draw_numbers()
+	_place_texts()
 	_pulses.advance(frame_delta_ms)
 	_numbers.advance(frame_delta_ms)
 
@@ -153,19 +177,21 @@ func _draw_chains() -> void:
 	var chain_cfg: Dictionary = _cfg["chain"]
 	var labels := _chains.labels()
 	for i in _label_pool.size():
-		var label3d := _label_pool[i]
+		var text := _label_pool[i]
 		var ring := _ring_pool[i]
 		var label: TriggerFx.ChainLabel = labels[i] if i < labels.size() else null
 		var tower_pos: Variant = null
 		if label != null and label.origin_tower_id != null:
 			tower_pos = _tower_view.tower_position(label.origin_tower_id)
 		if label == null or (label.origin_tower_id != null and tower_pos == null):
-			label3d.visible = false
+			text.visible = false
 			ring.visible = false
 			continue
 		var anchor: Vector3
 		if tower_pos != null:
-			anchor = tower_pos + Vector3(0, 1.25, 0)
+			# acima das estrelas (o herói em pixel é mais alto que o bloco)
+			var lift := _tower_view.star_height(label.origin_tower_id) + float(chain_cfg["offsetY"]) * RenderConfig.PX_TO_UNIT
+			anchor = tower_pos + Vector3(0, lift, 0)
 			# Anel no pé da torre: pulsa enquanto a cadeia está viva.
 			var pulse := 1.0
 			if label.alive:
@@ -183,10 +209,10 @@ func _draw_chains() -> void:
 			shown["chain_id"] = label.chain_id
 			shown["length"] = label.length
 			shown["at_ms"] = _time_ms
-			label3d.text = String(chain_cfg["text"]).replace("{n}", str(label.length))
-		label3d.position = anchor
-		label3d.modulate.a = 1.0 if label.alive else 0.6
-		label3d.visible = true
+			text.text = String(chain_cfg["text"]).replace("{n}", str(label.length))
+		_label_at[i] = anchor
+		text.modulate.a = 1.0 if label.alive else 0.6
+		text.visible = true
 
 
 ## Cada número fica preso a um texto do pool enquanto vive: o texto é feito uma vez só.
@@ -210,5 +236,5 @@ func _draw_numbers() -> void:
 			_number_pool[slot].text = str(roundi(n.value))
 			_number_pool[slot].visible = true
 		var life := maxf(0.0, n.ms_left / float(cfg["durationMs"]))
-		_number_pool[slot].position = Vector3(n.at.x, 0.6 + rise * (1.0 - life), n.at.y)
+		_number_at[slot] = Vector3(n.at.x, 0.6 + rise * (1.0 - life), n.at.y)
 		_number_pool[slot].modulate.a = life
