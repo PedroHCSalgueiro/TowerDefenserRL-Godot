@@ -187,3 +187,13 @@ O Pedro propôs três ideias. Elas são regras de jogo, então ficam em "Pergunt
 3. **Bônus e penalidade pelo lugar:** vale pela casa onde o herói está.
    - Rivalidades em ciclo: Valcoroa contra Cripta, Cripta contra Panteão, Panteão contra Forjaferro, Forjaferro contra Costa Rubra e Costa Rubra contra Valcoroa.
    - Números pequenos, com mais bônus do que penalidade.
+
+## 9. Valcoroa: esboço e peças (04/11)
+
+Ficam em `Arte/cenario/valcoroa/`:
+- `esboco_valcoroa.png`: as 3 zonas, um pedaço de mapa cada;
+- `PROMPTS-valcoroa.md`: as 35 peças e os prompts.
+
+**Paredes:** são blocos na grade montados por código, com a textura vista de frente vinda do Gemini.
+- A parede da frente é baixa, para a gente ver dentro da sala.
+- O núcleo é o trono.
