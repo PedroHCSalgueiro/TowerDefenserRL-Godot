@@ -55,7 +55,8 @@
       },
       "tintAmount": 0.55,
       "sideColor": "#5e4330",
-      "gridShade": 0.1
+      "gridShade": 0.22,
+      "gridRadius": 2.5
     }
   },
   "expansion": {

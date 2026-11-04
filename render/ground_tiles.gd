@@ -67,6 +67,8 @@ func _build(cfg: Dictionary, grid_cfg: Dictionary) -> bool:
 	material.set_shader_parameter("atlas", ImageTexture.create_from_image(atlas))
 	material.set_shader_parameter("grid_shade", float(cfg["gridShade"]))
 	material.set_shader_parameter("tile", TILE)
+	material.set_shader_parameter("grid_radius", float(cfg["gridRadius"]))
+	set_cursor(null)
 	return true
 
 
@@ -79,6 +81,11 @@ static func _tinted(image: Image, tint: Color, amount: float) -> Image:
 				var mixed := Color(c.r * tint.r, c.g * tint.g, c.b * tint.b).lerp(tint, 0.25)
 				out.set_pixel(x, y, Color(c.lerp(mixed, amount), c.a))
 	return out
+
+
+## A grade só aparece em volta do mouse (`gridRadius` casas, sumindo para fora); null = mouse fora do mapa.
+func set_cursor(ground: Variant) -> void:
+	material.set_shader_parameter("cursor", ground if ground != null else Vector2(-1000, -1000))
 
 
 ## Refaz a imagem de cada casa: aberta ganha chão, fechada fica sem (o fundo escuro aparece).

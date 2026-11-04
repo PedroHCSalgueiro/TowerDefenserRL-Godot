@@ -14,8 +14,10 @@ render_mode unshaded, cull_back, depth_draw_opaque;
 uniform sampler2D atlas : filter_nearest, repeat_disable;
 uniform sampler2D cells : filter_nearest, repeat_disable;
 uniform vec2 map_size = vec2(1.0, 1.0);
-// Escurece a borda de cada losango (linha da grade, discreta).
+// Escurece a borda de cada losango (linha da grade), só perto do mouse: some aos poucos até `grid_radius` casas.
 uniform float grid_shade = 0.0;
+uniform vec2 cursor = vec2(-1000.0, -1000.0);
+uniform float grid_radius = 2.5;
 // Tamanho da casa em pixels da arte (largura = 2 x altura).
 uniform ivec2 tile = ivec2(48, 24);
 
@@ -66,5 +68,6 @@ void fragment() {
 	if (color.a < 0.5) {
 		discard;
 	}
-	ALBEDO = border(local) ? color.rgb * (1.0 - grid_shade) : color.rgb;
+	float near = 1.0 - smoothstep(grid_radius * 0.4, grid_radius, distance(vec2(cell), cursor));
+	ALBEDO = border(local) ? color.rgb * (1.0 - grid_shade * near) : color.rgb;
 }

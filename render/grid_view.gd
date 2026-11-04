@@ -186,6 +186,8 @@ func view_cells(extra: Array = []) -> Rect2i:
 ## Atualiza a casa sob o mouse. `screen_pos` null = mouse fora do jogo (sobre a interface).
 func update_hover(camera: Camera3D, screen_pos: Variant) -> void:
 	hovered_cell = GroundProjection.cell_at_screen(camera, screen_pos, map) if screen_pos != null else null
+	if _ground != null:
+		_ground.set_cursor(GroundProjection.ground_at_screen(camera, screen_pos) if screen_pos != null and camera != null else null)
 
 
 ## Realça a casa sob o mouse: verde se dá para construir, vermelho se não (`valid` null = só

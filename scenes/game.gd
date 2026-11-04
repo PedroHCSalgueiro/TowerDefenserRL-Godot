@@ -638,6 +638,10 @@ func _run_dev_tools(delta: float) -> void:
 		_args.erase("zoom")
 		for i in absi(notches):
 			camera_ctl.model.wheel(-signf(notches), get_viewport().get_visible_rect().size / 2.0)
+	# `--mouse=x,y`: põe o mouse nesse ponto da janela (capturas da grade e do realce sob o mouse)
+	if _args.has("mouse") and _elapsed >= 0.6:
+		var xy := String(_args["mouse"]).split(",")
+		get_viewport().warp_mouse(Vector2(float(xy[0]), float(xy[1])))
 	if _args.has("demo"):
 		_demo_step += delta
 		if _demo_step > 0.8:
