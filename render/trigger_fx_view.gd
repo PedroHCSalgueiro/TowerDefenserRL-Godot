@@ -114,6 +114,12 @@ func toggle_numbers() -> bool:
 	return _numbers.toggle()
 
 
+## Liga ou desliga os números de dano (opção do jogador, no começo da run ou pelo menu).
+func set_numbers(on: bool) -> void:
+	if _numbers.enabled != on:
+		_numbers.toggle()
+
+
 func _lookup(tower_id: int) -> Dictionary:
 	return _tower_info.get(tower_id, {})
 

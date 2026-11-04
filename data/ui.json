@@ -129,7 +129,7 @@
       },
       {
         "keys": "Esc",
-        "action": "Cancelar a torre presa ao mouse ou o arrasto"
+        "action": "Cancelar a torre presa ao mouse ou o arrasto; sem torre na mão, abre o menu"
       },
       {
         "keys": "1 a 3 / R",
@@ -222,5 +222,37 @@
         "text": "A posição das torres importa: algumas reagem às vizinhas. Experimente!"
       }
     ]
+  },
+  "pauseMenu": {
+    "title": "Jogo pausado",
+    "buttonLabel": "Menu",
+    "buttonTooltip": "Menu (Esc)",
+    "resume": "Continuar",
+    "restart": "Reiniciar run",
+    "help": "Ajuda",
+    "options": "Opções",
+    "toMenu": "Voltar ao menu inicial",
+    "quit": "Sair do jogo",
+    "confirm": "A run atual será perdida. Tem certeza?",
+    "confirmYes": "Sim",
+    "confirmNo": "Não",
+    "runInfo": "{set} · semente {seed}",
+    "escHint": "Esc volta ao jogo"
+  },
+  "titleScreen": {
+    "title": "Tower Defense Roguelite",
+    "newGame": "Novo jogo",
+    "options": "Opções",
+    "quit": "Sair",
+    "back": "Voltar",
+    "hint": "Enter começa um novo jogo",
+    "setsHint": "Teclas 1 a {n} escolhem o conjunto · Enter joga · Esc volta"
+  },
+  "options": {
+    "title": "Opções",
+    "fullscreen": "Tela cheia",
+    "damageNumbers": "Números de dano (tecla N durante a run)",
+    "startSpeed": "Velocidade no começo da run",
+    "back": "Voltar"
   }
 }

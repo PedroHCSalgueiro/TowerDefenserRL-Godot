@@ -42,6 +42,7 @@ var reward_screen: RewardScreenUi
 var expansion_screen: ExpansionScreenUi
 var help: HelpScreen
 var end_screen: EndScreen
+var pause_menu: PauseMenu
 var tower_drag: TowerDragController
 var debug_panel: DebugPanel
 
@@ -66,8 +67,11 @@ func _ready() -> void:
 	pending_seed = ""
 	seed_text = _args.get("seed", chosen_seed if chosen_seed != "" else _random_seed())
 	runner = SimulationRunner.new(Simulation.create(seed_text, GameSystems.create(map)))
+	# opções do jogador (`GameSettings`): velocidade e números de dano no começo da run
+	runner.clock.set_speed(GameSettings.start_speed())
 	_build_world()
 	_build_ui()
+	trigger_fx.set_numbers(GameSettings.damage_numbers())
 	if _args.has("demo"):
 		_demo_setup()
 	_open_for_dev()
@@ -201,6 +205,16 @@ func _build_ui() -> void:
 	# As duas ficam no canto de cima à esquerda: a escolha da parede, aberta pelo debug, vem por cima.
 	root.move_child(expansion_screen, debug_panel.get_index())
 
+	# O menu de pausa fica por cima de tudo.
+	pause_menu = PauseMenu.new()
+	root.add_child(pause_menu)
+	pause_menu.setup(func() -> bool: return runner.paused, func(v: bool) -> void: runner.paused = v, _run_info())
+	pause_menu.restart_pressed.connect(_restart)
+	pause_menu.menu_pressed.connect(_back_to_menu)
+	pause_menu.help_pressed.connect(help.open)
+	pause_menu.damage_numbers_changed.connect(trigger_fx.set_numbers)
+	wave_hud.append_control(pause_menu.toggle_button)
+
 	nexus_panel.evolve_pressed.connect(_evolve_nexus)
 	wave_hud.call_pressed.connect(_call_wave)
 	wave_hud.speed_pressed.connect(func() -> void: runner.clock.cycle_speed())
@@ -233,7 +247,16 @@ func _blocked() -> bool:
 
 
 func _camera_blocked() -> bool:
-	return help.is_open() or _state().rewards.screen_open() or _state().status != "playing"
+	return help.is_open() or pause_menu.is_open() or _state().rewards.screen_open() or _state().status != "playing"
+
+
+## Conjunto e semente da run, para o rodapé do menu de pausa.
+func _run_info() -> String:
+	var set_name := DataLoader.set_id()
+	for info: Dictionary in GameSets.list():
+		if info["id"] == DataLoader.set_id():
+			set_name = info["name"]
+	return String(DataLoader.load_json("ui.json")["pauseMenu"]["runInfo"]).format({"set": set_name, "seed": seed_text})
 
 
 func _holding_tower() -> bool:
@@ -305,7 +328,10 @@ func _input(event: InputEvent) -> void:
 		if debug_panel.handle_key(key):
 			get_viewport().set_input_as_handled()
 			return
-		# A ajuda aberta consome todas as teclas do jogo.
+		# O menu de pausa e a ajuda abertos consomem todas as teclas do jogo.
+		if pause_menu.handle_key(key):
+			get_viewport().set_input_as_handled()
+			return
 		if help.handle_key(key):
 			get_viewport().set_input_as_handled()
 			return
@@ -336,7 +362,11 @@ func _handle_game_key(key: InputEventKey) -> bool:
 			trigger_fx.toggle_numbers()
 			return true
 		KEY_ESCAPE:
-			_cancel_hand()
+			# com torre na mão o Esc só solta a torre; sem ela, abre o menu de pausa
+			if _holding_tower():
+				_cancel_hand()
+			else:
+				pause_menu.open()
 			return true
 	if _blocked() and key.keycode != KEY_R and key.keycode != KEY_S and key.keycode != KEY_E \
 			and not (key.keycode >= KEY_1 and key.keycode <= KEY_6):
@@ -570,7 +600,7 @@ func _demo_setup() -> void:
 	runner.clock.set_speed(3.0)
 
 
-## `--open=reward|expansion|help|end|debug`: abre uma tela logo no começo (para capturas de tela).
+## `--open=reward|expansion|help|pause|end|debug`: abre uma tela logo no começo (para capturas de tela).
 func _open_for_dev() -> void:
 	match String(_args.get("open", "")):
 		"reward":
@@ -580,6 +610,8 @@ func _open_for_dev() -> void:
 			runner.sim.enqueue({"type": "debugOpenExpansion"})
 		"help":
 			help.open()
+		"pause":
+			pause_menu.open()
 		"end":
 			_state().status = "lost"
 		"debug":
