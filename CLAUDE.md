@@ -12,6 +12,8 @@ dos testes. Clone local de consulta: `C:\Users\pedro\Documents\TowerDefenserRL-r
 
 Repositório (privado): https://github.com/PedroHCSalgueiro/TowerDefenserRL-Godot
 Plano do porte: `docs/plano-porte-godot.md`.
+Visual do cenário: `docs/direcao-visual-cenario.md` (a pegada aprovada; seguir em todo asset de cenário) e
+`docs/plano-cenario.md` (biomas, transições e relevo; proposta, decisões pendentes).
 
 ## Links do Notion (use sempre estes, não precisa buscar)
 - Mini-GDD (regras do jogo): https://app.notion.com/p/3e4c656560ae81f4b23dc4c4ece91da4
