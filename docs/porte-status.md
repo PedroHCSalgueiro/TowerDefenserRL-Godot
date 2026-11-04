@@ -40,11 +40,13 @@ Câmera ortográfica (`GroundProjection`, `CameraModel` = porte de camera.ts), g
 projéteis em MultiMesh, barras de vida em shader billboard, efeitos de gatilho, hover e preview de ligação (`render/`).
 
 **Pixel 2x (04/11):** a câmera passou de 45°/45° para azimute 45° e elevação 30°, a projeção 2:1 do Phaser (a casa é
-o losango de 64×32 no zoom 1). O 3D é desenhado com um pixel por pixel da arte e ampliado sem filtro
+o losango de 96×48 no zoom 1). O 3D é desenhado com um pixel por pixel da arte e ampliado sem filtro
 (`scaling_3d_mode` NEAREST na janela, `camera.pixelArt` em render.json); a interface continua na resolução da tela.
 O zoom anda em passos inteiros, a câmera anda de pixel da arte em pixel da arte, os heróis são as folhas
-`estilo-novo/x64` (`HeroSprite`, um pixel da folha = um pixel da arte) e o chão é o bioma de 32×16
+`estilo-novo/x64` (`HeroSprite`, um pixel da folha = um pixel da arte) e o chão é o bioma de 48×24
 (`GroundTiles` + `ground_tiles.gdshader`, `grid.ground`). Os textos dos efeitos saíram do 3D para uma camada 2D.
+No mesmo dia a casa passou de 32×16 para 48×24 pixels da arte: com 32×16, heróis vizinhos se embolavam. Heróis,
+inimigos e barras ficaram do mesmo tamanho na tela (`RenderConfig.PX_TO_UNIT` = 1/48); só a casa cresceu.
 
 ## Fase 3 — UI ✅
 Loja, HUD de ondas, painéis do núcleo e das classes, tooltip, drag de torres, tutorial, tela de recompensa, ajuda (H),

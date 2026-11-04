@@ -1,6 +1,6 @@
 class_name GroundTiles
 extends RefCounted
-## O chão em pixel do mapa (`grid.ground` em render.json): as casas de 32x16 do bioma (geradas por
+## O chão em pixel do mapa (`grid.ground` em render.json): as casas de 48x24 do bioma (geradas por
 ## `Arte/ferramentas/gerar_biomas.py`, cópias na pasta `folder`) num atlas de uma linha, e uma textura com a imagem de
 ## cada casa do mapa, que o `ground_tiles.gdshader` desenha pixel a pixel por cima das lajes do `GridView`.
 ##
@@ -9,7 +9,7 @@ extends RefCounted
 ## entrada e núcleo usam a primeira do caminho tingida com `entranceColor` e `nexusColor`.
 
 const SHADER := preload("res://render/ground_tiles.gdshader")
-const TILE := Vector2i(32, 16)
+const TILE := Vector2i(48, 24)
 
 var material: ShaderMaterial
 var _free: Array[int] = []
@@ -66,6 +66,7 @@ func _build(cfg: Dictionary, grid_cfg: Dictionary) -> bool:
 	material.shader = SHADER
 	material.set_shader_parameter("atlas", ImageTexture.create_from_image(atlas))
 	material.set_shader_parameter("grid_shade", float(cfg["gridShade"]))
+	material.set_shader_parameter("tile", TILE)
 	return true
 
 

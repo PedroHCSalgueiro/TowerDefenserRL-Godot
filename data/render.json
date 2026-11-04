@@ -1,7 +1,7 @@
 {
   "tile": {
-    "width": 64,
-    "height": 32
+    "width": 96,
+    "height": 48
   },
   "camera": {
     "zoom": {
@@ -140,14 +140,14 @@
     "height": 18,
     "fallbackColor": "#ff00ff",
     "heroSprites": {
-      "heightUnits": 1.75,
+      "heightUnits": 1.17,
       "idleFps": 8,
       "attackFps": 15,
       "attackShare": 0.9,
       "fireFrame": 5,
       "beamHeight": 0.9,
       "forwardUnits": 0.75,
-      "starGap": 0.3
+      "starGap": 0.2
     },
     "classColors": {
       "artillery": "#e0703c",
@@ -171,11 +171,11 @@
       "pixels": [
         "...o....",
         "..owo...",
-        ".oyyyo..",
+        "ooyyyoo.",
         "oyyyyyo.",
         ".oyyyo..",
-        ".oyoyo..",
-        ".oo.oo..",
+        "oyyoyyo.",
+        "oo...oo.",
         "........"
       ]
     },

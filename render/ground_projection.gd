@@ -5,8 +5,8 @@ extends RefCounted
 ## 3D, com o centro da casa em coordenadas inteiras e a casa ocupando ±0,5.
 ##
 ## A câmera é ortográfica, olhando de (+x, +z) para (−x, −z) com azimute de 45° e elevação de 30°: a
-## projeção 2:1 do Phaser, em que a casa vira o losango de 64×32 no zoom 1 (32×16 pixels da arte no pixel
-## 2x; decidido em 04/11 para o chão dos biomas encaixar pixel a pixel). Assim a casa (0,0) fica no topo do
+## projeção 2:1 do Phaser, em que a casa vira o losango de 96×48 no zoom 1 (48×24 pixels da arte no pixel
+## 2x; 32×16 em 04/11, trocado por 48×24 no mesmo dia para os heróis lado a lado não se embolarem). Assim a casa (0,0) fica no topo do
 ## losango do mapa, `x` cresce para baixo e à direita e `y` (z) para baixo e à esquerda.
 ##
 ## A "vista" da `CameraModel` é o plano da câmera em pixels: `view_px(x, z)`.
@@ -15,9 +15,8 @@ extends RefCounted
 ## ângulo (`Arte/ferramentas/render_pixel.py`, ELEVATION).
 const ELEVATION_DEG := 30.0
 const AZIMUTH_DEG := 45.0
-## Pixels do plano da vista por unidade do mundo (uma casa = 1 unidade). 32·√2 dá o mesmo tamanho
-## horizontal por casa do tile 64×32 do Phaser no zoom 1.
-const PX_PER_UNIT := 45.254834
+## Pixels do plano da vista por unidade do mundo (uma casa = 1 unidade). 48·√2 dá a casa de 96×48 no zoom 1.
+const PX_PER_UNIT := 67.882251
 
 
 static func elevation() -> float:

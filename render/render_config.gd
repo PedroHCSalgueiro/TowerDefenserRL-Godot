@@ -1,11 +1,12 @@
 class_name RenderConfig
 extends RefCounted
 ## Números e cores da renderização (data/render.json), com os tamanhos convertidos de "pixels do
-## Phaser" para unidades do mundo 3D (uma casa = 1 unidade; no Phaser uma casa tem 32 px de
-## largura no zoom 1, então 1 px ≈ 1/32 de casa).
+## Phaser" para unidades do mundo 3D (uma casa = 1 unidade). Os tamanhos em px valem na tela, no zoom 1: com a
+## casa de 96 px de largura, 1 px ≈ 1/48 de casa (era 1/32 com a casa de 64; heróis, inimigos e barras ficaram do
+## mesmo tamanho na tela e só a casa cresceu).
 
 ## Pixels do Phaser por unidade do mundo (para converter raios, alturas etc.).
-const PX_TO_UNIT := 1.0 / 32.0
+const PX_TO_UNIT := 1.0 / 48.0
 
 static var _cfg: Dictionary = {}
 ## Conjunto de torres a que `_cfg` pertence (trocar de conjunto muda cores e modelos).

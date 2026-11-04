@@ -1,5 +1,5 @@
 extends GutTest
-## Pixel 2x: câmera 2:1 (a casa vira o losango de 64x32 no zoom 1), zoom em passos inteiros, vista acertada na grade
+## Pixel 2x: câmera 2:1 (a casa vira o losango de 96x48 no zoom 1), zoom em passos inteiros, vista acertada na grade
 ## de pixels da arte e o chão em pixel do bioma.
 
 const VIEWPORT := Vector2(1280, 720)
@@ -20,8 +20,8 @@ func _model(bounds: Rect2 = BOUNDS) -> CameraModel:
 
 
 func test_a_casa_vira_o_losango_2_por_1() -> void:
-	assert_almost_eq(GroundProjection.view_px(1, 0), Vector2(32, 16), Vector2(0.001, 0.001), "x anda para baixo e à direita")
-	assert_almost_eq(GroundProjection.view_px(0, 1), Vector2(-32, 16), Vector2(0.001, 0.001), "z anda para baixo e à esquerda")
+	assert_almost_eq(GroundProjection.view_px(1, 0), Vector2(48, 24), Vector2(0.001, 0.001), "x anda para baixo e à direita")
+	assert_almost_eq(GroundProjection.view_px(0, 1), Vector2(-48, 24), Vector2(0.001, 0.001), "z anda para baixo e à esquerda")
 
 
 func test_o_zoom_para_so_em_passos_inteiros() -> void:
