@@ -12,40 +12,115 @@ A pegada visual (como cada coisa deve parecer) está em `docs/direcao-visual-cen
   Cada pedaço novo é o lugar natural de uma **transição**.
 - **Chão já gerado:** os 7 biomas do `gerar_biomas.py` (grama, floresta, areia, neve, outono, pântano e vulcânico).
 
-## 2. Proposta: biomas separados das regiões dos heróis
+## 2. Cada região é um lugar (direção do Pedro, 04/11)
 
-O bioma é o **lugar** do mapa, e a região é a **facção** dos heróis. Como a run mistura facções, o lugar não pode depender delas.
-Ainda assim, cada bioma lembra uma região, para dar identidade:
+O Pedro achou o "bosque" simples demais e definiu a ideia: **o cenário é a terra de cada região**.
 
-| Bioma | Lembra | Chão | Peças marcantes | Luz |
-|---|---|---|---|---|
-| **Floresta do reino** | Valcoroa | grama em manchas, terra | carvalhos retorcidos, fogueira, ruína, cerca, riacho e ponte | quente, de fim de tarde |
-| **Costa** | Costa Rubra | areia clara, pedra molhada | palmeiras, rochas, destroços de barco, cais, água rasa | clara, levemente azulada |
-| **Deserto dos templos** | Panteão | areia dourada, laje de arenito | cactos, colunas quebradas, estátua enterrada, obelisco, oásis | forte, branca e quente |
-| **Forja** | Forjaferro | rocha escura, cinza | rochas vulcânicas, trilhos, carrinhos de minério, chaminés, lava | laranja de baixo, fumaça |
-| **Bosque morto / cemitério** | Cripta Cinzenta | outono escuro, folhagem | árvores secas, lápides, cripta, lanternas, névoa | fria, com pontos quentes de lanterna |
+- Valcoroa acontece **dentro de um reino de verdade**, num palácio.
+- Costa Rubra acontece **numa costa com mar**.
 
-Neve e pântano ficam de reserva, como variações (montanha do Panteão, brejo da Cripta).
+As outras três regiões seguem a mesma ideia. Cada região tem **3 zonas**. O mapa base é uma delas, e cada pedaço novo pode ser outra zona da mesma região, para não cansar numa run longa.
 
-**Primeiro corte:** Floresta do reino, porque já está no meio. Depois, a Costa, que fecha as duas regiões do lançamento.
+### 👑 Valcoroa: o palácio real
+Medieval clássico. Ouro, azul real e mármore claro.
 
-## 3. Transições entre biomas
+- **Zonas:**
+  - salão do trono: piso de mármore, tapete vermelho como caminho, colunas e vitrais;
+  - pátio e jardim interno: lajes, canteiros podados, fonte e estátuas;
+  - muralhas e ameias: pedra, estandartes, catapultas e ponte levadiça.
+- **Caminho:** tapete ou passadeira de pedra clara, gasta nas bordas.
+- **Chão em manchas:** mármore com desgaste, manchas de luz dos vitrais e poeira nos cantos.
+- **Relevo em volta:** paredes do salão com janelas, galerias, sacadas e escadarias.
+  O "derrubar parede" do mapa que cresce combina com isto: a parede cai e abre a sala nova.
+- **Pontos de interesse:** trono, lareira grande, armaria, mesa de banquete e fonte do pátio.
+- **Luz:** feixes dourados dos vitrais, castiçais e tochas.
+- **Vida:** chama de tocha, estandartes balançando, poeira no feixe de luz e pétalas no jardim.
 
-**Regra:** só existe transição entre **vizinhos**. Nunca, por exemplo, de neve direto para deserto.
+### 🏴‍☠️ Costa Rubra: a costa pirata
+Piratas, ouro e saque. Vermelho-ferrugem, madeira molhada e turquesa do mar.
+
+- **Zonas:**
+  - praia e enseada: areia, rochas, palmeiras e barco encalhado;
+  - porto e cais: tábuas, cordas, caixotes, barris e guindaste;
+  - vila pirata nos rochedos: palafitas, pontes de corda e bandeiras.
+- **Caminho:** areia batida na praia e tábuas no cais.
+- **Chão em manchas:** areia seca e molhada, algas e conchas.
+- **Relevo em volta:**
+  - o mar: ondas, espuma batendo nas pedras e navios ancorados ao fundo;
+  - os penhascos de rocha.
+
+  O mapa fica numa faixa de terra entre o mar e o penhasco.
+- **Pontos de interesse:** navio naufragado, baú meio enterrado, farol, fogueira e forca do porto.
+- **Luz:** sol forte com reflexo da água balançando no chão perto do mar. No fim de tarde fica laranja, e à noite vêm as lanternas.
+- **Vida:** ondas, gaivotas, espuma, bandeiras e água pingando.
+
+### ⚙️ Forjaferro: a cidade-fábrica
+Steampunk. Cobre, latão, ferro escuro e vapor branco.
+
+- **Zonas:**
+  - fundição: piso de ferro rebitado, canais de metal derretido e caldeirões;
+  - pátio dos trilhos: dormentes, carrinhos de minério, carvão e engrenagens gigantes;
+  - telhados e passarelas: chapas, chaminés, canos e grades.
+- **Caminho:** trilho, esteira ou piso de grade de metal.
+- **Chão em manchas:** chapas com ferrugem, fuligem, óleo e marcas de rodas.
+- **Relevo em volta:** prédios de tijolo, chaminés enormes soltando fumaça e poços com brilho de metal derretido lá embaixo.
+- **Pontos de interesse:** fornalha, relógio de torre (combina com o Tic), oficina, guindaste a vapor e tanque de pressão.
+- **Luz:** laranja vindo de baixo (metal derretido), lâmpadas elétricas azuladas (combina com a Volta) e fumaça.
+- **Vida:** vapor saindo dos canos, faíscas, engrenagens girando e luz piscando.
+
+### 💀 Cripta Cinzenta: a necrópole
+Fantasia sombria. Cinza, roxo apagado e verde-espectral.
+A referência da fogueira e da ponte já é quase este clima.
+
+- **Zonas:**
+  - cemitério: lápides, túmulos, árvores secas e cerca de ferro torta;
+  - pântano dos mortos: água parada escura, névoa rente ao chão, raízes e juncos;
+  - catacumbas: corredores de pedra, nichos com ossos, velas e sarcófagos.
+- **Caminho:** terra pisada entre os túmulos, lajes rachadas e passarela de tábuas no pântano.
+- **Chão em manchas:** terra escura, folhas mortas, musgo cinza e ossinhos.
+- **Relevo em volta:** muros do cemitério, mausoléus altos, igreja em ruína ao fundo e névoa densa na borda.
+- **Pontos de interesse:** mausoléu, altar, poço de almas, carroça fúnebre e fogueira de vigia.
+- **Luz:** escura e fria, com pontos quentes de lanterna e o brilho verde das almas. É o bioma em que a luz por cima mais trabalha.
+- **Vida:** névoa andando, almas flutuando (combina com a mecânica de almas da Cripta), corvos e vaga-lumes frios.
+
+### 🏛️ Panteão: o monte dos deuses
+Mitologia. Mármore branco, ouro e céu.
+Os heróis misturam mitos (grego, egípcio e nórdico), então o lugar é **onde todos os deuses se encontram**.
+
+- **Zonas:**
+  - templo grego no alto: mármore, colunas, oliveiras e nuvens lá embaixo;
+  - deserto dos templos, o que o Pedro queria: areia dourada, pirâmide, obelisco, esfinge meio enterrada, cactos e oásis;
+  - salão nórdico na neve: madeira, pedra, runas, fogueira e pinheiros nevados.
+- **Caminho:** escadarias e lajes de mármore, e areia batida no deserto.
+- **Chão em manchas:** mármore com veios, dunas suaves e neve com pegadas.
+- **Relevo em volta:** **ilhas flutuando no céu**, com a borda do mapa caindo em nuvens, e estátuas colossais ao fundo.
+- **Pontos de interesse:** altar com chama sagrada, estátua de deus, oráculo (combina com a Pítia), ninho de grifo (combina com a Kallia) e portal de luz.
+- **Luz:** a mais clara e saturada do jogo, com raios de sol entre as nuvens.
+- **Vida:** nuvens passando por baixo, chama sagrada, areia soprando ou neve caindo, conforme a zona.
+
+## 3. Transições entre regiões
+
+Com cada região sendo um lugar, a passagem de uma para outra precisa de um motivo no mundo.
+A proposta é **um continente só**, com fronteiras entre vizinhas:
 
 ```
-Bosque morto ── Floresta do reino ── Costa ── Deserto dos templos ── Forja
+Cripta Cinzenta ── Valcoroa ── Costa Rubra ── Forjaferro ── Panteão
+ (catacumbas      (palácio)    (porto)        (fábrica na    (o monte
+  sob o reino)                                 montanha)      acima de tudo)
 ```
 
-**Como fica no mapa:**
-- O mapa base tem um bioma.
-- Cada pedaço novo pode trocar para um bioma vizinho.
-- A emenda entre dois pedaços usa a mesma técnica do caminho orgânico:
-  - uma máscara de ruído decide qual chão aparece em cada pixel, numa faixa de 1 a 2 casas;
-  - nessa faixa as peças se misturam (capim seco entre a grama e a areia, um cacto perto de um arbusto).
+| Par | Peça de passagem |
+|---|---|
+| Valcoroa → Cripta | escadaria do palácio descendo para as catacumbas, ou o cemitério real atrás das muralhas |
+| Valcoroa → Costa Rubra | o portão do palácio sai para o porto: o cais de pedra do reino vira o cais de madeira dos piratas |
+| Costa Rubra → Forjaferro | estaleiro e doca de ferro: a madeira vira metal e as rochas da costa sobem para a montanha |
+| Forjaferro → Panteão | elevador ou trilho subindo a montanha: o último trecho vira escadaria de mármore até as nuvens |
+
+**Como a passagem fica no mapa:**
+- O pedaço novo traz a região vizinha.
+- A emenda é uma faixa de 1 a 2 casas, onde os chãos e as peças dos dois lados se misturam de forma orgânica, junto com a peça de passagem.
 - **Nunca uma linha reta.**
-
-**O que cada par precisa:** cerca de 4 peças de transição. Por exemplo, capim seco, pedras de duas cores e uma árvore "de fronteira", como uma palmeira na floresta.
+- Entre zonas da mesma região, vale a mesma técnica.
 
 ## 4. Relevo: montanhas, penhascos e desfiladeiros
 
@@ -83,14 +158,14 @@ Todo bioma tem as mesmas vagas, cerca de 35 peças, o que facilita planejar e co
 
 ## 6. Ordem de trabalho
 
-1. **Floresta completa no jogo:** chão, faixas, vento, luz, peças e relevo. Este é o corte vertical.
+1. **Primeira região completa no jogo (Valcoroa, palácio):** chão, faixas, vento, luz, peças e relevo. Este é o corte vertical.
 2. **Transição de teste:** um pedaço de Bosque morto abrindo ao lado da floresta, para provar a técnica.
 3. **Costa.**
 4. Depois, um bioma por vez, sempre com o kit completo antes do próximo.
 
 ## 7. Decisões do Pedro (pendentes)
 
-1. Os biomas propostos (seção 2) e a ordem de trabalho.
+1. Biomas: definido pelo Pedro (04/11) que cada região é um lugar. Falta aprovar as zonas, a geografia (seções 2 e 3) e a ordem de trabalho.
 2. Como o bioma muda numa run:
    - (a) um bioma por run;
    - (b) o mapa vai mudando a cada pedaço novo, para um vizinho;
