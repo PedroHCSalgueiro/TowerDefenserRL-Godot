@@ -25,7 +25,9 @@ var _entrance_mat: Material
 var _nexus_mat: Material
 ## Chão em pixel do bioma (`grid.ground`): cada laje ganha uma tampa desenhada pelo `GroundTiles`, e as lajes
 ## ficam só com a cor da lateral (terra). Sem ele, as lajes coloridas de antes.
-var _ground: GroundTiles
+## Ou o chão do cenário do conjunto (`grid.scenery`: `SceneryGround`), com a muralha em volta (`walls`).
+var _ground: Variant = null
+var walls: FortressWalls
 var _top: PlaneMesh
 var _side_mat: Material
 var _drawn_revision := -1
@@ -48,11 +50,17 @@ func setup(p_map: SimMap) -> void:
 	_slab.size = Vector3(0.96, 0.12, 0.96)
 	_ghost_slab = BoxMesh.new()
 	_ghost_slab.size = Vector3(0.92, 0.04, 0.92)
-	_ground = GroundTiles.create(cfg)
+	if cfg.has("scenery"):
+		_ground = SceneryGround.create(cfg)
+		walls = FortressWalls.create(cfg)
+		add_child(walls)
+	else:
+		_ground = GroundTiles.create(cfg)
 	if _ground != null:
 		_top = PlaneMesh.new()
 		_top.size = Vector2(1.0, 1.0)
-		_side_mat = MeshUtil.lit_material(RenderConfig.color(cfg["ground"]["sideColor"]))
+		var side: String = cfg["scenery"]["sideColor"] if cfg.has("scenery") else cfg["ground"]["sideColor"]
+		_side_mat = MeshUtil.lit_material(RenderConfig.color(side))
 	_tiles = Node3D.new()
 	add_child(_tiles)
 	_ghosts = Node3D.new()
@@ -73,6 +81,8 @@ func setup(p_map: SimMap) -> void:
 ## Devolve true no quadro em que o chão mudou.
 func refresh(delta: float) -> bool:
 	_elapsed += delta
+	if walls != null:
+		walls.animate(delta)
 	if not _ghost_materials.is_empty():
 		var cfg: Dictionary = RenderConfig.data()["expansion"]
 		var pulse := 0.75 + 0.25 * sin(_elapsed * TAU / float(cfg["pulseSeconds"]))
@@ -106,6 +116,8 @@ func _build_tiles(animate: bool) -> void:
 		child.queue_free()
 	if _ground != null:
 		_ground.update(map, entrances)
+	if walls != null:
+		walls.rebuild(map)
 	for y in map.height:
 		for x in map.width:
 			var cell := Vector2i(x, y)

@@ -38,5 +38,73 @@
         "restYawDegrees": 45
       }
     }
+  },
+  "grid": {
+    "scenery": {
+      "sideColor": "#1c1e24",
+      "ground": {
+        "floorRamp": [
+          "#22262e",
+          "#282c35",
+          "#2e323b",
+          "#343842",
+          "#3b3f48"
+        ],
+        "pathRamp": [
+          "#7c7a80",
+          "#8c8a8f",
+          "#9b999d",
+          "#aaa8aa",
+          "#b8b5b5"
+        ],
+        "glowColor": "#9a52ff",
+        "glowStrength": 0.9,
+        "glowDecayCells": 6,
+        "warp": 0.16,
+        "slab": 0.5,
+        "jointDark": 0.62,
+        "mossAmount": 0.22,
+        "mossColor": "#2a3d26",
+        "rimDark": 0.72,
+        "gridShade": 0.25,
+        "gridRadius": 2.5
+      },
+      "walls": {
+        "texture": "res://assets/cenario/valcoroa/muralha_face.png",
+        "topColor": "#3a3c40",
+        "height": 1.3,
+        "lowHeight": 0.3,
+        "merlonSize": 0.22,
+        "merlonHeight": 0.22,
+        "leftLight": 1.3,
+        "rightLight": 0.95
+      },
+      "torches": {
+        "every": 4,
+        "height": 0.5,
+        "flameColor": "#ffb347",
+        "poleColor": "#3a2e26"
+      },
+      "light": {
+        "ambient": "#6c7594",
+        "vignette": 0.55,
+        "torch": {
+          "color": "#ff9a40",
+          "strength": 0.85,
+          "radius": 1.4,
+          "flicker": 0.12
+        },
+        "entrance": {
+          "color": "#a050ff",
+          "strength": 0.8,
+          "radius": 2.4
+        },
+        "nexus": {
+          "color": "#60b0ff",
+          "strength": 0.8,
+          "radius": 2.2
+        }
+      }
+    }
   }
 }

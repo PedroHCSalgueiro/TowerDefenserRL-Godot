@@ -118,6 +118,10 @@ func _build_world() -> void:
 	grid = GridView.new()
 	add_child(grid)
 	grid.setup(map)
+	var light := SceneLight.create(RenderConfig.data()["grid"])
+	if light != null:
+		add_child(light)
+		light.setup(camera, map, grid.walls)
 	tower_view = TowerView.new()
 	add_child(tower_view)
 	tower_view.setup(TowerData.game_data())
