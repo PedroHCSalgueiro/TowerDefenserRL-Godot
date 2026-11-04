@@ -174,3 +174,16 @@ Todo bioma tem as mesmas vagas, cerca de 35 peças, o que facilita planejar e co
    Sugestão: **não**, só visual.
 4. Uma árvore pode ficar na frente da área de jogo, ficando transparente quando tem alguém atrás?
 5. O núcleo (a torre do reino): é feito no Gemini, como peça, ou modelado no Blender, como os heróis, para ter animação?
+
+## 8. Ideias de jogo ligadas ao cenário (04/11, em discussão)
+
+O Pedro propôs três ideias. Elas são regras de jogo, então ficam em "Perguntas de design — Cenário e biomas" (itens 6 a 8) até ele decidir.
+
+1. **Rota aleatória:** cada run passa por uma rota diferente do continente, e nenhuma run vê tudo.
+   - Proposta: a geografia é fixa, a zona inicial é sorteada, e em cada expansão o jogador escolhe entre 2 ou 3 paredes que levam a zonas vizinhas sorteadas.
+   - Um modo longo, a "Grande Travessia", passaria pelas 5 regiões.
+2. **Sempre todos os campeões:** os 40 heróis na loja em toda run.
+   - Antes de decidir, medir com os bots: a diluição da loja com 3 cópias por estrela e o bônus de região mais difícil de completar.
+3. **Bônus e penalidade pelo lugar:** vale pela casa onde o herói está.
+   - Rivalidades em ciclo: Valcoroa contra Cripta, Cripta contra Panteão, Panteão contra Forjaferro, Forjaferro contra Costa Rubra e Costa Rubra contra Valcoroa.
+   - Números pequenos, com mais bônus do que penalidade.
