@@ -1,6 +1,6 @@
 extends "res://dev/prototipos/proto25d/herois.gd"
-## Teste de visual estilizado: os heróis usam as imagens de referência recortadas (dev/prototipos/proto25d/
-## art_ref), em alta resolução, num cenário de cores chapadas. Só Aldric, Lyra e Tomás têm imagem.
+## Teste de visual estilizado: os heróis de Valcoroa usam as folhas em pixel de PIXEL_HEROES; sem elas,
+## caem nas imagens de referência recortadas (dev/prototipos/proto25d/art_ref), num cenário de cores chapadas.
 ## A animação é feita em código (balanço e tranco), porque cada herói é uma imagem só.
 ##   godot --path . res://dev/prototipos/proto25d/herois_ref.tscn [-- --shot=a.png --shot-at=6 --dist=8]
 
@@ -16,6 +16,11 @@ const STYLED := {
 	"aldric": {"cell": [4, 5], "color": "ffe066", "kind": "beam", "muzzle": 0.5},
 	"tomas": {"cell": [6, 5], "color": "ffffff", "kind": "light", "muzzle": 0.84},
 	"lyra": {"cell": [8, 5], "color": "5de35d", "kind": "bolt", "muzzle": 0.85},
+	"brom": {"cell": [2, 5], "color": "ff8a2a", "kind": "ball", "muzzle": 0.5},
+	"selene": {"cell": [5, 8], "color": "b25cff", "kind": "orb", "muzzle": 0.6},
+	"wulf": {"cell": [7, 8], "color": "ff4040", "kind": "arrow", "muzzle": 0.6},
+	"isolde": {"cell": [9, 8], "color": "9be3ff", "kind": "ice", "muzzle": 0.6},
+	"mabel": {"cell": [11, 8], "color": "38e8e0", "kind": "trap", "muzzle": 0.6},
 }
 
 ## Herói renderizado do 3D em 8 direções (render_sheet.py) e cavaleiro do pacote, para comparar.
@@ -29,7 +34,16 @@ const SPRITE_FORWARD := 0.75
 ## Altura do cavaleiro dentro do quadro de 128 px do pacote.
 const PIXEL_BODY_PX := 90.0
 ## Heróis em pixel art (render_pixel.py): folhas de 8 direções e 15 quadros, disparo no quadro 5.
-const PIXEL_HEROES := {"aldric": "res://dev/prototipos/proto25d/art_pixel/", "lyra": "res://dev/prototipos/proto25d/art_lyra/"}
+const PIXEL_HEROES := {
+	"aldric": "res://dev/prototipos/proto25d/art_pixel/",
+	"lyra": "res://dev/prototipos/proto25d/art_lyra/",
+	"tomas": "res://dev/prototipos/proto25d/art_tomas/",
+	"brom": "res://dev/prototipos/proto25d/art_brom/",
+	"selene": "res://dev/prototipos/proto25d/art_selene/",
+	"wulf": "res://dev/prototipos/proto25d/art_wulf/",
+	"isolde": "res://dev/prototipos/proto25d/art_isolde/",
+	"mabel": "res://dev/prototipos/proto25d/art_mabel/",
+}
 const PIXEL_FIRE_FRAME := 5
 const IDLE_FPS := 8.0
 
