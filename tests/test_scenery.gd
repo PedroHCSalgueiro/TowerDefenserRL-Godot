@@ -42,3 +42,13 @@ func test_tochas_ficam_ao_lado_do_caminho() -> void:
 		var side: Vector2i = spot[1]
 		assert_true(map.is_path(cell))
 		assert_false(map.is_path(cell + side), "a tocha fica do lado livre")
+
+
+func test_medidas_em_pixels_da_arte() -> void:
+	# 1 pixel da arte = 2 pixels da tela no zoom 1 (pixel 2x)
+	var tela_por_unidade_vertical := GroundProjection.PX_PER_UNIT * cos(GroundProjection.elevation())
+	assert_almost_eq(40.0 / FortressWalls.px_up() * tela_por_unidade_vertical, 80.0, 0.01, "muralha de 40 px da arte = 80 px na tela")
+	assert_almost_eq(12.0 / FortressWalls.px_up() * tela_por_unidade_vertical, 24.0, 0.01, "saia de 12 px da arte = 24 px na tela")
+	# ao longo de um lado da casa, 24 px da arte na horizontal (meia largura do losango de 48)
+	var meio_lado := GroundProjection.view_px(1, 0).x
+	assert_almost_eq(meio_lado, FortressWalls.px_along() * 2.0, 0.01, "um lado da casa anda 24 px da arte (48 na tela) na horizontal")

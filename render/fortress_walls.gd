@@ -38,14 +38,25 @@ func _build_materials() -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = WALL_SHADER
 	_material.set_shader_parameter("face", load(String(w["texture"])))
-	_material.set_shader_parameter("top_color", SceneryGround._vec(w["topColor"]))
-	_material.set_shader_parameter("left_light", float(w["leftLight"]))
-	_material.set_shader_parameter("right_light", float(w["rightLight"]))
-	_material.set_shader_parameter("px_along", GroundTiles.TILE.x / 2.0)
-	_material.set_shader_parameter("px_up", GroundProjection.PX_PER_UNIT * cos(GroundProjection.elevation()) / float(RenderConfig.data()["camera"]["pixelArt"]["viewPxPerArtPx"]))
+	for key: String in ["leftTint", "topTint", "rightTint"]:
+		var c: Array = w[key]
+		_material.set_shader_parameter(key.replace("Tint", "_tint").to_lower(), Vector3(c[0], c[1], c[2]))
+	_material.set_shader_parameter("edge_light", float(w["edgeLight"]))
+	_material.set_shader_parameter("px_along", px_along())
+	_material.set_shader_parameter("px_up", px_up())
 	var t: Dictionary = _cfg["torches"]
 	_flame_material = MeshUtil.flat_material(RenderConfig.color(t["flameColor"]))
 	_pole_material = MeshUtil.flat_material(RenderConfig.color(t["poleColor"]))
+
+
+## Pixels da arte por unidade do mundo ao longo de um lado da casa (casa de 48: 24 por lado).
+static func px_along() -> float:
+	return GroundTiles.TILE.x / 2.0
+
+
+## Pixels da arte por unidade do mundo na vertical (na tela, a altura encolhe pelo cosseno da elevação).
+static func px_up() -> float:
+	return GroundProjection.PX_PER_UNIT * cos(GroundProjection.elevation()) / float(RenderConfig.data()["camera"]["pixelArt"]["viewPxPerArtPx"])
 
 
 ## Casas de muralha: fechadas (ou fora do mapa) com alguma vizinha aberta. Valor: true = alta (a vizinha aberta fica à
@@ -104,13 +115,14 @@ func rebuild(map: SimMap) -> void:
 	_flames.clear()
 	torch_points.clear()
 	var w: Dictionary = _cfg["walls"]
-	var tall_h := float(w["height"])
-	var low_h := float(w["lowHeight"])
+	# medidas em pixels da arte (data), levadas para unidades do mundo; o chão fica em y = 0
+	var tall_h := float(w["heightPx"]) / px_up()
+	var skirt := float(w["skirtPx"]) / px_up()
+	var mer_h := float(w["merlonHeightPx"]) / px_up()
+	var mer_t := float(w["merlonThicknessPx"]) / px_along()
+	var mer_l := float(w["merlonLengthPx"]) / px_along()
 	var block := BoxMesh.new()
 	block.size = Vector3(1.0, 1.0, 1.0)
-	var merlon := BoxMesh.new()
-	var ms := float(w["merlonSize"])
-	merlon.size = Vector3(ms, float(w["merlonHeight"]), ms)
 	var cells := wall_cells(map)
 	if props != null:
 		props.rebuild(map, cells)
@@ -118,12 +130,12 @@ func rebuild(map: SimMap) -> void:
 		# no portal da muralha alta fica a abertura; na beirada da frente a plataforma continua embaixo dele
 		if props != null and props.portal_cells.has(cell) and cells[cell]:
 			continue
-		var h := tall_h if cells[cell] else low_h
+		# muralha: do chão até `heightPx`; borda da frente: só a saia da plataforma, do chão até `skirtPx` para baixo
+		var top := tall_h if cells[cell] else 0.0
+		var bottom := -skirt
 		var mi := MeshUtil.instance(block, _material, self)
-		# a borda da frente é a beirada da plataforma: rente ao chão em cima e com a parede de tijolo descendo no escuro
-		var bottom := -0.12 if cells[cell] else -float(w["lowDepth"])
-		mi.scale = Vector3(1.0, h - 0.12 - bottom, 1.0)
-		mi.position = Vector3(cell.x, (h - 0.12 + bottom) / 2.0, cell.y)
+		mi.scale = Vector3(1.0, top - bottom, 1.0)
+		mi.position = Vector3(cell.x, (top + bottom) / 2.0, cell.y)
 		if not cells[cell]:
 			continue
 		# ameias na beirada da muralha alta que olha para a área aberta
@@ -134,10 +146,14 @@ func rebuild(map: SimMap) -> void:
 			if cells[cell] and (side.x < 0 or side.y < 0):
 				continue
 			var edge := side if cells[cell] else -side
-			for t in [-0.3, 0.0, 0.3]:
+			var merlon := BoxMesh.new()
+			merlon.size = Vector3(mer_t, mer_h, mer_l) if edge.x != 0 else Vector3(mer_l, mer_h, mer_t)
+			var count := int(w["merlonsPerCell"])
+			for k in count:
+				var t := (k + 0.5) / count - 0.5
 				var m := MeshUtil.instance(merlon, _material, self)
 				var along := Vector3(0, 0, t) if edge.x != 0 else Vector3(t, 0, 0)
-				m.position = Vector3(cell.x + edge.x * (0.5 - ms / 2.0), h - 0.12 + float(w["merlonHeight"]) / 2.0, cell.y + edge.y * (0.5 - ms / 2.0)) + along
+				m.position = Vector3(cell.x + edge.x * (0.5 - mer_t / 2.0), top + mer_h / 2.0, cell.y + edge.y * (0.5 - mer_t / 2.0)) + along
 	var t_cfg: Dictionary = _cfg["torches"]
 	var pole := BoxMesh.new()
 	pole.size = Vector3(0.05, float(t_cfg["height"]), 0.05)

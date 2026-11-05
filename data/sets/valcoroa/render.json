@@ -87,14 +87,28 @@
       },
       "walls": {
         "texture": "res://assets/cenario/valcoroa/muralha_face.png",
-        "topColor": "#3c4356",
-        "height": 1.35,
-        "lowHeight": 0.2,
-        "merlonSize": 0.22,
-        "merlonHeight": 0.22,
-        "leftLight": 1.2,
-        "rightLight": 0.85,
-        "lowDepth": 1.6
+        "heightPx": 40,
+        "skirtPx": 12,
+        "merlonHeightPx": 6,
+        "merlonThicknessPx": 4,
+        "merlonLengthPx": 6,
+        "merlonsPerCell": 3,
+        "leftTint": [
+          1.0,
+          0.98,
+          0.92
+        ],
+        "topTint": [
+          0.78,
+          0.8,
+          0.88
+        ],
+        "rightTint": [
+          0.55,
+          0.56,
+          0.72
+        ],
+        "edgeLight": 1.35
       },
       "torches": {
         "every": 5,
