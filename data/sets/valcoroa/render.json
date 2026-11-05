@@ -86,7 +86,7 @@
         "grassShare": 0.45
       },
       "walls": {
-        "texture": "res://assets/cenario/valcoroa/muralha_face.png",
+        "texture": "res://assets/cenario/valcoroa/parede_c.png",
         "heightPx": 40,
         "skirtPx": 12,
         "merlonHeightPx": 6,
