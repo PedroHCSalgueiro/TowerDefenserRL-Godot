@@ -18,6 +18,8 @@ var torch_points: Array[Vector3] = []
 var _flames: Array[MeshInstance3D] = []
 var _elapsed := 0.0
 var _revision := -1
+## Peças em volta (portal, torre, pé da muralha, miudezas, cristal do núcleo); null sem `props`.
+var props: SceneryProps
 
 
 static func create(grid_cfg: Dictionary) -> FortressWalls:
@@ -27,6 +29,7 @@ static func create(grid_cfg: Dictionary) -> FortressWalls:
 	var walls := FortressWalls.new()
 	walls._cfg = cfg
 	walls._build_materials()
+	walls.props = SceneryProps.create(grid_cfg)
 	return walls
 
 
@@ -92,8 +95,12 @@ func rebuild(map: SimMap) -> void:
 		return
 	_revision = map.revision
 	for child in get_children():
+		if child == props:
+			continue
 		remove_child(child)
 		child.queue_free()
+	if props != null and props.get_parent() == null:
+		add_child(props)
 	_flames.clear()
 	torch_points.clear()
 	var w: Dictionary = _cfg["walls"]
@@ -105,21 +112,27 @@ func rebuild(map: SimMap) -> void:
 	var ms := float(w["merlonSize"])
 	merlon.size = Vector3(ms, float(w["merlonHeight"]), ms)
 	var cells := wall_cells(map)
+	if props != null:
+		props.rebuild(map, cells)
 	for cell: Vector2i in cells:
+		if props != null and props.portal_cells.has(cell):
+			continue
 		var h := tall_h if cells[cell] else low_h
 		var mi := MeshUtil.instance(block, _material, self)
 		mi.scale = Vector3(1.0, h, 1.0)
 		mi.position = Vector3(cell.x, h / 2.0 - 0.12, cell.y)
-		if cells[cell]:
-			# ameias na beirada que olha para a área aberta
-			for side: Vector2i in [Vector2i(1, 0), Vector2i(0, 1)]:
-				var n := cell + side
-				if not (map.is_inside(n) and map.is_open(n)):
-					continue
-				for t in [-0.3, 0.0, 0.3]:
-					var m := MeshUtil.instance(merlon, _material, self)
-					var along := Vector3(0, 0, t) if side.x != 0 else Vector3(t, 0, 0)
-					m.position = Vector3(cell.x + side.x * (0.5 - ms / 2.0), h - 0.12 + float(w["merlonHeight"]) / 2.0, cell.y + side.y * (0.5 - ms / 2.0)) + along
+		# ameias: na alta, na beirada que olha para a área aberta; na baixa, na beirada de fora
+		for side: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
+			var n := cell + side
+			if not (map.is_inside(n) and map.is_open(n)):
+				continue
+			if cells[cell] and (side.x < 0 or side.y < 0):
+				continue
+			var edge := side if cells[cell] else -side
+			for t in [-0.3, 0.0, 0.3]:
+				var m := MeshUtil.instance(merlon, _material, self)
+				var along := Vector3(0, 0, t) if edge.x != 0 else Vector3(t, 0, 0)
+				m.position = Vector3(cell.x + edge.x * (0.5 - ms / 2.0), h - 0.12 + float(w["merlonHeight"]) / 2.0, cell.y + edge.y * (0.5 - ms / 2.0)) + along
 	var t_cfg: Dictionary = _cfg["torches"]
 	var pole := BoxMesh.new()
 	pole.size = Vector3(0.05, float(t_cfg["height"]), 0.05)
@@ -129,6 +142,11 @@ func rebuild(map: SimMap) -> void:
 		var cell: Vector2i = spot[0]
 		var side: Vector2i = spot[1]
 		var base := Vector3(cell.x + side.x * 0.5, 0.0, cell.y + side.y * 0.5)
+		if props != null and t_cfg.has("sprite"):
+			var at := base + Vector3(1, 0, 1).normalized() * float(props._cfg["forwardUnits"])
+			if props._sprite(String(t_cfg["sprite"]), at) != null:
+				torch_points.append(at + Vector3(0, 0.6, 0))
+				continue
 		var p := MeshUtil.instance(pole, _pole_material, self)
 		p.position = base + Vector3(0, float(t_cfg["height"]) / 2.0, 0)
 		var f := MeshUtil.instance(flame, _flame_material, self)

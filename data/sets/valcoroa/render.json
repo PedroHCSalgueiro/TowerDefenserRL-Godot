@@ -41,68 +41,122 @@
   },
   "grid": {
     "scenery": {
-      "sideColor": "#1c1e24",
+      "sideColor": "#1a1d26",
       "ground": {
         "floorRamp": [
-          "#22262e",
-          "#282c35",
-          "#2e323b",
-          "#343842",
-          "#3b3f48"
+          "#2a2f3b",
+          "#313744",
+          "#383e4c",
+          "#404655",
+          "#484e5d"
         ],
         "pathRamp": [
-          "#7c7a80",
-          "#8c8a8f",
-          "#9b999d",
-          "#aaa8aa",
-          "#b8b5b5"
+          "#56607a",
+          "#626c87",
+          "#6e7893",
+          "#7a849f",
+          "#8690aa"
         ],
-        "glowColor": "#9a52ff",
-        "glowStrength": 0.9,
+        "glowColor": "#5a6cff",
+        "glowStrength": 0.8,
         "glowDecayCells": 6,
         "warp": 0.16,
         "slab": 0.5,
         "jointDark": 0.62,
-        "mossAmount": 0.22,
+        "mossAmount": 0.15,
         "mossColor": "#2a3d26",
         "rimDark": 0.72,
         "gridShade": 0.25,
-        "gridRadius": 2.5
+        "gridRadius": 2.5,
+        "dirtRamp": [
+          "#2b2620",
+          "#332d25",
+          "#3b332a",
+          "#433a2f",
+          "#4b4134"
+        ],
+        "grassRamp": [
+          "#1f2b1d",
+          "#253423",
+          "#2c3d29",
+          "#33462f",
+          "#3a4f35"
+        ],
+        "slabShare": 0.3,
+        "grassShare": 0.45
       },
       "walls": {
         "texture": "res://assets/cenario/valcoroa/muralha_face.png",
-        "topColor": "#3a3c40",
-        "height": 1.3,
-        "lowHeight": 0.3,
+        "topColor": "#3c4356",
+        "height": 1.35,
+        "lowHeight": 0.55,
         "merlonSize": 0.22,
         "merlonHeight": 0.22,
-        "leftLight": 1.3,
-        "rightLight": 0.95
+        "leftLight": 1.2,
+        "rightLight": 0.85
       },
       "torches": {
-        "every": 4,
+        "every": 5,
         "height": 0.5,
         "flameColor": "#ffb347",
-        "poleColor": "#3a2e26"
+        "poleColor": "#3a2e26",
+        "sprite": "tocha"
       },
       "light": {
-        "ambient": "#6c7594",
-        "vignette": 0.55,
+        "ambient": "#8a92b4",
+        "vignette": 0.5,
         "torch": {
           "color": "#ff9a40",
-          "strength": 0.85,
-          "radius": 1.4,
+          "strength": 0.8,
+          "radius": 1.5,
           "flicker": 0.12
         },
         "entrance": {
-          "color": "#a050ff",
-          "strength": 0.8,
-          "radius": 2.4
+          "color": "#5a6cff",
+          "strength": 0.9,
+          "radius": 2.6
         },
         "nexus": {
-          "color": "#60b0ff",
-          "strength": 0.8,
+          "color": "#60b8ff",
+          "strength": 0.9,
           "radius": 2.2
+        }
+      },
+      "props": {
+        "folder": "res://assets/cenario/valcoroa/pecas/",
+        "forwardUnits": 0.6,
+        "portal": "portal",
+        "corner": "torre",
+        "nexus": "cristal_nucleo",
+        "lights": [
+          "tocha",
+          "braseiro"
+        ],
+        "wallChance": 0.7,
+        "wallFoot": {
+          "barril": 3,
+          "caixa": 3,
+          "tocha": 2,
+          "braseiro": 1,
+          "obelisco": 1,
+          "pilar": 1,
+          "coluna": 1,
+          "cristal": 2,
+          "arvore": 2,
+          "seca": 2,
+          "moita": 2,
+          "espinho": 1,
+          "toco": 1,
+          "pedra_pe": 1
+        },
+        "groundChance": 0.28,
+        "ground": {
+          "capim": 4,
+          "cranio": 2,
+          "pedras": 2,
+          "cogumelo": 1,
+          "raiz": 2,
+          "tabua": 1
         }
       }
     }

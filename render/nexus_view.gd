@@ -83,3 +83,8 @@ func _draw_line(a: Vector3, b: Vector3) -> void:
 	im.surface_add_vertex(a)
 	im.surface_add_vertex(b)
 	im.surface_end()
+
+
+## Esconde o cilindro (o cenário põe o cristal no lugar); a barra de vida continua.
+func hide_pillar() -> void:
+	_pillar.visible = false

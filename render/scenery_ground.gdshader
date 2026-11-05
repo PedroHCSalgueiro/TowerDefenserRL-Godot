@@ -16,6 +16,11 @@ uniform vec2 map_size = vec2(1.0, 1.0);
 uniform ivec2 tile = ivec2(48, 24);
 uniform vec3 floor_ramp[5];
 uniform vec3 path_ramp[5];
+uniform vec3 dirt_ramp[5];
+uniform vec3 grass_ramp[5];
+// quanto do pátio é laje, grama e terra (o resto); as manchas são grandes e de borda irregular
+uniform float slab_share = 0.3;
+uniform float grass_share = 0.35;
 uniform vec3 glow_color = vec3(0.6, 0.3, 1.0);
 uniform float glow_strength = 0.5;
 uniform float warp = 0.16;
@@ -121,17 +126,40 @@ void fragment() {
 		float gl = texture(glow, (g + 0.5) / map_size).r;
 		color = mix(color, color * 0.6 + glow_color * 0.7, clamp(gl * glow_strength, 0.0, 1.0));
 	} else {
-		// pátio: manchas grandes (5 tons), lajes em fileiras desencontradas, juntas e musgo
-		float n = fbm(vec2(g.x - g.y, (g.x + g.y) * 2.0) * 0.45);
-		int tone = clamp(int(floor(n * 6.0 - 0.6)), 0, 4);
-		color = floor_ramp[tone];
-		vec2 s = g / slab;
-		float row = floor(s.y);
-		float u = s.x + 0.5 * mod(row, 2.0);
-		vec2 f = vec2(fract(u), fract(s.y));
-		color *= 0.9 + 0.2 * hash(vec2(floor(u), row));
-		if (f.x < 0.07 || f.y < 0.1) {
-			color *= joint_dark;
+		// pátio misturado: manchas grandes de lajes, grama e terra, cada uma com a sua textura
+		float tone_n = fbm(vec2(g.x - g.y, (g.x + g.y) * 2.0) * 0.45);
+		int tone = clamp(int(floor(tone_n * 6.0 - 0.6)), 0, 4);
+		float zone = fbm(g * 0.55 + 21.0);
+		float zone2 = fbm(g * 0.55 + 77.0);
+		vec2 pf = vec2(px.x / 2.0, px.y);
+		float grain = hash(floor(pf));
+		if (zone > 1.0 - slab_share) {
+			// lajes em fileiras desencontradas
+			color = floor_ramp[tone];
+			vec2 sl = g / slab;
+			float row = floor(sl.y);
+			float uu = sl.x + 0.5 * mod(row, 2.0);
+			vec2 f = vec2(fract(uu), fract(sl.y));
+			color *= 0.9 + 0.2 * hash(vec2(floor(uu), row));
+			if (f.x < 0.07 || f.y < 0.1) {
+				color *= joint_dark;
+			}
+		} else if (zone2 > 1.0 - grass_share) {
+			// grama: tons em manchas e fiapos de 2 pixels em pé
+			color = grass_ramp[tone];
+			if (grain > 0.86) {
+				color = grass_ramp[min(tone + 1, 4)];
+			} else if (grain < 0.08) {
+				color = grass_ramp[max(tone - 1, 0)];
+			}
+		} else {
+			// terra com pedrinhas
+			color = dirt_ramp[tone];
+			if (grain > 0.95) {
+				color = floor_ramp[min(tone + 2, 4)];
+			} else if (grain < 0.1) {
+				color *= 0.85;
+			}
 		}
 		if (fbm(g * 0.8 + 40.0) > 1.0 - moss_amount) {
 			color = mix(color, moss_color, 0.35);

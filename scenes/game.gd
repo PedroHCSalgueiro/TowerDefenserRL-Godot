@@ -128,6 +128,8 @@ func _build_world() -> void:
 	nexus_view = NexusView.new()
 	add_child(nexus_view)
 	nexus_view.setup(map)
+	if grid.walls != null and grid.walls.props != null:
+		nexus_view.hide_pillar()
 	enemy_view = EnemyView.new()
 	add_child(enemy_view)
 	enemy_view.setup(EnemyData.game_data())

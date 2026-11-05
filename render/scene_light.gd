@@ -49,9 +49,12 @@ func _process(delta: float) -> void:
 	var colors := PackedVector4Array()
 	var t: Dictionary = _cfg["torch"]
 	if _walls != null:
-		for i in _walls.torch_points.size():
+		var points: Array[Vector3] = _walls.torch_points.duplicate()
+		if _walls.props != null:
+			points.append_array(_walls.props.light_points)
+		for i in points.size():
 			var flicker := 1.0 + float(t["flicker"]) * sin(_elapsed * 9.0 + i * 2.3) * sin(_elapsed * 5.3 + i)
-			_add(lights, colors, _walls.torch_points[i], t, flicker)
+			_add(lights, colors, points[i], t, flicker)
 	for i in _map.entrance_count():
 		_add(lights, colors, Vector3(_map.entrance_cell(i).x, 0.4, _map.entrance_cell(i).y), _cfg["entrance"], 1.0)
 	_add(lights, colors, Vector3(_map.nexus.x, 0.5, _map.nexus.y), _cfg["nexus"], 1.0 + 0.06 * sin(_elapsed * 2.0))
