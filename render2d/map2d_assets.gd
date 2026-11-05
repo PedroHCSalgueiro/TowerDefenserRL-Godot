@@ -66,6 +66,14 @@ func prop(name: String) -> Sprite2D:
 	var s := Sprite2D.new()
 	s.texture = _textures[name]
 	s.centered = false
-	var foot: Array = meta["pecas"][name]["pe"]
-	s.offset = -Vector2(float(foot[0]), float(foot[1]))
+	s.offset = -foot_of(name)
 	return s
+
+
+## Ponto do pé da peça dentro da imagem (pixels da arte, a partir do canto de cima à esquerda): o pé calculado pelo
+## gerador (`pe`, conforme o `modo` da peça) mais a correção manual (`ajuste`, editável em mapa2d.json).
+func foot_of(name: String) -> Vector2:
+	var info: Dictionary = meta["pecas"][name]
+	var foot: Array = info["pe"]
+	var adj: Array = info.get("ajuste", [0, 0])
+	return Vector2(float(foot[0]) + float(adj[0]), float(foot[1]) + float(adj[1]))

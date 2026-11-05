@@ -62,3 +62,38 @@ func test_posicao_das_pecas_bate_com_as_casas_do_tilemap() -> void:
 	assert_almost_eq(Map2DBuilders.cell_point(l, 4.0, 1.7) - l.map_to_local(Vector2i(4, 2)), Map2DBuilders.iso(0.0, -0.3), Vector2(0.001, 0.001))
 	# a casa vizinha está a uma casa de distância (o iso é só o vetor, não a posição)
 	assert_eq(l.map_to_local(Vector2i(1, 0)) - l.map_to_local(Vector2i(0, 0)), Map2DBuilders.iso(1, 0))
+
+
+func test_ancoras_seguem_o_modo_de_cada_peca() -> void:
+	for name: String in assets.meta["pecas"]:
+		var info: Dictionary = assets.meta["pecas"][name]
+		var pe: Array = info["pe"]
+		var h := int(info["tamanho"][1])
+		if info["modo"] == "base":
+			assert_eq(int(pe[1]), h, "%s (base): o pé é a linha mais baixa" % name)
+		else:
+			# pegada: o centro do losango da base, largura/4 acima da ponta de baixo
+			# (o gerador arredonda meio para o par, como o Python: 52,5 vira 52)
+			assert_almost_eq(float(pe[1]), h - float(info["base"]) / 4.0, 0.5, "%s (pegada): pé no centro da base" % name)
+			assert_lt(int(pe[1]), h, "%s: pé acima da linha mais baixa" % name)
+		assert_true(int(pe[0]) >= 0 and int(pe[0]) <= int(info["tamanho"][0]), "%s: pé dentro da imagem" % name)
+
+
+func test_decoracao_achatada_preserva_a_ancora_antiga() -> void:
+	# capim, crânio, pedras, raiz, cogumelo e tábua já tocavam o chão pela linha de baixo: continuam iguais
+	var antes := {"capim": [8, 10], "cranio": [6, 10], "pedras": [8, 12], "raiz": [4, 11], "cogumelo": [8, 16], "tabua": [4, 9],
+			"torre": [28, 94], "portal": [36, 60]}
+	for name: String in antes:
+		assert_eq(assets.foot_of(name), Vector2(antes[name][0], antes[name][1]), name)
+
+
+func test_ajuste_manual_e_respeitado() -> void:
+	var info: Dictionary = assets.meta["pecas"]["barril"]
+	var guardado: Array = info.get("ajuste", [0, 0])
+	info["ajuste"] = [3, -2]
+	var s := assets.prop("barril")
+	assert_eq(s.offset, -(Vector2(float(info["pe"][0]), float(info["pe"][1])) + Vector2(3, -2)))
+	s.free()
+	info["ajuste"] = guardado
+	var arvore: Dictionary = assets.meta["pecas"]["arvore"]
+	assert_eq(assets.foot_of("arvore"), Vector2(float(arvore["pe"][0]) + float(arvore["ajuste"][0]), float(arvore["pe"][1]) + float(arvore["ajuste"][1])))

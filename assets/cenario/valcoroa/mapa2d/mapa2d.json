@@ -323,266 +323,410 @@
   "tocha": {
    "pe": [
     5,
-    26
+    24
    ],
+   "modo": "pegada",
+   "base": 10,
    "tamanho": [
     10,
     26
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "braseiro": {
    "pe": [
     6,
-    16
+    13
    ],
+   "modo": "pegada",
+   "base": 11,
    "tamanho": [
     11,
     16
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "barril": {
    "pe": [
     6,
-    17
+    14
    ],
+   "modo": "pegada",
+   "base": 12,
    "tamanho": [
     12,
     17
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "caixa": {
    "pe": [
     8,
-    14
+    10
    ],
+   "modo": "pegada",
+   "base": 15,
    "tamanho": [
     15,
     14
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "pilar": {
    "pe": [
     14,
-    60
+    53
    ],
+   "modo": "pegada",
+   "base": 27,
    "tamanho": [
     27,
     60
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "coluna": {
    "pe": [
     14,
-    34
+    27
    ],
+   "modo": "pegada",
+   "base": 27,
    "tamanho": [
     27,
     34
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "cristal": {
    "pe": [
-    12,
-    31
+    11,
+    26
    ],
+   "modo": "pegada",
+   "base": 22,
    "tamanho": [
     22,
     31
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "pedra_pe": {
    "pe": [
     8,
-    24
+    20
    ],
+   "modo": "pegada",
+   "base": 16,
    "tamanho": [
     16,
     24
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "arvore": {
    "pe": [
-    12,
-    58
+    11,
+    52
    ],
+   "modo": "pegada",
+   "base": 22,
    "tamanho": [
     62,
     58
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    8,
+    -3
+   ]
   },
   "seca": {
    "pe": [
-    15,
-    40
+    16,
+    35
    ],
+   "modo": "pegada",
+   "base": 19,
    "tamanho": [
     30,
     40
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "toco": {
    "pe": [
-    9,
-    25
+    12,
+    19
    ],
+   "modo": "pegada",
+   "base": 23,
    "tamanho": [
     23,
     25
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "moita": {
    "pe": [
-    14,
-    27
+    16,
+    19
    ],
+   "modo": "pegada",
+   "base": 31,
    "tamanho": [
     31,
     27
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    4
+   ]
   },
   "espinho": {
    "pe": [
-    17,
-    25
+    16,
+    18
    ],
+   "modo": "pegada",
+   "base": 29,
    "tamanho": [
     30,
     25
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    3
+   ]
   },
   "torre": {
    "pe": [
     28,
     94
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     56,
     94
    ],
-   "fator": 1
+   "fator": 1,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "arco": {
    "pe": [
     45,
     77
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     56,
     77
    ],
-   "fator": 1
+   "fator": 1,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "obelisco": {
    "pe": [
     10,
-    43
+    38
    ],
+   "modo": "pegada",
+   "base": 20,
    "tamanho": [
     20,
     43
    ],
-   "fator": 2
+   "fator": 2,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "raiz": {
    "pe": [
     4,
     11
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     9,
     11
    ],
-   "fator": 4
+   "fator": 4,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "capim": {
    "pe": [
     8,
     10
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     16,
     10
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "cranio": {
    "pe": [
     6,
     10
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     12,
     10
    ],
-   "fator": 4
+   "fator": 4,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "pedras": {
    "pe": [
     8,
     12
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     16,
     12
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "cogumelo": {
    "pe": [
     8,
     16
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     16,
     16
    ],
-   "fator": 3
+   "fator": 3,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "tabua": {
    "pe": [
     4,
     9
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     14,
     9
    ],
-   "fator": 4
+   "fator": 4,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "cristal_nucleo": {
    "pe": [
-    15,
-    40
+    14,
+    33
    ],
+   "modo": "pegada",
+   "base": 29,
    "tamanho": [
     29,
     40
    ],
-   "fator": 1
+   "fator": 1,
+   "ajuste": [
+    0,
+    0
+   ]
   },
   "portal": {
    "pe": [
     36,
     60
    ],
+   "modo": "base",
+   "base": 0,
    "tamanho": [
     44,
     60
    ],
-   "fator": 1
+   "fator": 1,
+   "ajuste": [
+    0,
+    0
+   ]
   }
  }
 }
