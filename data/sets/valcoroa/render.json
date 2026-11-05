@@ -89,11 +89,12 @@
         "texture": "res://assets/cenario/valcoroa/muralha_face.png",
         "topColor": "#3c4356",
         "height": 1.35,
-        "lowHeight": 0.55,
+        "lowHeight": 0.2,
         "merlonSize": 0.22,
         "merlonHeight": 0.22,
         "leftLight": 1.2,
-        "rightLight": 0.85
+        "rightLight": 0.85,
+        "lowDepth": 1.6
       },
       "torches": {
         "every": 5,

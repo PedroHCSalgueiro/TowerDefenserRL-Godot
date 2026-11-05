@@ -115,13 +115,18 @@ func rebuild(map: SimMap) -> void:
 	if props != null:
 		props.rebuild(map, cells)
 	for cell: Vector2i in cells:
-		if props != null and props.portal_cells.has(cell):
+		# no portal da muralha alta fica a abertura; na beirada da frente a plataforma continua embaixo dele
+		if props != null and props.portal_cells.has(cell) and cells[cell]:
 			continue
 		var h := tall_h if cells[cell] else low_h
 		var mi := MeshUtil.instance(block, _material, self)
-		mi.scale = Vector3(1.0, h, 1.0)
-		mi.position = Vector3(cell.x, h / 2.0 - 0.12, cell.y)
-		# ameias: na alta, na beirada que olha para a área aberta; na baixa, na beirada de fora
+		# a borda da frente é a beirada da plataforma: rente ao chão em cima e com a parede de tijolo descendo no escuro
+		var bottom := -0.12 if cells[cell] else -float(w["lowDepth"])
+		mi.scale = Vector3(1.0, h - 0.12 - bottom, 1.0)
+		mi.position = Vector3(cell.x, (h - 0.12 + bottom) / 2.0, cell.y)
+		if not cells[cell]:
+			continue
+		# ameias na beirada da muralha alta que olha para a área aberta
 		for side: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
 			var n := cell + side
 			if not (map.is_inside(n) and map.is_open(n)):
