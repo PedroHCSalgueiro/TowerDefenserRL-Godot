@@ -105,7 +105,7 @@ World2D (Node2D, y_sort_enabled)
 | `data/scenery2d.json` | mapa de teste, regras, espaçamentos e luzes |
 | `tests/test_map2d.gd` | testes da montagem |
 
-**Assets:** saem de `Arte/ferramentas/gerar_tiles_2d.py`, que só reduz, recorta e projeta as artes existentes.
+**Assets:** saem de `tools/arte/gerar_tiles_2d.py` (no repositório; precisa dos recortes em `Arte/cenario/valcoroa/recortes/`), que só reduz, recorta e projeta as artes existentes.
 - As peças são reduzidas por um **fator inteiro**, e cada uma tem o seu **ponto do pé**.
 - As lajes e o caminho são as texturas `parede_b` e `parede_a` projetadas no losango, em 4×4 variantes que continuam de uma casa para a outra.
 - A grama e a terra são os losangos de `grama/`, escurecidos.

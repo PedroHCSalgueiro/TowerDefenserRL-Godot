@@ -73,10 +73,32 @@ func test_ancoras_seguem_o_modo_de_cada_peca() -> void:
 			assert_eq(int(pe[1]), h, "%s (base): o pé é a linha mais baixa" % name)
 		else:
 			# pegada: o centro do losango da base, largura/4 acima da ponta de baixo
-			# (o gerador arredonda meio para o par, como o Python: 52,5 vira 52)
-			assert_almost_eq(float(pe[1]), h - float(info["base"]) / 4.0, 0.5, "%s (pegada): pé no centro da base" % name)
+			assert_eq(int(pe[1]), _round_half_even(h - float(info["base"]) / 4.0), "%s (pegada): pé no centro da base" % name)
 			assert_lt(int(pe[1]), h, "%s: pé acima da linha mais baixa" % name)
 		assert_true(int(pe[0]) >= 0 and int(pe[0]) <= int(info["tamanho"][0]), "%s: pé dentro da imagem" % name)
+
+
+## Mesma regra do gerador (round() do Python): o meio vai para o par. O round() do GDScript sobe o meio (52,5 -> 53).
+func _round_half_even(v: float) -> int:
+	var f := floorf(v)
+	if is_equal_approx(v - f, 0.5):
+		return int(f) if int(f) % 2 == 0 else int(f) + 1
+	return int(roundf(v))
+
+
+func test_arredondamento_segue_o_gerador() -> void:
+	assert_eq(_round_half_even(52.5), 52, "árvore: 58 - 22/4 = 52,5")
+	assert_eq(_round_half_even(25.5), 26, "cristal: 31 - 22/4 = 25,5")
+	assert_eq(_round_half_even(23.5), 24, "tocha: 26 - 10/4 = 23,5")
+	assert_eq(_round_half_even(19.25), 19)
+
+
+func test_ponto_de_contato_da_arvore_no_sprite() -> void:
+	# o que o Sprite2D usa de verdade: pé 52 (centro da base) + ajuste [8, -3] -> o tronco toca o chão em (19, 49)
+	var s := assets.prop("arvore")
+	assert_eq(s.offset, Vector2(-19, -49))
+	assert_false(s.centered)
+	s.free()
 
 
 func test_decoracao_achatada_preserva_a_ancora_antiga() -> void:
