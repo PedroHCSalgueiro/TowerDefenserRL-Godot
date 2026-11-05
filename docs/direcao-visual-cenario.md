@@ -3,6 +3,7 @@
 Esta é a pegada que o Pedro aprovou em 04/11/2026, depois dos testes da floresta (cenas v1 a v5).
 Os testes estão em `Arte/cenario/gemini/`: `NOTAS-testes.md`, `PLANO-floresta.md` e os scripts `cena_v*.py`.
 A proposta de biomas, relevo e transições está em `docs/plano-cenario.md`.
+**Para gerar arte com IA:** a página do Notion "Regras de estilo — instruções para o agente de imagem" (https://app.notion.com/p/40fc656560ae81e9b794ce92ae48269d) tem o bloco pronto para colar nas instruções do agente, com câmera, tamanho de pixel, escala, fundo e o que evitar.
 
 **Referência de clima:** jogos de ação em pixel com cenário denso e iluminado, como o Hero Siege.
 A referência é só de ideia. **Nunca copiar arte de outro jogo**, nem colocar no jogo uma imagem que o Gemini copiou de uma captura.

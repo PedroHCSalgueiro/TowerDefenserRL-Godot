@@ -22,6 +22,7 @@ Visual do cenário: `docs/direcao-visual-cenario.md` (a pegada aprovada; seguir 
 - Teste Godot: https://app.notion.com/p/3f9c656560ae81fb8a12ce9a4607b871
 - Direção de Arte: https://app.notion.com/p/3ebc656560ae8102a571de5ca487830d
 - Guia de Estilo Visual — Personagens: https://app.notion.com/p/3fac656560ae8150933de77457155594
+- Regras de estilo para o agente de imagem (cenário e peças): https://app.notion.com/p/40fc656560ae81e9b794ce92ae48269d
 
 Quando Pedro disser "execute a tarefa X", leia a tarefa e as seções do Mini-GDD
 citadas, apresente um plano e só então implemente.
