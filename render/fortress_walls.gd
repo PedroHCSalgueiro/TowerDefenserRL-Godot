@@ -11,6 +11,9 @@ const WALL_SHADER := preload("res://render/fortress_wall.gdshader")
 
 var _cfg: Dictionary
 var _material: ShaderMaterial
+## Rebordo da saia: o mesmo bloco, com o topo na cor do meio-fio.
+var _rim_material: ShaderMaterial
+var _box: BoxMesh
 var _flame_material: StandardMaterial3D
 var _pole_material: StandardMaterial3D
 ## Pontos das chamas (mundo), para a luz por cima.
@@ -38,12 +41,18 @@ func _build_materials() -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = WALL_SHADER
 	_material.set_shader_parameter("face", load(String(w["texture"])))
-	for key: String in ["leftTint", "topTint", "rightTint"]:
+	for key: String in ["leftTint", "rightTint"]:
 		var c: Array = w[key]
 		_material.set_shader_parameter(key.replace("Tint", "_tint").to_lower(), Vector3(c[0], c[1], c[2]))
 	_material.set_shader_parameter("edge_light", float(w["edgeLight"]))
+	_material.set_shader_parameter("outline_dark", float(w["outlineDark"]))
 	_material.set_shader_parameter("px_along", px_along())
 	_material.set_shader_parameter("px_up", px_up())
+	var top: Array = w["topColor"]
+	_material.set_shader_parameter("top_color", Vector3(top[0], top[1], top[2]))
+	_rim_material = _material.duplicate() as ShaderMaterial
+	var rim: Array = w["rimColor"]
+	_rim_material.set_shader_parameter("top_color", Vector3(rim[0], rim[1], rim[2]))
 	var t: Dictionary = _cfg["torches"]
 	_flame_material = MeshUtil.flat_material(RenderConfig.color(t["flameColor"]))
 	_pole_material = MeshUtil.flat_material(RenderConfig.color(t["poleColor"]))
@@ -57,6 +66,97 @@ static func px_along() -> float:
 ## Pixels da arte por unidade do mundo na vertical (na tela, a altura encolhe pelo cosseno da elevação).
 static func px_up() -> float:
 	return GroundProjection.PX_PER_UNIT * cos(GroundProjection.elevation()) / float(RenderConfig.data()["camera"]["pixelArt"]["viewPxPerArtPx"])
+
+
+func _unit_box() -> BoxMesh:
+	if _box == null:
+		_box = BoxMesh.new()
+		_box.size = Vector3.ONE
+	return _box
+
+
+static func _open(map: SimMap, cell: Vector2i) -> bool:
+	return map.is_inside(cell) and map.is_open(cell)
+
+
+## Casa baixa de canto: sem vizinha aberta nos 4 lados, só na diagonal.
+static func _corner_low(map: SimMap, cells: Dictionary, cell: Vector2i) -> bool:
+	if not cells.has(cell) or cells[cell]:
+		return false
+	for side: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if _open(map, cell + side):
+			return false
+	return true
+
+
+## Blocos da muralha e da saia ({lo, hi: Vector3, rim: bool}), em unidades do mundo, com o chão em y = 0. Medidas em
+## pixels da arte em `walls` (render.json). Só geometria, sem nó: usado pelo `rebuild` e pelos testes.
+## - Muralha (casa alta): meia casa de espessura, na metade de dentro (encostada na área aberta); vai do fundo da
+##   saia até `heightPx`. Na ponta que encontra a saia da frente, ela avança a largura do rebordo, e a face de fecho
+##   vira um paredão só (muralha + saia).
+## - Saia (casa baixa): o rebordo, uma faixa de `rimPx` de largura rente ao chão, descendo `skirtPx`. No canto
+##   coberto pela ponta da muralha, nada.
+## - Ameias: blocos de `merlonLengthPx` x `merlonThicknessPx` x `merlonHeightPx` na beirada de fora do topo, a cada
+##   1/`merlonsPerCell` casa, com a primeira encostada na ponta da muralha que dá para a frente.
+static func wall_boxes(map: SimMap, cells: Dictionary, w: Dictionary, portals: Dictionary = {}) -> Array:
+	var out: Array = []
+	var tall_h := float(w["heightPx"]) / px_up()
+	var skirt := float(w["skirtPx"]) / px_up()
+	var rim := float(w["rimPx"]) / px_along()
+	var mer_h := float(w["merlonHeightPx"]) / px_up()
+	var mer_t := float(w["merlonThicknessPx"]) / px_along()
+	var mer_l := float(w["merlonLengthPx"]) / px_along()
+	var step := 1.0 / float(w["merlonsPerCell"])
+	# ponta da frente de cada direção (onde fica a primeira ameia)
+	var end_z := float(map.height) - 0.5 + rim
+	var end_x := float(map.width) - 0.5 + rim
+	for cell: Vector2i in cells:
+		var cx := float(cell.x)
+		var cz := float(cell.y)
+		if cells[cell]:
+			if portals.has(cell):
+				continue
+			var ox := _open(map, cell + Vector2i(1, 0))
+			var oz := _open(map, cell + Vector2i(0, 1))
+			var boxes: Array = []   # [x0, x1, z0, z1, ao longo de z?]
+			if ox:
+				var z1 := cz + 0.5 + (rim if _corner_low(map, cells, cell + Vector2i(0, 1)) else 0.0)
+				boxes.append([cx, cx + 0.5, cz - 0.5, z1, true])
+			if oz:
+				var x1 := cx + 0.5 + (rim if _corner_low(map, cells, cell + Vector2i(1, 0)) else 0.0)
+				boxes.append([cx - 0.5, x1, cz, cz + 0.5, false])
+			if not ox and not oz:
+				boxes.append([cx, cx + 0.5, cz, cz + 0.5, true])
+				boxes.append([cx, cx + 0.5, cz, cz + 0.5, false])
+			for k in boxes.size():
+				var b: Array = boxes[k]
+				if not (not ox and not oz and k == 1):
+					out.append({"lo": Vector3(b[0], -skirt, b[2]), "hi": Vector3(b[1], tall_h, b[3]), "rim": false})
+				# ameias na beirada de fora (x = cx na parede que corre ao longo de z; z = cz na outra)
+				var along_z: bool = b[4]
+				var a0: float = b[2] if along_z else b[0]
+				var a1: float = b[3] if along_z else b[1]
+				var anchor := end_z if along_z else end_x
+				var c := anchor - mer_l / 2.0 - ceilf((anchor - mer_l / 2.0 - (a1 - mer_l / 2.0)) / step - 0.0001) * step
+				while c - mer_l / 2.0 >= a0 - 0.0001:
+					if along_z:
+						out.append({"lo": Vector3(cx, tall_h, c - mer_l / 2.0), "hi": Vector3(cx + mer_t, tall_h + mer_h, c + mer_l / 2.0), "rim": false})
+					else:
+						out.append({"lo": Vector3(c - mer_l / 2.0, tall_h, cz), "hi": Vector3(c + mer_l / 2.0, tall_h + mer_h, cz + mer_t), "rim": false})
+					c -= step
+		else:
+			var open_mz := _open(map, cell + Vector2i(0, -1))
+			var open_mx := _open(map, cell + Vector2i(-1, 0))
+			if open_mz:
+				out.append({"lo": Vector3(cx - 0.5, -skirt, cz - 0.5), "hi": Vector3(cx + 0.5, 0.0, cz - 0.5 + rim), "rim": true})
+			if open_mx:
+				out.append({"lo": Vector3(cx - 0.5, -skirt, cz - 0.5), "hi": Vector3(cx - 0.5 + rim, 0.0, cz + 0.5), "rim": true})
+			if not open_mz and not open_mx:
+				# canto: coberto pela ponta da muralha, ou um quadradinho de rebordo
+				var covered: bool = (cells.get(cell + Vector2i(0, -1), false) and _open(map, cell + Vector2i(1, -1))) 						or (cells.get(cell + Vector2i(-1, 0), false) and _open(map, cell + Vector2i(-1, 1)))
+				if not covered:
+					out.append({"lo": Vector3(cx - 0.5, -skirt, cz - 0.5), "hi": Vector3(cx - 0.5 + rim, 0.0, cz - 0.5 + rim), "rim": true})
+	return out
 
 
 ## Casas de muralha: fechadas (ou fora do mapa) com alguma vizinha aberta. Valor: true = alta (a vizinha aberta fica à
@@ -115,45 +215,15 @@ func rebuild(map: SimMap) -> void:
 	_flames.clear()
 	torch_points.clear()
 	var w: Dictionary = _cfg["walls"]
-	# medidas em pixels da arte (data), levadas para unidades do mundo; o chão fica em y = 0
-	var tall_h := float(w["heightPx"]) / px_up()
-	var skirt := float(w["skirtPx"]) / px_up()
-	var mer_h := float(w["merlonHeightPx"]) / px_up()
-	var mer_t := float(w["merlonThicknessPx"]) / px_along()
-	var mer_l := float(w["merlonLengthPx"]) / px_along()
-	var block := BoxMesh.new()
-	block.size = Vector3(1.0, 1.0, 1.0)
 	var cells := wall_cells(map)
 	if props != null:
 		props.rebuild(map, cells)
-	for cell: Vector2i in cells:
-		# no portal da muralha alta fica a abertura; na beirada da frente a plataforma continua embaixo dele
-		if props != null and props.portal_cells.has(cell) and cells[cell]:
-			continue
-		# muralha: do chão até `heightPx`; borda da frente: só a saia da plataforma, do chão até `skirtPx` para baixo
-		var top := tall_h if cells[cell] else 0.0
-		var bottom := -skirt
-		var mi := MeshUtil.instance(block, _material, self)
-		mi.scale = Vector3(1.0, top - bottom, 1.0)
-		mi.position = Vector3(cell.x, (top + bottom) / 2.0, cell.y)
-		if not cells[cell]:
-			continue
-		# ameias na beirada da muralha alta que olha para a área aberta
-		for side: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]:
-			var n := cell + side
-			if not (map.is_inside(n) and map.is_open(n)):
-				continue
-			if cells[cell] and (side.x < 0 or side.y < 0):
-				continue
-			var edge := side if cells[cell] else -side
-			var merlon := BoxMesh.new()
-			merlon.size = Vector3(mer_t, mer_h, mer_l) if edge.x != 0 else Vector3(mer_l, mer_h, mer_t)
-			var count := int(w["merlonsPerCell"])
-			for k in count:
-				var t := (k + 0.5) / count - 0.5
-				var m := MeshUtil.instance(merlon, _material, self)
-				var along := Vector3(0, 0, t) if edge.x != 0 else Vector3(t, 0, 0)
-				m.position = Vector3(cell.x + edge.x * (0.5 - mer_t / 2.0), top + mer_h / 2.0, cell.y + edge.y * (0.5 - mer_t / 2.0)) + along
+	for b: Dictionary in wall_boxes(map, cells, w, props.portal_cells if props != null else {}):
+		var mi := MeshUtil.instance(_unit_box(), _rim_material if b["rim"] else _material, self)
+		var lo: Vector3 = b["lo"]
+		var hi: Vector3 = b["hi"]
+		mi.scale = hi - lo
+		mi.position = (lo + hi) / 2.0
 	var t_cfg: Dictionary = _cfg["torches"]
 	var pole := BoxMesh.new()
 	pole.size = Vector3(0.05, float(t_cfg["height"]), 0.05)

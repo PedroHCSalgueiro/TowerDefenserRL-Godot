@@ -52,3 +52,31 @@ func test_medidas_em_pixels_da_arte() -> void:
 	# ao longo de um lado da casa, 24 px da arte na horizontal (meia largura do losango de 48)
 	var meio_lado := GroundProjection.view_px(1, 0).x
 	assert_almost_eq(meio_lado, FortressWalls.px_along() * 2.0, 0.01, "um lado da casa anda 24 px da arte (48 na tela) na horizontal")
+
+
+func test_ponta_esquerda_une_muralha_e_saia() -> void:
+	var map := _map()
+	var w := {"heightPx": 40, "skirtPx": 12, "rimPx": 3, "merlonHeightPx": 6, "merlonThicknessPx": 4, "merlonLengthPx": 6, "merlonsPerCell": 3}
+	var boxes := FortressWalls.wall_boxes(map, FortressWalls.wall_cells(map), w)
+	var rim := 3.0 / FortressWalls.px_along()
+	var frente := float(map.height) - 0.5 + rim
+	var ponta: Variant = null
+	for b: Dictionary in boxes:
+		var lo: Vector3 = b["lo"]
+		var hi: Vector3 = b["hi"]
+		if not b["rim"] and is_equal_approx(lo.x, -1.0) and is_equal_approx(hi.z, frente) and lo.y < 0.0:
+			ponta = b
+	assert_not_null(ponta, "a muralha da esquerda avança até a frente do rebordo")
+	var altura_px: float = ((ponta["hi"] as Vector3).y - (ponta["lo"] as Vector3).y) * FortressWalls.px_up()
+	assert_almost_eq(altura_px, 52.0, 0.01, "face de fecho: 40 da muralha + 12 da saia")
+	assert_almost_eq(((ponta["hi"] as Vector3).x - (ponta["lo"] as Vector3).x), 0.5, 0.001, "meia casa de espessura")
+	# nenhum rebordo sobra para fora da ponta (o canto da esquerda é coberto pela muralha)
+	for b: Dictionary in boxes:
+		if b["rim"]:
+			assert_true((b["lo"] as Vector3).x >= -0.5 - 0.001, "rebordo não passa da ponta da muralha")
+	# a primeira ameia encosta na ponta
+	var encostada := false
+	for b: Dictionary in boxes:
+		if not b["rim"] and (b["lo"] as Vector3).y > 0.0 and is_equal_approx((b["hi"] as Vector3).z, frente):
+			encostada = true
+	assert_true(encostada, "a primeira ameia começa na quina da ponta")
