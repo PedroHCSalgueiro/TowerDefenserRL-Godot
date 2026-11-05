@@ -177,7 +177,10 @@ def _ajuste(nome):
 # Ajuste manual inicial, em pixels da arte (só vale se o mapa2d.json não tiver outro):
 # - árvore: a pegada pega a raiz da esquerda; o tronco toca o chão 8 px à direita e 3 px acima;
 # - moita e espinheiro: são achatados (sem lados retos), então o contato fica mais perto da linha de baixo.
-AJUSTE = {"arvore": [8, -3], "moita": [0, 4], "espinho": [0, 3]}
+# - portal: os pés dos pilares ficam na linha do chão (y = 0), mas o tile da muralha desenha a face de dentro até o
+#   fundo da saia (SKIRT = 12 px abaixo do chão), por cima do chão da casa da frente. A base visível da parede fica
+#   12 px abaixo; o portal desce os mesmos 12 px para os pilares encostarem nela (medido coluna a coluna).
+AJUSTE = {"arvore": [8, -3], "moita": [0, 4], "espinho": [0, 3], "portal": [0, -SKIRT]}
 
 
 pecas = {}

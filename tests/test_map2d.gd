@@ -142,11 +142,69 @@ func test_portal_tamanho_e_pe() -> void:
 	var pe: Array = info["pe"]
 	assert_true(int(pe[0]) > 8 and int(pe[0]) < 20, "pé no meio da largura: %s" % [pe])
 	assert_true(int(pe[1]) > 30 and int(pe[1]) <= 38, "pé na base: %s" % [pe])
-	# a abertura deixa passar um inimigo (diâmetro 2 x enemies.radius, em pixels da arte)
+	# "abertura" em mapa2d.json é a área VISUAL do redemoinho (inclui o arco), não o vão no chão
 	var ab: Array = info["abertura"]
-	var inimigo := 2.0 * float(RenderConfig.data()["enemies"]["radius"])
-	assert_gt(float(ab[3] - ab[1]), inimigo, "abertura mais alta que um inimigo")
-	assert_gt(float(ab[2] - ab[0]), inimigo * 0.5, "abertura mais larga que meio inimigo")
+	assert_eq(Vector4i(int(ab[0]), int(ab[1]), int(ab[2]), int(ab[3])), Vector4i(7, 9, 18, 30))
+
+
+## Pedra do portal: opaco e fora da paleta do redemoinho (gerar_tiles_2d.portal_de_arco).
+const REDEMOINHO := [Color8(40, 40, 140), Color8(70, 80, 220), Color8(120, 150, 255), Color8(200, 220, 255)]
+
+
+func _pedra(img: Image, x: int, y: int) -> bool:
+	var c := img.get_pixel(x, y)
+	if c.a <= 0.5:
+		return false
+	for r: Color in REDEMOINHO:
+		if c.is_equal_approx(r):
+			return false
+	return true
+
+
+## Vão físico do portal no chão: do último pixel de pedra do pilar de trás (na base dele) ao primeiro do pilar da
+## frente (na base dele), na horizontal da imagem. Ao longo de um lado da casa, 24 px na horizontal = 1 casa.
+func _vao_no_chao_px() -> int:
+	var img: Image = (load(assets.folder + "pecas/portal.png") as Texture2D).get_image()
+	var w := img.get_width()
+	var base := [-1, -1]
+	for y in img.get_height():
+		for half in 2:
+			for x in range(half * w / 2, (half + 1) * w / 2):
+				if _pedra(img, x, y):
+					base[half] = y
+	var tras := -1
+	var frente := w
+	for y in [base[0] - 1, base[0]]:
+		for x in w / 2:
+			if _pedra(img, x, y):
+				tras = maxi(tras, x)
+	for y in [base[1] - 1, base[1]]:
+		for x in range(w / 2, w):
+			if _pedra(img, x, y):
+				frente = mini(frente, x)
+	return frente - tras - 1
+
+
+func test_portal_vao_fisico_e_o_inimigo() -> void:
+	var vao := _vao_no_chao_px()
+	assert_eq(vao, 9, "9 px livres entre os pilares, no chão")
+	var casa_px := 24.0   # um lado da casa, na horizontal
+	var inimigo := 2.0 * float(RenderConfig.data()["enemies"]["radius"]) * RenderConfig.PX_TO_UNIT * casa_px
+	assert_almost_eq(inimigo, 7.0, 0.01, "inimigo comum: 0,29 casa de diâmetro = 7 px ao longo da parede")
+	assert_gt(float(vao), inimigo, "o inimigo comum cabe no vão")
+	var elite := inimigo * float(RenderConfig.data()["enemies"]["eliteScale"])
+	assert_gt(elite, float(vao), "a elite (x1,5 = 10,5 px) não cabe: registrado no relatório")
+
+
+func test_portal_desce_ate_a_base_visivel_da_muralha() -> void:
+	# o tile da muralha desenha a face de dentro até o fundo da saia (12 px abaixo do chão); o portal desce o mesmo
+	var info: Dictionary = assets.meta["pecas"]["portal"]
+	assert_eq(Vector2i(int(info["ajuste"][0]), int(info["ajuste"][1])), Vector2i(0, -12))
+	assert_eq(assets.foot_of("portal"), Vector2(float(info["pe"][0]), float(info["pe"][1]) - 12.0))
+	# só o desenho desce: a posição do nó (e com ela o Y-Sort) continua na face da muralha
+	var s := assets.prop("portal")
+	assert_eq(s.offset, -assets.foot_of("portal"))
+	s.free()
 
 
 func test_portal_na_face_de_dentro_da_muralha() -> void:
