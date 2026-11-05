@@ -1,0 +1,264 @@
+{
+  "assets": "res://assets/cenario/valcoroa/mapa2d/",
+  "testMap": {
+    "id": "teste-2d",
+    "width": 12,
+    "height": 12,
+    "path": [
+      {
+        "x": 0,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 5
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 7,
+        "y": 1
+      },
+      {
+        "x": 7,
+        "y": 8
+      },
+      {
+        "x": 10,
+        "y": 8
+      },
+      {
+        "x": 10,
+        "y": 11
+      }
+    ]
+  },
+  "terrain": {
+    "seed": 7,
+    "frequency": 0.16,
+    "slabAbove": -0.36,
+    "grassBelow": -0.42,
+    "grass": [
+      "grama_lisa_01",
+      "grama_lisa_02",
+      "grama_lisa_03",
+      "grama_lisa_04",
+      "grama_escura_01",
+      "grama_pedrinhas_01"
+    ],
+    "dirt": [
+      "terra_terra_01",
+      "terra_caminho_01",
+      "terra_caminho_02"
+    ]
+  },
+  "spacing": {
+    "props": 0.75,
+    "decor": 0.32,
+    "decorToProp": 0.45
+  },
+  "wallInset": 0.28,
+  "clusterEvery": 3,
+  "clusters": {
+    "deposito": [
+      [
+        "barril",
+        -0.15,
+        0.0
+      ],
+      [
+        "barril",
+        0.12,
+        0.1
+      ],
+      [
+        "caixa",
+        0.05,
+        -0.25
+      ]
+    ],
+    "santuario": [
+      [
+        "obelisco",
+        0.0,
+        0.0
+      ],
+      [
+        "cristal",
+        0.3,
+        0.2
+      ],
+      [
+        "cogumelo",
+        -0.25,
+        0.25
+      ]
+    ],
+    "jardim": [
+      [
+        "arvore",
+        0.0,
+        0.0
+      ],
+      [
+        "moita",
+        0.35,
+        0.3
+      ],
+      [
+        "capim",
+        -0.3,
+        0.3
+      ]
+    ],
+    "ruina": [
+      [
+        "coluna",
+        0.0,
+        0.0
+      ],
+      [
+        "pedras",
+        0.3,
+        0.2
+      ],
+      [
+        "cranio",
+        -0.25,
+        0.3
+      ]
+    ],
+    "guarda": [
+      [
+        "braseiro",
+        0.0,
+        0.0
+      ],
+      [
+        "caixa",
+        0.3,
+        0.15
+      ]
+    ]
+  },
+  "clusterOrder": [
+    "deposito",
+    "jardim",
+    "santuario",
+    "ruina",
+    "guarda"
+  ],
+  "centerpieces": [
+    [
+      [
+        "pilar",
+        0.0,
+        0.0
+      ],
+      [
+        "cogumelo",
+        0.35,
+        0.25
+      ],
+      [
+        "cogumelo",
+        -0.3,
+        0.3
+      ],
+      [
+        "pedra_pe",
+        0.3,
+        -0.3
+      ]
+    ],
+    [
+      [
+        "seca",
+        0.0,
+        0.0
+      ],
+      [
+        "raiz",
+        0.35,
+        0.2
+      ],
+      [
+        "capim",
+        -0.3,
+        0.25
+      ]
+    ]
+  ],
+  "minRegion": 6,
+  "torchEvery": 4,
+  "torchInset": 0.42,
+  "decor": {
+    "chance": 0.55,
+    "nearPathBonus": 0.25,
+    "pieces": {
+      "capim": 5,
+      "pedras": 2,
+      "cranio": 1,
+      "raiz": 2,
+      "tabua": 1,
+      "cogumelo": 1
+    }
+  },
+  "lights": {
+    "ambient": "#454c6c",
+    "torch": {
+      "color": "#ff9a48",
+      "energy": 1.4,
+      "scale": 1.0
+    },
+    "braseiro": {
+      "color": "#ff8a3a",
+      "energy": 1.3,
+      "scale": 0.8
+    },
+    "portal": {
+      "color": "#6a5cff",
+      "energy": 1.5,
+      "scale": 1.6
+    },
+    "nucleo": {
+      "color": "#5ab8ff",
+      "energy": 1.3,
+      "scale": 1.4
+    },
+    "cristal": {
+      "color": "#5ab8ff",
+      "energy": 0.6,
+      "scale": 0.6
+    },
+    "cogumelo": {
+      "color": "#4ab0ff",
+      "energy": 0.4,
+      "scale": 0.4
+    }
+  },
+  "heroes": [
+    [
+      "sir-aldric",
+      2,
+      7
+    ],
+    [
+      "lyra",
+      5,
+      3
+    ],
+    [
+      "tomas",
+      8,
+      6
+    ],
+    [
+      "brom",
+      5,
+      9
+    ]
+  ]
+}
