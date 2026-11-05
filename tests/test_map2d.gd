@@ -69,6 +69,8 @@ func test_ancoras_seguem_o_modo_de_cada_peca() -> void:
 		var info: Dictionary = assets.meta["pecas"][name]
 		var pe: Array = info["pe"]
 		var h := int(info["tamanho"][1])
+		if info["modo"] == "portal":
+			continue  # conferido em test_portal_*
 		if info["modo"] == "base":
 			assert_eq(int(pe[1]), h, "%s (base): o pé é a linha mais baixa" % name)
 		else:
@@ -104,7 +106,7 @@ func test_ponto_de_contato_da_arvore_no_sprite() -> void:
 func test_decoracao_achatada_preserva_a_ancora_antiga() -> void:
 	# capim, crânio, pedras, raiz, cogumelo e tábua já tocavam o chão pela linha de baixo: continuam iguais
 	var antes := {"capim": [8, 10], "cranio": [6, 10], "pedras": [8, 12], "raiz": [4, 11], "cogumelo": [8, 16], "tabua": [4, 9],
-			"torre": [28, 94], "portal": [36, 60]}
+			"torre": [28, 94]}
 	for name: String in antes:
 		assert_eq(assets.foot_of(name), Vector2(antes[name][0], antes[name][1]), name)
 
@@ -119,3 +121,81 @@ func test_ajuste_manual_e_respeitado() -> void:
 	info["ajuste"] = guardado
 	var arvore: Dictionary = assets.meta["pecas"]["arvore"]
 	assert_eq(assets.foot_of("arvore"), Vector2(float(arvore["pe"][0]) + float(arvore["ajuste"][0]), float(arvore["pe"][1]) + float(arvore["ajuste"][1])))
+
+
+
+func _portal() -> Array:
+	var portals := SceneryProps.portal_cells_of(map)
+	assert_eq(portals.size(), 1, "o mapa de teste tem uma entrada")
+	var c: Vector2i = portals.keys()[0]
+	return [c, portals[c]]
+
+
+func test_portal_tamanho_e_pe() -> void:
+	var info: Dictionary = assets.meta["pecas"]["portal"]
+	assert_eq(info["modo"], "portal")
+	assert_eq(int(info["fator"]), 2, "arco nativo 56x77 reduzido por fator inteiro 2")
+	assert_eq(Vector2i(int(info["tamanho"][0]), int(info["tamanho"][1])), Vector2i(28, 38))
+	var muralha_px: int = 40
+	assert_lt(int(info["tamanho"][1]), muralha_px, "o portal cabe embaixo do topo da muralha (a parede faz a verga)")
+	# o pé fica entre os dois pilares, na altura dos pés deles (não na ponta de um só)
+	var pe: Array = info["pe"]
+	assert_true(int(pe[0]) > 8 and int(pe[0]) < 20, "pé no meio da largura: %s" % [pe])
+	assert_true(int(pe[1]) > 30 and int(pe[1]) <= 38, "pé na base: %s" % [pe])
+	# a abertura deixa passar um inimigo (diâmetro 2 x enemies.radius, em pixels da arte)
+	var ab: Array = info["abertura"]
+	var inimigo := 2.0 * float(RenderConfig.data()["enemies"]["radius"])
+	assert_gt(float(ab[3] - ab[1]), inimigo, "abertura mais alta que um inimigo")
+	assert_gt(float(ab[2] - ab[0]), inimigo * 0.5, "abertura mais larga que meio inimigo")
+
+
+func test_portal_na_face_de_dentro_da_muralha() -> void:
+	var p := _portal()
+	var c: Vector2i = p[0]
+	var out: Vector2i = p[1]
+	var props := Map2DBuilders.place_props(map, FortressWalls.wall_cells(map), SceneryProps.portal_cells_of(map), cfg)
+	var portal: Dictionary = props.filter(func(x: Dictionary) -> bool: return x["name"] == "portal")[0]
+	assert_eq(portal["at"], Vector2(c) - Vector2(out) * 0.5, "na face de dentro, centrado na casa")
+	assert_eq(portal["flip"], out.x != 0, "espelhado na parede que corre ao longo de z")
+
+
+func test_portal_chao_e_muralha_em_volta() -> void:
+	var p := _portal()
+	var c: Vector2i = p[0]
+	var out: Vector2i = p[1]
+	var cells := FortressWalls.wall_cells(map)
+	# soleira: o chão do caminho na casa do portal, existente no atlas
+	var sol := Map2DBuilders.threshold_tiles(SceneryProps.portal_cells_of(map))
+	assert_true(sol.has(c))
+	assert_true(assets.has_tile("chao", sol[c]), sol[c])
+	assert_true(String(sol[c]).begins_with("soleira_z_" if out.x != 0 else "soleira_x_"))
+	# a muralha continua na casa do portal (verga e batentes) e nas duas vizinhas ao longo da parede
+	var wt := Map2DBuilders.wall_tiles(map, cells, SceneryProps.portal_cells_of(map))
+	var along := Vector2i(0, 1) if out.x != 0 else Vector2i(1, 0)
+	for k in [-1, 0, 1]:
+		var w: Vector2i = c + along * int(k)
+		assert_true(wt.has(w), "muralha em %s" % w)
+		assert_true(assets.has_tile("muralha", wt[w]), wt[w])
+	# a casa de dentro, na frente do portal, é o começo do caminho
+	assert_true(map.is_path(c - out), "o caminho começa na frente do portal")
+	# a saia não passa pela casa do portal (ela é só da borda da frente)
+	assert_false(Map2DBuilders.edge_tiles(map, cells).has(c))
+
+
+func test_quem_passa_pelo_portal_fica_na_frente_dele() -> void:
+	var l := TileMapLayer.new()
+	l.tile_set = assets.tile_set
+	add_child_autofree(l)
+	var p := _portal()
+	var c: Vector2i = p[0]
+	var out: Vector2i = p[1]
+	var portal_y := Map2DBuilders.cell_point(l, Map2DBuilders.portal_point(c, out).x, Map2DBuilders.portal_point(c, out).y).y
+	# Y-Sort: um herói ou inimigo na casa de entrada (logo depois do vão) é desenhado depois do portal
+	var entrada_y := Map2DBuilders.cell_point(l, (c - out).x, (c - out).y).y
+	assert_gt(entrada_y, portal_y)
+	# e a muralha vizinha (ordenada meia casa para trás) é desenhada antes do portal: não atravessa os pilares
+	var along := Vector2i(0, 1) if out.x != 0 else Vector2i(1, 0)
+	var y_origin := -int(assets.meta["tile"][1]) / 2 - 1
+	for k in [-1, 0, 1]:
+		var w: Vector2i = c + along * int(k)
+		assert_lt(l.map_to_local(w).y + y_origin, portal_y, "muralha %s antes do portal" % w)

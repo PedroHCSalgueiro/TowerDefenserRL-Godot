@@ -48,6 +48,9 @@ func _build() -> void:
 	var path := _layer("Caminho", -2, false)
 	add_child(path)
 	Map2DBuilders.paint_path(path, assets, map)
+	var soleiras := Map2DBuilders.threshold_tiles(portals)
+	for c: Vector2i in soleiras:
+		path.set_cell(c, Map2DAssets.SRC_CHAO, assets.tile("chao", soleiras[c]))
 	var edge := _layer("Borda", -1, false)
 	add_child(edge)
 	var edges := Map2DBuilders.edge_tiles(map, cells)

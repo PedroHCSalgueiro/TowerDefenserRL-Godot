@@ -105,7 +105,7 @@ MODO = {
     "tocha": "pegada", "braseiro": "pegada", "barril": "pegada", "caixa": "pegada", "pilar": "pegada", "coluna": "pegada",
     "cristal": "pegada", "pedra_pe": "pegada", "arvore": "pegada", "seca": "pegada", "toco": "pegada",
     "moita": "pegada", "espinho": "pegada", "obelisco": "pegada", "cristal_nucleo": "pegada",
-    "arco": "base", "torre": "base", "portal": "base",
+    "arco": "base", "torre": "base", "portal": "portal",
     "raiz": "base", "capim": "base", "cranio": "base", "pedras": "base", "cogumelo": "base", "tabua": "base",
 }
 try:
@@ -114,10 +114,52 @@ except (OSError, ValueError, KeyError):
     _antes = {}
 
 
+def pe_pilares(im):
+    """Âncora "portal": o meio entre os pés dos dois pilares (a ponta de baixo de cada metade da imagem). É o centro da
+    passagem no chão, o ponto que fica no meio da espessura da muralha."""
+    a = np.asarray(im)[..., 3] > 0
+    w = a.shape[1]
+    pes = []
+    for x0, x1 in ((0, w // 2), (w // 2, w)):
+        ys, xs = np.nonzero(a[:, x0:x1])
+        y = ys.max()
+        xs_base = xs[ys == y] + x0
+        pes.append(((xs_base.min() + xs_base.max() + 1) / 2, y + 1))
+    return [int(round((pes[0][0] + pes[1][0]) / 2)), int(round((pes[0][1] + pes[1][1]) / 2))]
+
+
+def portal_de_arco(src, k):
+    """Portal = o arco do recorte nativo reduzido por fator inteiro, com o redemoinho pintado só na abertura (os
+    pixels transparentes que têm pedra dos dois lados na mesma linha e pedra acima na mesma coluna)."""
+    red = reduz_inteiro(Image.open(src), k)
+    red = red.crop(red.getbbox())
+    a = np.asarray(red).copy()
+    op = a[..., 3] > 0
+    h, w = op.shape
+    esq = np.maximum.accumulate(op, axis=1)
+    dir_ = np.maximum.accumulate(op[:, ::-1], axis=1)[:, ::-1]
+    cima = np.maximum.accumulate(op, axis=0)
+    ab = (~op) & esq & dir_ & cima
+    ys, xs = np.nonzero(ab)
+    cx, cy = xs.mean(), ys.mean()
+    rx, ry = (xs.max() - xs.min() + 1) / 2, (ys.max() - ys.min() + 1) / 2
+    yy, xx = np.mgrid[0:h, 0:w]
+    r = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+    ang = np.arctan2((yy - cy) / ry, (xx - cx) / rx)
+    esp = np.sin(ang * 3 + r * 9) > 0
+    pal = np.array([[40, 40, 140], [70, 80, 220], [120, 150, 255], [200, 220, 255]])
+    idx = np.clip((1 - r) * 2.2 + esp * 0.9, 0, 3).astype(int)
+    a[ab, :3] = pal[idx[ab]]
+    a[ab, 3] = 255
+    return Image.fromarray(a), [int(xs.min()), int(ys.min()), int(xs.max() + 1), int(ys.max() + 1)]
+
+
 def registra(nome, im, k):
     modo = MODO[nome]
     if modo == "pegada":
         p, larg = pe_pegada(im)
+    elif modo == "portal":
+        p, larg = pe_pilares(im), 0
     else:
         p, larg = pe(im), 0
     pecas[nome] = {"pe": p, "modo": modo, "base": larg, "tamanho": list(im.size), "fator": k,
@@ -147,11 +189,17 @@ for src, (nome, alvo) in ALVO.items():
     red = red.crop(bb)
     red.save(OUT + f"pecas/{nome}.png")
     registra(nome, red, k)
-# o cristal do núcleo e o portal (arco + o redemoinho já usado no jogo) vêm das versões do jogo
-for nome in ("cristal_nucleo", "portal"):
+# o cristal do núcleo vem da versão do jogo
+for nome in ("cristal_nucleo",):
     im = Image.open(JOGO + f"valcoroa/pecas/{nome}.png").convert("RGBA")
     im.save(OUT + f"pecas/{nome}.png")
     registra(nome, im, 1)
+# o portal: o arco nativo (56x77) por fator 2, para caber na muralha de 40 px; a abertura fica guardada
+PORTAL_FATOR = 2
+_portal, _abertura = portal_de_arco(REC + "Lote05_1.png", PORTAL_FATOR)
+_portal.save(OUT + "pecas/portal.png")
+registra("portal", _portal, PORTAL_FATOR)
+pecas["portal"]["abertura"] = _abertura
 
 
 # ------------------------------------------------------------------ chão (losangos 48x24)
@@ -196,6 +244,21 @@ for cz in range(4):
     for cx in range(4):
         chao_tiles[f"laje_{cx}_{cz}"] = losango_de_textura(lajes, cx, cz)
         chao_tiles[f"caminho_{cx}_{cz}"] = losango_de_textura(pedra, cx, cz)
+# soleira: o chão do caminho só na metade de dentro da casa do portal (a espessura da muralha, que é de meia casa).
+# "soleira_z": muralha ao longo de z, aberta em +x (fica a metade de x >= 0); "soleira_x": aberta em +z.
+for cz in range(4):
+    for cx in range(4):
+        cheio = chao_tiles[f"caminho_{cx}_{cz}"]
+        for lado in ("z", "x"):
+            t = cheio.copy()
+            for y in range(TH):
+                for x in range(TW):
+                    sx, sy = x + 0.5 - TW / 2, y + 0.5 - TH / 2
+                    gx = (sx / (TW / 2) + sy / (TH / 2)) / 2
+                    gz = (sy / (TH / 2) - sx / (TW / 2)) / 2
+                    if (gx if lado == "z" else gz) < 0:
+                        t[y, x] = 0
+            chao_tiles[f"soleira_{lado}_{cx}_{cz}"] = t
 # grama e terra: os losangos de 48x24 que já existiam, escurecidos para o clima da noite
 for nome, k in [("lisa_01", 0.45), ("lisa_02", 0.45), ("lisa_03", 0.45), ("lisa_04", 0.45), ("escura_01", 0.5),
                 ("pedrinhas_01", 0.45), ("terra_01", 0.5), ("caminho_01", 0.45), ("caminho_02", 0.45)]:

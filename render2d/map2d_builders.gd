@@ -68,10 +68,13 @@ static func paint_path(layer: TileMapLayer, assets: Map2DAssets, map: SimMap) ->
 # ------------------------------------------------------------------ muralha e saia
 ## Peça de muralha de cada casa alta: "z_<v>" (corre ao longo de z, aberta em +x), "x_<v>", com "_ponta" onde encontra
 ## a saia da frente, ou "canto". A variante v segue a posição ao longo da parede (a textura continua).
-static func wall_tiles(map: SimMap, cells: Dictionary, portals: Dictionary) -> Dictionary:
+## A casa do portal também recebe a muralha: o portal (28x38, mais baixo que os 40 px da muralha) é desenhado na frente
+## dela, então a parede faz o batente dos lados e a verga em cima, com as ameias seguindo sem buraco. `portals` fica na
+## assinatura para quem precisar saber quais casas são portal.
+static func wall_tiles(map: SimMap, cells: Dictionary, _portals: Dictionary) -> Dictionary:
 	var out := {}
 	for c: Vector2i in cells:
-		if not cells[c] or portals.has(c):
+		if not cells[c]:
 			continue
 		var ox := _open(map, c + Vector2i(1, 0))
 		var oz := _open(map, c + Vector2i(0, 1))
@@ -99,6 +102,29 @@ static func edge_tiles(map: SimMap, cells: Dictionary) -> Dictionary:
 	return out
 
 
+# ------------------------------------------------------------------ portal
+## Ponto do portal (em casas): na face de dentro da muralha (a muralha ocupa a metade de dentro da casa, então a face fica
+## a 0,5 do centro), centrado na casa ao longo da parede. No 2D o portal é desenhado por cima da muralha: no meio da
+## espessura (0,25) a base dele ficaria 3 px acima da linha onde a parede encontra o chão, mostrando tijolo embaixo dos
+## pilares; na face, os pilares encostam no chão e a parede faz o batente e a verga em volta.
+const PORTAL_DEPTH := 0.5
+
+
+static func portal_point(cell: Vector2i, outward: Vector2i) -> Vector2:
+	return Vector2(cell) - Vector2(outward) * PORTAL_DEPTH
+
+
+## Soleira de cada portal: o chão do caminho só na metade de dentro da casa (a espessura da muralha), para o caminho
+## atravessar o vão sem mostrar o fundo e sem passar para fora da muralha. "soleira_z_<x>_<y>" na parede que corre ao
+## longo de z (saída em -x), "soleira_x_<x>_<y>" na que corre ao longo de x (saída em -z).
+static func threshold_tiles(portals: Dictionary) -> Dictionary:
+	var out := {}
+	for c: Vector2i in portals:
+		var outward: Vector2i = portals[c]
+		out[c] = "soleira_%s_%d_%d" % ["z" if outward.x != 0 else "x", posmod(c.x, 4), posmod(c.y, 4)]
+	return out
+
+
 # ------------------------------------------------------------------ peças
 ## Lista de peças {name, at (Vector2 em casas), flip, light} montada por regras, nesta ordem (cada uma respeita o espaço
 ## das anteriores):
@@ -112,10 +138,10 @@ static func edge_tiles(map: SimMap, cells: Dictionary) -> Dictionary:
 static func place_props(map: SimMap, cells: Dictionary, portals: Dictionary, cfg: Dictionary) -> Array:
 	var out: Array = []
 	var gap := float(cfg["spacing"]["props"])
-	# 1. portal
+	# 1. portal: na face de dentro da muralha, centrado na casa (`portal_point`); o pé é o meio entre os dois pilares
 	for c: Vector2i in portals:
 		var outward: Vector2i = portals[c]
-		var at := Vector2(c) - Vector2(outward) * 0.3
+		var at := portal_point(c, outward)
 		out.append({"name": "portal", "at": at, "flip": outward.x != 0, "light": "portal"})
 		var along := Vector2(0, 1) if outward.x != 0 else Vector2(1, 0)
 		for s in [-1.0, 1.0]:

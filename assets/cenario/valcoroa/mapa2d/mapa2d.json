@@ -141,41 +141,169 @@
     7,
     3
    ],
-   "grama_lisa_01": [
+   "soleira_z_0_0": [
     0,
     4
    ],
-   "grama_lisa_02": [
+   "soleira_x_0_0": [
     1,
     4
    ],
-   "grama_lisa_03": [
+   "soleira_z_1_0": [
     2,
     4
    ],
-   "grama_lisa_04": [
+   "soleira_x_1_0": [
     3,
     4
    ],
-   "grama_escura_01": [
+   "soleira_z_2_0": [
     4,
     4
    ],
-   "grama_pedrinhas_01": [
+   "soleira_x_2_0": [
     5,
     4
    ],
-   "terra_terra_01": [
+   "soleira_z_3_0": [
     6,
     4
    ],
-   "terra_caminho_01": [
+   "soleira_x_3_0": [
     7,
     4
    ],
-   "terra_caminho_02": [
+   "soleira_z_0_1": [
     0,
     5
+   ],
+   "soleira_x_0_1": [
+    1,
+    5
+   ],
+   "soleira_z_1_1": [
+    2,
+    5
+   ],
+   "soleira_x_1_1": [
+    3,
+    5
+   ],
+   "soleira_z_2_1": [
+    4,
+    5
+   ],
+   "soleira_x_2_1": [
+    5,
+    5
+   ],
+   "soleira_z_3_1": [
+    6,
+    5
+   ],
+   "soleira_x_3_1": [
+    7,
+    5
+   ],
+   "soleira_z_0_2": [
+    0,
+    6
+   ],
+   "soleira_x_0_2": [
+    1,
+    6
+   ],
+   "soleira_z_1_2": [
+    2,
+    6
+   ],
+   "soleira_x_1_2": [
+    3,
+    6
+   ],
+   "soleira_z_2_2": [
+    4,
+    6
+   ],
+   "soleira_x_2_2": [
+    5,
+    6
+   ],
+   "soleira_z_3_2": [
+    6,
+    6
+   ],
+   "soleira_x_3_2": [
+    7,
+    6
+   ],
+   "soleira_z_0_3": [
+    0,
+    7
+   ],
+   "soleira_x_0_3": [
+    1,
+    7
+   ],
+   "soleira_z_1_3": [
+    2,
+    7
+   ],
+   "soleira_x_1_3": [
+    3,
+    7
+   ],
+   "soleira_z_2_3": [
+    4,
+    7
+   ],
+   "soleira_x_2_3": [
+    5,
+    7
+   ],
+   "soleira_z_3_3": [
+    6,
+    7
+   ],
+   "soleira_x_3_3": [
+    7,
+    7
+   ],
+   "grama_lisa_01": [
+    0,
+    8
+   ],
+   "grama_lisa_02": [
+    1,
+    8
+   ],
+   "grama_lisa_03": [
+    2,
+    8
+   ],
+   "grama_lisa_04": [
+    3,
+    8
+   ],
+   "grama_escura_01": [
+    4,
+    8
+   ],
+   "grama_pedrinhas_01": [
+    5,
+    8
+   ],
+   "terra_terra_01": [
+    6,
+    8
+   ],
+   "terra_caminho_01": [
+    7,
+    8
+   ],
+   "terra_caminho_02": [
+    0,
+    9
    ]
   }
  },
@@ -713,19 +841,25 @@
   },
   "portal": {
    "pe": [
-    36,
-    60
+    16,
+    34
    ],
-   "modo": "base",
+   "modo": "portal",
    "base": 0,
    "tamanho": [
-    44,
-    60
+    28,
+    38
    ],
-   "fator": 1,
+   "fator": 2,
    "ajuste": [
     0,
     0
+   ],
+   "abertura": [
+    7,
+    9,
+    18,
+    30
    ]
   }
  }
