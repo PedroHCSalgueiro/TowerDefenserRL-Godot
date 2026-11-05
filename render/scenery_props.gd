@@ -104,7 +104,11 @@ func rebuild(map: SimMap, walls: Dictionary) -> void:
 	for cell: Vector2i in portal_cells:
 		var out: Vector2i = portal_cells[cell]
 		var at := Vector3(cell.x - out.x * 0.45, 0.0, cell.y - out.y * 0.45) + cam_dir * 0.4
-		_sprite(String(_cfg["portal"]), at)
+		var portal := _sprite(String(_cfg["portal"]), at)
+		# a imagem do arco segue a parede que corre ao longo de x (desce para a direita na tela); na parede que corre
+		# ao longo de z (desce para a esquerda), ela é espelhada
+		if portal != null:
+			portal.flip_h = out.x != 0
 	# pé da muralha alta e cantos
 	for cell: Vector2i in walls:
 		if not walls[cell] or portal_cells.has(cell):
