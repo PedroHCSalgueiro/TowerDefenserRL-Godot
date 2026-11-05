@@ -9,6 +9,8 @@ var cfg: Dictionary
 var map: SimMap
 var assets: Map2DAssets
 var _light_tex: Texture2D
+## Camada de referência para a posição das casas (todas as camadas usam o mesmo TileSet e a mesma origem).
+var _grid: TileMapLayer
 var _shot := ""
 var _elapsed := 0.0
 
@@ -41,6 +43,7 @@ func _build() -> void:
 	# chão: terreno e caminho embaixo de tudo, depois a saia
 	var terrain := _layer("Terreno", -3, false)
 	add_child(terrain)
+	_grid = terrain
 	Map2DBuilders.paint_terrain(terrain, assets, map, kinds, cfg["terrain"])
 	var path := _layer("Caminho", -2, false)
 	add_child(path)
@@ -71,19 +74,19 @@ func _build() -> void:
 			s.flip_h = true
 			s.offset.x = -(s.texture.get_width() + s.offset.x)
 		var at: Vector2 = p["at"]
-		s.position = Map2DBuilders.iso(at.x, at.y).round()
+		s.position = Map2DBuilders.cell_point(_grid, at.x, at.y).round()
 		world.add_child(s)
 		if String(p["light"]) != "":
 			lights.append([s.position + Vector2(0, -float(s.texture.get_height()) * 0.7), String(p["light"])])
 	for h: Array in cfg["heroes"]:
 		var hero := _hero(String(h[0]))
 		if hero != null:
-			hero.position = Map2DBuilders.iso(float(h[1]), float(h[2])).round()
+			hero.position = Map2DBuilders.cell_point(_grid, float(h[1]), float(h[2])).round()
 			world.add_child(hero)
 	_add_lights(lights)
 	var cam := Camera2D.new()
 	cam.zoom = Vector2(2, 2)
-	cam.position = Map2DBuilders.iso(map.width / 2.0 - 0.5, map.height / 2.0 - 0.5).round() + Vector2(0, -40)
+	cam.position = Map2DBuilders.cell_point(_grid, map.width / 2.0 - 0.5, map.height / 2.0 - 0.5).round() + Vector2(0, -40)
 	add_child(cam)
 	cam.make_current()
 

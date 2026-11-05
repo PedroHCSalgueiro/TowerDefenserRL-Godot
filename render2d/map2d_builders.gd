@@ -4,9 +4,19 @@ extends RefCounted
 ## terreno, caminho, muralha e saia, peças (por conjuntos com regra) e decoração. Nada aqui muda uma casa.
 ## A muralha reaproveita a classificação do 3D (`FortressWalls.wall_cells`: alta atrás, baixa na frente).
 
-## Ponto do chão (x, z em casas) -> pixel da arte no plano 2D (diamond down: x desce para a direita, z para a esquerda).
+## Deslocamento no plano 2D (em pixels da arte) de um vetor do chão (x, z em casas): diamond down, x desce para a direita
+## e z para a esquerda. É só a direção e a escala: NÃO é a posição de uma casa (a casa (0, 0) não fica em (0, 0) no
+## TileMapLayer). Para posicionar algo no mapa, use `cell_point`.
 static func iso(gx: float, gz: float) -> Vector2:
 	return Vector2((gx - gz) * 24.0, (gx + gz) * 12.0)
+
+
+## Ponto do chão (x, z em casas, com fração) -> posição local no `layer`, alinhada com o centro das casas do TileMap.
+## A casa inteira mais próxima vem do `TileMapLayer.map_to_local()` (que no isométrico 48x24 põe o centro da casa (0, 0)
+## em (24, 12), meia casa a mais que o `iso`), e a fração (0,25, 0,3...) é somada com o `iso`.
+static func cell_point(layer: TileMapLayer, gx: float, gz: float) -> Vector2:
+	var cell := Vector2i(floori(gx + 0.5), floori(gz + 0.5))
+	return layer.map_to_local(cell) + iso(gx - cell.x, gz - cell.y)
 
 
 static func _open(map: SimMap, c: Vector2i) -> bool:
