@@ -81,3 +81,15 @@ Também valem estas regras:
 - Casas de construir: faixa limpa ou de capim baixo. A grade só aparece em volta do mouse.
 - Tudo o que é denso (capim alto, árvores, relevo) fica nas casas fechadas e fora do mapa, emoldurando a área de jogo.
 - O caminho dos inimigos sempre lê na hora, com contraste de valor maior que o da referência.
+
+### 9. Tudo tem que fazer sentido (Pedro, 04/11)
+- **Peça grande se apoia em alguma coisa.** A torre fica no canto, com a base no chão, e as paredes encostam nela. Nada flutua atrás da parede.
+- **Peça segue a parede ou o caminho.** O arco da entrada fica alinhado com a parede, e grade e cerca só cercam alguma coisa. Nunca uma grade solta no meio do pátio.
+- **Monte cantinhos com um motivo:**
+  - entrada guardada por braseiros, com ossos de quem tentou passar;
+  - depósito de barris, caixas e tábuas encostado na parede;
+  - jardim com árvore, moita e capim num canto;
+  - círculo de runas com pilar, obelisco e cogumelos que brilham;
+  - ruína com coluna quebrada;
+  - núcleo com braseiros dos dois lados.
+- **Parede comprida se monta por código**, com a textura vista de frente. Do gerador de imagens vêm só as peças pontuais: arco, torre e enfeites.
